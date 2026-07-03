@@ -36,7 +36,7 @@ const defaultSizeMap = {
 };
 
 /*스타일*/
-const Overlay = styled.div`
+const ModalOverlay = styled.div`
   position: fixed;
   top: 0;
   left: 0;
@@ -49,7 +49,7 @@ const Overlay = styled.div`
   z-index: 1000;
 `;
 
-const ModalBox = styled.div<{ type: 'default' | 'confirm'; size: 'sm' | 'lg' }>`
+const ModalWrapper = styled.div<{ type: 'default' | 'confirm'; size: 'sm' | 'lg' }>`
   background-color: #ffffff;
   border: none;
   box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.25);
@@ -132,8 +132,8 @@ function Modal({
   if (!isOpen) return null;
 
   return (
-    <Overlay onClick={onClose}>
-      <ModalBox type={type} size={size} onClick={(e) => e.stopPropagation()}>
+    <ModalOverlay onClick={onClose}>
+      <ModalWrapper type={type} size={size} onClick={(e) => e.stopPropagation()}>
         {type === 'default' && children}
 
         {type === 'confirm' && (
@@ -152,8 +152,8 @@ function Modal({
             </ConfirmButtonWrapper>
           </>
         )}
-      </ModalBox>
-    </Overlay>
+      </ModalWrapper>
+    </ModalOverlay>
   );
 }
 
