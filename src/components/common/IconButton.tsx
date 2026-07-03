@@ -15,7 +15,7 @@ const sizeMap = {
   xs: '13px', // ... 누르면 삭제 Button 뜸 (댓글, 친구 목록)
   sm: '18px', // 좋아요, 댓글, 친구페이지 검색
   md: '22px', // 검색,  프로필 수정
-  lg: '25px', // 필터
+  lg: '25px', // 필터, 알림
 };
 
 const StyledIconButton = styled.button<{ size: 'xs' | 'sm' | 'md' | 'lg' }>`
