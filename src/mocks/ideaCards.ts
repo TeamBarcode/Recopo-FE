@@ -174,31 +174,27 @@ export const fetchMockIdeas = async (
 
 // ===== 아이디어 수정 =====
 export interface UpdateIdeaRequest {
-    title : string;
-    tags? : string[];
-    category : string;
-    isPublic : boolean;
-    //summary : string;
-    keywords: string[];           // 핵심 키워드도 수정 가능
-    expectedFeatures: string[];   // 예상 기능도 수정 가능
-    techStack: string[];          // 추천 기술 스택도 수정 가능
-    //recoBotResult
+  title: string;
+  tags?: string[];
+  category: string;
+  isPublic: boolean;
 }
 
 export const updateMockIdea = async (
-    ideaId : string,
-    request : UpdateIdeaRequest
-) : Promise<IdeaDetail> => {
-    await new Promise((r)=>setTimeout(r, 500));
+  ideaId: string,
+  request: UpdateIdeaRequest
+): Promise<IdeaCard> => {
+  await new Promise((r) => setTimeout(r, 500));
 
-    if(mockIdeaDetail.id !== ideaId){
-        throw {message : '존재하지 않는 아이디어예요'};
-    }
+  const existingIdea = mockIdeaCards.find((idea) => idea.id === ideaId);
+  if (!existingIdea) {
+    throw { message: '존재하지 않는 아이디어예요' };
+  }
 
-    return {
-        ...mockIdeaDetail,
-        ...request,
-    };
+  return {
+    ...existingIdea,
+    ...request,
+  };
 };
 
 // ===== 아이디어 삭제 =====

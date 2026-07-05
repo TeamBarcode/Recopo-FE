@@ -124,3 +124,56 @@ export const fetchMockProfileSetup = async (
         },
     };
 };
+
+// ===== 아이디 찾기 =====
+export interface FindUserIDRequest {
+    email : string;
+}
+
+export interface FindUserIDErrorResponse {
+    errorCode : 'EMAIL_NOT_FOUND';
+    message : string;
+}
+
+export const mockFindUserIDErrorNotFound : FindUserIDErrorResponse = {
+    errorCode : 'EMAIL_NOT_FOUND',
+    message : '해당 이메일로 가입된 계정이 없어요',
+};
+
+export const findMockUserID = async (
+    request : FindUserIDRequest
+) : Promise <{success : boolean}> => {
+    await new Promise((r)=>setTimeout(r,500));
+
+    if(request.email !== mockUser.email){
+        throw mockFindUserIDErrorNotFound;
+    }
+    return {success:true};
+};
+
+// ===== 비밀번호 찾기 =====
+export interface FindPasswordRequest {
+  email: string;
+}
+
+export interface FindPasswordErrorResponse {
+  errorCode: 'EMAIL_NOT_FOUND';
+  message: string;
+}
+
+export const mockFindPasswordErrorNotFound: FindPasswordErrorResponse = {
+  errorCode: 'EMAIL_NOT_FOUND',
+  message: '해당 이메일로 가입된 계정이 없어요',
+};
+
+export const findMockPassword = async (
+  request: FindPasswordRequest
+): Promise<{ success: boolean }> => {
+  await new Promise((r) => setTimeout(r, 500));
+
+  if (request.email !== mockUser.email) {
+    throw mockFindPasswordErrorNotFound;
+  }
+
+  return { success: true };
+};
