@@ -16,14 +16,17 @@ function ProfileSetupPage() {
     userId,
     nickname,
     profileImage,
-    isUserIdChecked,
-    isNicknameChecked,
+    userIdStatus,
+    userIdMessage,
+    isCheckingUserId,
+    isSubmitting,
     isNextEnabled,
-    checkUserId,
-    checkNickname,
     handleUserIdChange,
     handleNicknameChange,
     handleProfileImageChange,
+    checkUserId,
+    confirmNickname,
+    submitProfileSetup,
   } = useProfileSetup();
 
   const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
@@ -32,6 +35,14 @@ function ProfileSetupPage() {
     if (!file) return;
 
     handleProfileImageChange(URL.createObjectURL(file));
+  };
+
+  const handleNext = async () => {
+    const isSuccess = await submitProfileSetup();
+
+    if (isSuccess) {
+      navigate('/');
+    }
   };
 
   return (
@@ -65,29 +76,35 @@ function ProfileSetupPage() {
 
           <Form>
             <FieldGroup>
-              <FieldLabel htmlFor="user-id">아이디</FieldLabel>
+              <FieldLabel>아이디</FieldLabel>
 
               <FieldRow>
                 <UnderlinedInput>
                   <Input
                     value={userId}
                     onChange={(event) => handleUserIdChange(event.target.value)}
-                    placeholder=""
+                    placeholder="영문, 숫자, 언더바 2~20자"
                     size="md"
                     width="100%"
                   />
                 </UnderlinedInput>
 
-                <CheckButton type="button" onClick={checkUserId}>
-                  중복 확인
+                <CheckButton type="button" disabled={isCheckingUserId} onClick={checkUserId}>
+                  {isCheckingUserId ? '확인 중' : '중복 확인'}
                 </CheckButton>
               </FieldRow>
 
-              {isUserIdChecked && <SuccessMessage>사용 가능한 아이디입니다.</SuccessMessage>}
+              {userIdStatus === 'available' && (
+                <SuccessMessage aria-live="polite">{userIdMessage}</SuccessMessage>
+              )}
+
+              {userIdStatus === 'duplicate' && (
+                <ErrorMessage aria-live="polite">{userIdMessage}</ErrorMessage>
+              )}
             </FieldGroup>
 
             <FieldGroup>
-              <FieldLabel htmlFor="nickname">이름</FieldLabel>
+              <FieldLabel>이름</FieldLabel>
 
               <FieldRow>
                 <UnderlinedInput>
@@ -100,17 +117,15 @@ function ProfileSetupPage() {
                   />
                 </UnderlinedInput>
 
-                <CheckButton type="button" onClick={checkNickname}>
+                <CheckButton type="button" onClick={confirmNickname}>
                   확인
                 </CheckButton>
               </FieldRow>
-
-              {isNicknameChecked && <SuccessMessage>사용 가능한 이름입니다.</SuccessMessage>}
             </FieldGroup>
           </Form>
 
-          <NextButton type="button" disabled={!isNextEnabled} onClick={() => navigate('/')}>
-            다음
+          <NextButton type="button" disabled={!isNextEnabled} onClick={handleNext}>
+            {isSubmitting ? '저장 중' : '다음'}
           </NextButton>
         </Content>
       </PageInner>
@@ -156,7 +171,7 @@ const LogoSubtitle = styled.span`
 
 const Content = styled.section`
   width: 340px;
-  margin: 66px auto 0;
+  margin: 58px auto 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -165,7 +180,8 @@ const Content = styled.section`
 const TitleRow = styled.div`
   display: flex;
   align-items: center;
-  gap: ${tokens.spacing[12]};
+  gap: ${tokens.spacing[16]};
+  transform: translateY(-8px);
 `;
 
 const Recobot = styled.img`
@@ -180,22 +196,23 @@ const Title = styled.h1`
 `;
 
 const ProfileArea = styled.div`
-  margin-top: 50px;
+  margin-top: 66px;
   display: flex;
   flex-direction: column;
   align-items: center;
 `;
 
 const UploadButton = styled.button`
-  height: 30px;
+  height: 26px;
   margin-top: ${tokens.spacing[20]};
-  padding: 0 14px;
+  padding: 0 12px;
   border: 1px solid ${tokens.colors.border.primary};
   border-radius: ${tokens.radius.sm};
   background: ${tokens.colors.button.white};
-  color: ${tokens.colors.text.light};
+  color: ${tokens.colors.text.primary};
   font-family: inherit;
   font-size: ${tokens.fontSize.sm};
+  font-weight: ${tokens.fontWeight.regular};
   cursor: pointer;
 
   &:active {
@@ -219,7 +236,7 @@ const FieldGroup = styled.div`
   width: 100%;
 `;
 
-const FieldLabel = styled.label`
+const FieldLabel = styled.span`
   display: block;
   margin-bottom: ${tokens.spacing[8]};
   color: ${tokens.colors.text.primary};
@@ -237,29 +254,46 @@ const UnderlinedInput = styled.div`
   flex: 1;
   height: 42px;
   border-bottom: 1px solid ${tokens.colors.border.secondary};
+
+  input::placeholder {
+    color: ${tokens.colors.text.placeholder};
+  }
 `;
 
 const CheckButton = styled.button`
   flex-shrink: 0;
-  height: 34px;
-  padding: 0 14px;
+  height: 30px;
+  padding: 0 12px;
   border: 1px solid ${tokens.colors.border.primary};
   border-radius: ${tokens.radius.sm};
   background: ${tokens.colors.button.white};
   color: ${tokens.colors.text.primary};
   font-family: inherit;
   font-size: ${tokens.fontSize.sm};
+  font-weight: ${tokens.fontWeight.regular};
   cursor: pointer;
 
-  &:active {
+  &:disabled {
+    cursor: wait;
+    opacity: 0.6;
+  }
+
+  &:not(:disabled):active {
     opacity: 0.6;
   }
 `;
 
-const SuccessMessage = styled.p`
+const Message = styled.p`
   margin: ${tokens.spacing[8]} 0 0;
-  color: ${tokens.colors.text.extraLight};
   font-size: ${tokens.fontSize.sm};
+`;
+
+const SuccessMessage = styled(Message)`
+  color: ${tokens.colors.text.extraLight};
+`;
+
+const ErrorMessage = styled(Message)`
+  color: ${tokens.colors.text.error};
 `;
 
 const NextButton = styled.button`
@@ -272,6 +306,7 @@ const NextButton = styled.button`
   color: ${tokens.colors.button.white};
   font-family: inherit;
   font-size: ${tokens.fontSize.md};
+  font-weight: ${tokens.fontWeight.regular};
   cursor: pointer;
 
   &:disabled {

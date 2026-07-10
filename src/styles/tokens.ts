@@ -7,6 +7,7 @@ export const colors = {
     semiLight: '#373737',
     light: '#434343',
     extraLight: '#696969',
+    placeholder: '#D7D6D6',
     error: '#FF7D7D',
   },
 
