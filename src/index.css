@@ -1,5 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Asta+Sans:wght@300;400;500;600;700&display=swap');
+
 :root {
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Asta Sans', system-ui, sans-serif;
   color: #111111;
   background: #ffffff;
   font-synthesis: none;

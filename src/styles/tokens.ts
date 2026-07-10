@@ -31,7 +31,7 @@ export const colors = {
 
 export const fontFamily = {
   logo: 'Archivo Black',
-  primary: '42dot Sans',
+  primary: 'Asta Sans',
 } as const;
 
 export const fontSize = {
