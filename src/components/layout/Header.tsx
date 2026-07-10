@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import notificationIcon from '@/assets/notification.svg';
 import Avatar from '@/components/common/Avatar';
 import IconButton from '@/components/common/IconButton';
+import { tokens } from '@/styles/tokens';
 
 function Header() {
   return (
@@ -168,8 +169,9 @@ const LogoLink = styled(NavLink)`
 `;
 
 const LogoTitle = styled.span`
-  font-size: 36px;
-  font-weight: 900;
+  font-family: ${tokens.fontFamily.logo};
+  font-size: ${tokens.fontSize.logo};
+  font-weight: ${tokens.fontWeight.bold};
   line-height: 0.9;
   letter-spacing: -1.4px;
   white-space: nowrap;
@@ -181,14 +183,15 @@ const LogoTitle = styled.span`
 
 const LogoSubtitle = styled.span`
   margin-top: 4px;
-  font-size: 19px;
-  font-weight: 900;
+  font-family: ${tokens.fontFamily.logo};
+  font-size: ${tokens.fontSize.xl};
+  font-weight: ${tokens.fontWeight.bold};
   line-height: 1;
   letter-spacing: -0.7px;
   white-space: nowrap;
 
   @media (max-width: 900px) {
-    font-size: 15px;
+    font-size: 14px;
   }
 `;
 

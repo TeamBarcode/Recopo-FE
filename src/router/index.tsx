@@ -7,6 +7,7 @@ import IdeaPage from '@/pages/IdeaPage';
 import LoginPage from '@/pages/LoginPage';
 import MyPage from '@/pages/MyPage';
 import SignupPage from '@/pages/SignupPage';
+import ProfileSetupPage from '@/pages/ProfileSetupPage';
 
 const router = createBrowserRouter([
   {
@@ -37,6 +38,10 @@ const router = createBrowserRouter([
   {
     path: '/signup',
     element: <SignupPage />,
+  },
+  {
+    path: '/profile-setup',
+    element: <ProfileSetupPage />,
   },
 ]);
 
