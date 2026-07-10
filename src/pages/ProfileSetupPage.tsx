@@ -44,8 +44,8 @@ function ProfileSetupPage() {
 
         <Content>
           <TitleRow>
-            <Title>프로필 설정</Title>
             <Recobot src={recobotHappy} alt="" />
+            <Title>프로필 설정</Title>
           </TitleRow>
 
           <ProfileArea>
@@ -64,39 +64,49 @@ function ProfileSetupPage() {
           </ProfileArea>
 
           <Form>
-            <FieldRow>
-              <InputBox>
-                <Input
-                  value={userId}
-                  onChange={(event) => handleUserIdChange(event.target.value)}
-                  placeholder="아이디"
-                  size="md"
-                />
-              </InputBox>
+            <FieldGroup>
+              <FieldLabel htmlFor="user-id">아이디</FieldLabel>
 
-              <CheckButton type="button" onClick={checkUserId}>
-                중복 확인
-              </CheckButton>
-            </FieldRow>
+              <FieldRow>
+                <UnderlinedInput>
+                  <Input
+                    value={userId}
+                    onChange={(event) => handleUserIdChange(event.target.value)}
+                    placeholder=""
+                    size="md"
+                    width="100%"
+                  />
+                </UnderlinedInput>
 
-            {isUserIdChecked && <SuccessMessage>사용 가능한 아이디입니다.</SuccessMessage>}
+                <CheckButton type="button" onClick={checkUserId}>
+                  중복 확인
+                </CheckButton>
+              </FieldRow>
 
-            <FieldRow>
-              <InputBox>
-                <Input
-                  value={nickname}
-                  onChange={(event) => handleNicknameChange(event.target.value)}
-                  placeholder="이름"
-                  size="md"
-                />
-              </InputBox>
+              {isUserIdChecked && <SuccessMessage>사용 가능한 아이디입니다.</SuccessMessage>}
+            </FieldGroup>
 
-              <CheckButton type="button" onClick={checkNickname}>
-                확인
-              </CheckButton>
-            </FieldRow>
+            <FieldGroup>
+              <FieldLabel htmlFor="nickname">이름</FieldLabel>
 
-            {isNicknameChecked && <SuccessMessage>사용 가능한 이름입니다.</SuccessMessage>}
+              <FieldRow>
+                <UnderlinedInput>
+                  <Input
+                    value={nickname}
+                    onChange={(event) => handleNicknameChange(event.target.value)}
+                    placeholder="프로필 이름 입력"
+                    size="md"
+                    width="100%"
+                  />
+                </UnderlinedInput>
+
+                <CheckButton type="button" onClick={checkNickname}>
+                  확인
+                </CheckButton>
+              </FieldRow>
+
+              {isNicknameChecked && <SuccessMessage>사용 가능한 이름입니다.</SuccessMessage>}
+            </FieldGroup>
           </Form>
 
           <NextButton type="button" disabled={!isNextEnabled} onClick={() => navigate('/')}>
@@ -145,8 +155,8 @@ const LogoSubtitle = styled.span`
 `;
 
 const Content = styled.section`
-  width: 420px;
-  margin: 70px auto 0;
+  width: 340px;
+  margin: 66px auto 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -155,36 +165,42 @@ const Content = styled.section`
 const TitleRow = styled.div`
   display: flex;
   align-items: center;
-  gap: ${tokens.spacing[10]};
-  margin-bottom: ${tokens.spacing[32]};
+  gap: ${tokens.spacing[12]};
+`;
+
+const Recobot = styled.img`
+  width: 32px;
+  height: 32px;
 `;
 
 const Title = styled.h1`
   margin: 0;
-  font-size: ${tokens.fontSize.title};
-  font-weight: ${tokens.fontWeight.bold};
-`;
-
-const Recobot = styled.img`
-  width: 38px;
-  height: 38px;
+  font-size: ${tokens.fontSize.page};
+  font-weight: ${tokens.fontWeight.semibold};
 `;
 
 const ProfileArea = styled.div`
+  margin-top: 50px;
   display: flex;
   flex-direction: column;
   align-items: center;
 `;
 
 const UploadButton = styled.button`
-  margin-top: ${tokens.spacing[10]};
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: ${tokens.colors.text.extraLight};
+  height: 30px;
+  margin-top: ${tokens.spacing[20]};
+  padding: 0 14px;
+  border: 1px solid ${tokens.colors.border.primary};
+  border-radius: ${tokens.radius.sm};
+  background: ${tokens.colors.button.white};
+  color: ${tokens.colors.text.light};
   font-family: inherit;
-  font-size: ${tokens.fontSize.md};
+  font-size: ${tokens.fontSize.sm};
   cursor: pointer;
+
+  &:active {
+    opacity: 0.6;
+  }
 `;
 
 const HiddenFileInput = styled.input`
@@ -193,53 +209,78 @@ const HiddenFileInput = styled.input`
 
 const Form = styled.div`
   width: 100%;
-  margin-top: ${tokens.spacing[32]};
+  margin-top: 58px;
   display: flex;
   flex-direction: column;
-  gap: ${tokens.spacing[12]};
+  gap: 34px;
+`;
+
+const FieldGroup = styled.div`
+  width: 100%;
+`;
+
+const FieldLabel = styled.label`
+  display: block;
+  margin-bottom: ${tokens.spacing[8]};
+  color: ${tokens.colors.text.primary};
+  font-size: ${tokens.fontSize.md};
+  font-weight: ${tokens.fontWeight.medium};
 `;
 
 const FieldRow = styled.div`
   display: flex;
-  gap: ${tokens.spacing[10]};
+  align-items: flex-end;
+  gap: ${tokens.spacing[12]};
 `;
 
-const InputBox = styled.div`
+const UnderlinedInput = styled.div`
   flex: 1;
-  border: 1px solid ${tokens.colors.border.primary};
-  border-radius: ${tokens.radius.sm};
+  height: 42px;
+  border-bottom: 1px solid ${tokens.colors.border.secondary};
 `;
 
 const CheckButton = styled.button`
-  width: 84px;
+  flex-shrink: 0;
+  height: 34px;
+  padding: 0 14px;
   border: 1px solid ${tokens.colors.border.primary};
   border-radius: ${tokens.radius.sm};
   background: ${tokens.colors.button.white};
+  color: ${tokens.colors.text.primary};
   font-family: inherit;
-  font-size: ${tokens.fontSize.md};
+  font-size: ${tokens.fontSize.sm};
   cursor: pointer;
+
+  &:active {
+    opacity: 0.6;
+  }
 `;
 
 const SuccessMessage = styled.p`
-  margin: -6px 0 0;
+  margin: ${tokens.spacing[8]} 0 0;
   color: ${tokens.colors.text.extraLight};
   font-size: ${tokens.fontSize.sm};
 `;
 
 const NextButton = styled.button`
-  width: 100%;
-  height: 44px;
-  margin-top: ${tokens.spacing[32]};
+  width: 130px;
+  height: 42px;
+  margin-top: 72px;
   border: none;
   border-radius: ${tokens.radius.sm};
   background: ${tokens.colors.button.black};
   color: ${tokens.colors.button.white};
   font-family: inherit;
-  font-size: ${tokens.fontSize.lg};
+  font-size: ${tokens.fontSize.md};
   cursor: pointer;
 
   &:disabled {
-    background: ${tokens.colors.button.disabled};
+    background: ${tokens.colors.button.primary};
+    color: ${tokens.colors.text.primary};
     cursor: not-allowed;
+  }
+
+  &:not(:disabled):active {
+    opacity: 0.7;
   }
 `;
