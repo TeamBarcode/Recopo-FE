@@ -2,17 +2,15 @@
 import styled from 'styled-components';
 import React from 'react';
 
+import { tokens } from '@/styles/tokens';
+
 /*
 여러 줄 텍스트 입력 컴포넌트
 예: 댓글 입력, 브레인스토밍 내용 입력
 */
 
 /*Props 타입 정의*/
-interface TextAreaProps {
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  placeholder?: string;
-  disabled?: boolean;
+interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   size?: 'sm' | 'md';
   width?: string;
 }
@@ -24,33 +22,36 @@ const widthMap = {
 };
 
 /*스타일*/
-const StyledTextArea = styled.textarea<{ size: 'sm' | 'md'; width?: string }>`
-  width: ${({ size, width }) => width || widthMap[size]};
+const StyledTextArea = styled.textarea<{
+  $size: 'sm' | 'md';
+  $width?: string;
+}>`
+  width: ${({ $size, $width }) => $width || widthMap[$size]};
   border: none;
-  border-radius: 10px;
+  border-radius: ${tokens.radius.sm};
   background-color: transparent;
-  color: #000000;
+  color: ${tokens.colors.text.primary};
   resize: none;
   box-sizing: border-box;
 
-  ${({ size }) =>
-    size === 'sm' &&
+  ${({ $size }) =>
+    $size === 'sm' &&
     `
       min-height: 200px;
-      padding: 8px 10px;
+      padding: ${tokens.spacing[8]} ${tokens.spacing[10]};
       font-size: 13px;
     `}
 
-  ${({ size }) =>
-    size === 'md' &&
+  ${({ $size }) =>
+    $size === 'md' &&
     `
       min-height: 120px;
-      padding: 12px;
+      padding: ${tokens.spacing[12]};
       font-size: 15px;
     `}
 
   &::placeholder {
-    color: #9e9e9e;
+    color: ${tokens.colors.text.placeholder};
   }
 
   &:focus {
@@ -63,24 +64,8 @@ const StyledTextArea = styled.textarea<{ size: 'sm' | 'md'; width?: string }>`
 `;
 
 /*TextArea 컴포넌트 정의*/
-function TextArea({
-  value,
-  onChange,
-  placeholder,
-  disabled = false,
-  size = 'md',
-  width,
-}: TextAreaProps) {
-  return (
-    <StyledTextArea
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      disabled={disabled}
-      size={size}
-      width={width}
-    />
-  );
+function TextArea({ size = 'md', width, ...textAreaProps }: TextAreaProps) {
+  return <StyledTextArea {...textAreaProps} $size={size} $width={width} />;
 }
 
 export default TextArea;
