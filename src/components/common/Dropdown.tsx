@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { tokens } from '@/styles/tokens';
 
@@ -23,7 +23,11 @@ interface DropdownProps {
 const StyledTrigger = styled.button<{
   size: string;
   isOpen: boolean;
+  $width?: number;
 }>`
+  ${({ $width }) => $width && `width: ${$width}px;`} 
+  box-sizing: border-box;
+  text-align: center;
   background-color: ${tokens.colors.button.primary};
   color: ${tokens.colors.text.primary};
   outline: none;
@@ -75,10 +79,12 @@ const StyledTrigger = styled.button<{
 `;
 
 const StyledContent = styled.div<{ size: string }>`
+  position: absolute;
+  z-index: 10;
+  min-width: 100%;
+  width: max-content;
   background-color: ${tokens.colors.border.secondary};
   border-radius: 0 0 ${tokens.radius.xs} ${tokens.radius.xs};
-  position: absolute;
-  width: 100%;
 
   ${({ size }) =>
     size === 'sm' &&
@@ -92,6 +98,11 @@ const StyledContent = styled.div<{ size: string }>`
       font-size: ${tokens.fontSize.md};
     `}
 `;
+/* 
+position: absolute — 목록이 문서 흐름에서 빠져나와 "둥둥 뜬 채로" 그려지게 함. 이래야 목록이 열려도 Toolbar나 다른 요소들이 안 밀림 (이게 핵심 이유)
+min-width: 100% — 옵션이 다 짧아도, 목록 박스가 트리거 버튼보다 좁아 보이진 않게 최소 크기 보장
+width: max-content — "콘텐츠/미디어"처럼 긴 옵션이 있으면, 그 옵션이 한 줄로 다 들어갈 만큼 박스가 알아서 넓어짐 (처음에 두 줄 되던 문제 해결)
+*/
 
 const StyledItem = styled.div<{ size: string }>`
   color: ${tokens.colors.text.primary};
@@ -116,10 +127,12 @@ const StyledItem = styled.div<{ size: string }>`
     `}
 `; /*아이템 한 칸 높이를 카테고리 높이랑 맞추기 위해 고정값을 넣음*/
 
+
 const Wrapper = styled.div`
   position: relative;
   display: inline-block;
 `;
+
 
 /*Dropdown 컴포넌트 정의*/
 function Dropdown({
@@ -134,12 +147,25 @@ function Dropdown({
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
+  /*useState는 잰 숫자(너비값)를 기억해뒀다가 나중에 StyledTrigger한테 넘겨줌*/
+  const [contentWidth, setContentWidth] = useState<number>();
+  const contentRef = useRef<HTMLDivElement>(null);
+  
+  //useLayoutEffect는 "이 컴포넌트가 화면에 그려진 직후, 근데 사용자 눈에 실제로 보이기 전에 실행해라"는 훅
+  useLayoutEffect(() => {
+    if (isOpen && contentRef.current) {
+      setContentWidth(contentRef.current.offsetWidth);
+    }
+  }, [isOpen]);
+
   /*드롭다운 바깥 영역을 클릭하면 닫기*/
   useEffect(() => {
     if (!isOpen) return;
 
     const handleOutsideClick = (event: MouseEvent) => {
+      console.log('바깥 클릭 감지됨, 대상:', event.target);
       if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        console.log('→ 바깥이라고 판단, 닫음');
         setIsOpen(false);
       }
     };
@@ -165,6 +191,7 @@ function Dropdown({
         size={size}
         isOpen={isOpen}
         disabled={disabled}
+        $width={isOpen ? contentWidth : undefined}
         onClick={() => {
           if (!disabled) {
             setIsOpen((previous) => !previous);
@@ -175,12 +202,13 @@ function Dropdown({
       </StyledTrigger>
 
       {isOpen && (
-        <StyledContent size={size}>
+        <StyledContent ref={contentRef} size={size}>
           {options.map((option) => (
             <StyledItem
               key={option}
               size={size}
               onClick={() => {
+                console.log('클릭됨:', option, '현재 value:', value);
                 onChange(option === value ? '' : option);
                 setIsOpen(false);
               }}

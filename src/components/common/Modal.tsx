@@ -81,15 +81,15 @@ const ModalWrapper = styled.div<{
   ${({ type }) =>
     type === 'confirm' &&
     `
-      width: 430px;
-      height: 218px;
+      width: 320px;
+      height: 160px;
       border-radius: ${tokens.radius.lg};
       padding: 0;
     `}
 `;
 
 const ConfirmContent = styled.div`
-  height: 141px;
+  height: 105px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -104,7 +104,7 @@ const ConfirmMessage = styled.p`
 `;
 
 const ConfirmButtonWrapper = styled.div`
-  height: 77px;
+  height: 55px;
   display: flex;
 `;
 
@@ -113,7 +113,7 @@ const ConfirmButton = styled.button<{
 }>`
   flex: 1;
   border: none;
-  font-size: ${tokens.fontSize.page};
+  font-size: ${tokens.fontSize.xl};
 
   ${({ variant }) =>
     variant === 'confirm' &&
