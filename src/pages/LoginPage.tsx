@@ -1,5 +1,7 @@
+import LoginEntry from '@/features/auth/components/loginEntry';
+
 function LoginPage() {
-  return <div>LoginPage</div>;
+  return <LoginEntry />;
 }
 
 export default LoginPage;

@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 
 import Layout from '@/components/layout/Layout';
 import FriendsPage from '@/pages/FriendsPage';
@@ -9,13 +9,15 @@ import MyPage from '@/pages/MyPage';
 import SignupPage from '@/pages/SignupPage';
 import ProfileSetupPage from '@/pages/ProfileSetupPage';
 
+const isLoggedIn = false; // TODO: 로그인 API 연동되면 실제 로그인 상태로 교체
+
 const router = createBrowserRouter([
   {
     element: <Layout />,
     children: [
       {
         path: '/',
-        element: <HomePage />,
+        element: isLoggedIn ? <HomePage /> : <Navigate to="/login" replace />,
       },
       {
         path: '/ideas',

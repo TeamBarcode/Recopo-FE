@@ -1,6 +1,8 @@
 /*import*/
 import styled from 'styled-components';
-import React from 'react';
+import React, { useEffect } from 'react';
+
+import { tokens } from '@/styles/tokens';
 
 /*
 모달 컴포넌트
@@ -9,29 +11,39 @@ confirm : 확인 팝업 모달
 */
 
 /*Props 타입 정의*/
-interface ModalProps {
-  type?: 'default' | 'confirm';
+interface CommonModalProps {
   size?: 'sm' | 'lg';
   isOpen: boolean;
   onClose: () => void;
+  className?: string;
+}
+
+interface DefaultModalProps extends CommonModalProps {
+  type?: 'default';
   children?: React.ReactNode;
+}
+
+interface ConfirmModalProps extends CommonModalProps {
+  type: 'confirm';
   message?: string;
   confirmText?: string;
   cancelText?: string;
-  onConfirm?: () => void;
+  onConfirm: () => void;
 }
+
+type ModalProps = DefaultModalProps | ConfirmModalProps;
 
 /*기본 모달 사이즈*/
 const defaultSizeMap = {
   sm: `
     width: 360px;
     min-height: 240px;
-    padding: 24px;
+    padding: ${tokens.spacing[24]};
   `,
   lg: `
     width: 560px;
     min-height: 480px;
-    padding: 24px;
+    padding: ${tokens.spacing[24]};
   `,
 };
 
@@ -49,8 +61,11 @@ const ModalOverlay = styled.div`
   z-index: 1000;
 `;
 
-const ModalWrapper = styled.div<{ type: 'default' | 'confirm'; size: 'sm' | 'lg' }>`
-  background-color: #ffffff;
+const ModalWrapper = styled.div<{
+  type: 'default' | 'confirm';
+  size: 'sm' | 'lg';
+}>`
+  background-color: ${tokens.colors.background};
   border: none;
   box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.25);
   box-sizing: border-box;
@@ -59,22 +74,22 @@ const ModalWrapper = styled.div<{ type: 'default' | 'confirm'; size: 'sm' | 'lg'
   ${({ type, size }) =>
     type === 'default' &&
     `
-      border-radius: 18px;
+      border-radius: ${tokens.radius.lg};
       ${defaultSizeMap[size]}
     `}
 
   ${({ type }) =>
     type === 'confirm' &&
     `
-      width: 430px;
-      height: 218px;
-      border-radius: 18px;
+      width: 320px;
+      height: 160px;
+      border-radius: ${tokens.radius.lg};
       padding: 0;
     `}
 `;
 
 const ConfirmContent = styled.div`
-  height: 141px;
+  height: 105px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -82,34 +97,36 @@ const ConfirmContent = styled.div`
 
 const ConfirmMessage = styled.p`
   margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-  color: #000000;
+  font-size: ${tokens.fontSize.page};
+  font-weight: ${tokens.fontWeight.semibold};
+  color: ${tokens.colors.text.primary};
   text-align: center;
 `;
 
 const ConfirmButtonWrapper = styled.div`
-  height: 77px;
+  height: 55px;
   display: flex;
 `;
 
-const ConfirmButton = styled.button<{ variant: 'confirm' | 'cancel' }>`
+const ConfirmButton = styled.button<{
+  variant: 'confirm' | 'cancel';
+}>`
   flex: 1;
   border: none;
-  font-size: 20px;
+  font-size: ${tokens.fontSize.xl};
 
   ${({ variant }) =>
     variant === 'confirm' &&
     `
-      background-color: #e5e5e5;
-      color: #000000;
+      background-color: #E5E5E5;
+      color: ${tokens.colors.text.primary};
     `}
 
   ${({ variant }) =>
     variant === 'cancel' &&
     `
       background-color: #444444;
-      color: #ffffff;
+      color: ${tokens.colors.button.white};
     `}
 
   &:active {
@@ -118,39 +135,62 @@ const ConfirmButton = styled.button<{ variant: 'confirm' | 'cancel' }>`
 `;
 
 /*Modal 컴포넌트 정의*/
-function Modal({
-  type = 'default',
-  size = 'sm',
-  isOpen,
-  onClose,
-  children,
-  message = '팝업창 확인 문구',
-  confirmText = '네',
-  cancelText = '아니오',
-  onConfirm,
-}: ModalProps) {
+function Modal(props: ModalProps) {
+  const { size = 'sm', isOpen, onClose, className } = props;
+
+  /*Escape로 닫기 + 모달이 열려 있는 동안 배경 스크롤 막기*/
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
+
+  const modalType = props.type === 'confirm' ? 'confirm' : 'default';
 
   return (
     <ModalOverlay onClick={onClose}>
-      <ModalWrapper type={type} size={size} onClick={(e) => e.stopPropagation()}>
-        {type === 'default' && children}
-
-        {type === 'confirm' && (
+      <ModalWrapper
+        type={modalType}
+        size={size}
+        className={className}
+        role="dialog"
+        aria-modal="true"
+        onClick={(event) => event.stopPropagation()}
+      >
+        {props.type === 'confirm' ? (
           <>
             <ConfirmContent>
-              <ConfirmMessage>{message}</ConfirmMessage>
+              <ConfirmMessage>{props.message ?? '팝업창 확인 문구'}</ConfirmMessage>
             </ConfirmContent>
 
             <ConfirmButtonWrapper>
-              <ConfirmButton variant="confirm" onClick={onConfirm}>
-                {confirmText}
+              <ConfirmButton type="button" variant="confirm" onClick={props.onConfirm}>
+                {props.confirmText ?? '네'}
               </ConfirmButton>
-              <ConfirmButton variant="cancel" onClick={onClose}>
-                {cancelText}
+
+              <ConfirmButton type="button" variant="cancel" onClick={onClose}>
+                {props.cancelText ?? '아니오'}
               </ConfirmButton>
             </ConfirmButtonWrapper>
           </>
+        ) : (
+          props.children
         )}
       </ModalWrapper>
     </ModalOverlay>

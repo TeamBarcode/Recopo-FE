@@ -19,7 +19,7 @@ function Header() {
           {({ isActive }) => (
             <IconWrapper>
               <HomeIcon color={isActive ? ACTIVE_COLOR : INACTIVE_COLOR} />
-              <NavLabel>Home</NavLabel>
+              <NavLabel $top={35}>Home</NavLabel>
             </IconWrapper>
           )}
         </NavButton>
@@ -28,7 +28,7 @@ function Header() {
           {({ isActive }) => (
             <IconWrapper>
               <CloudIcon color={isActive ? ACTIVE_COLOR : INACTIVE_COLOR} />
-              <NavLabel>Idea</NavLabel>
+              <NavLabel $top={undefined}>Idea</NavLabel>
             </IconWrapper>
           )}
         </NavButton>
@@ -37,7 +37,7 @@ function Header() {
           {({ isActive }) => (
             <IconWrapper>
               <StarIcon color={isActive ? ACTIVE_COLOR : INACTIVE_COLOR} />
-              <NavLabel>Friends</NavLabel>
+              <NavLabel $top={undefined}>Friends</NavLabel>
             </IconWrapper>
           )}
         </NavButton>
@@ -235,8 +235,11 @@ const IconWrapper = styled.div`
   }
 `;
 
-const NavLabel = styled.span`
+const NavLabel = styled.span<{ $top?: number }>`
   position: absolute;
+  left : 50%;
+  top: ${({ $top }) => ($top !== undefined ? `${$top}px` : '50%')};
+  transform: ${({ $top }) => ($top !== undefined ? 'translateX(-50%)' : 'translate(-50%, -50%)')};
   z-index: 1;
   color: #111111;
   font-size: 15px;
@@ -246,6 +249,11 @@ const NavLabel = styled.span`
     font-size: 13px;
   }
 `;
+/* 
+<NavLabel $top={35}>Home</NavLabel>  Home만 별도 지정
+$top prop을 안 주면(Idea, Friends) → top: 50% + transform: translate(-50%, -50%)로 IconWrapper(112×80) 박스 정중앙에 고정
+$top prop을 주면(Home만) → 그 값을 텍스트 윗변 위치로 직접 쓰고, 가로만 translateX(-50%)로 중앙 정렬
+*/
 
 const RightArea = styled.div`
   width: 240px;
