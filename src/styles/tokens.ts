@@ -1,6 +1,19 @@
 export const colors = {
   background: '#FFFFFF',
-  card: '#FFFD92',
+
+  category: {
+    contentMedia: '#FFFD92',
+    lifestyle: '#FDD6E8',
+    health: '#CAFF91',
+    workTool: '#A3E9FD',
+    developmentDesign: '#D4CAFD',
+    people: '#DDCAB0',
+    other: '#E1E1E1',
+  },
+
+  tag: {
+    brainstorm: 'rgba(0, 0, 0, 0.1)',
+  },
 
   text: {
     primary: '#000000',
