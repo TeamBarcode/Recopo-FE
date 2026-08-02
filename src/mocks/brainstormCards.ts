@@ -53,18 +53,42 @@ export interface CreateBrainstormCardRequest {
   tags?: string[];
 }
 
-export const createMockBrainstromCard = async (
+export const createMockBrainstormCard = async (
   request: CreateBrainstormCardRequest,
 ): Promise<BrainstormCard> => {
   await new Promise((r) => setTimeout(r, 500));
 
-  return {
+  const newCard : BrainstormCard = {
     id: `card_${Date.now()}`,
     title: request.title,
     content: request.content,
     tags: request.tags,
     category: request.category,
     createdAt: '2026.07.04',
+  };
+
+  mockBrainstormCards.push(newCard);
+  // 실제 서버라면 DB에 저장되는 부분. mock이라 그냥 배열에 추가해서
+  // 이후 fetchMockCards / 상세 조회에서도 이 카드가 조회되게 함
+
+  return newCard;
+};
+
+//카드 하나 조회하는 함수
+export const fetchMockCardDetail = async (
+  cardId : string
+  ): Promise<BrainstormCardDetail> => {
+  await new Promise((r) => setTimeout(r, 300));
+
+  const card = mockBrainstormCards.find((c) => c.id === cardId);
+  if(!card){
+    throw {message : '존재하지 않는 카드예요'};
+  }
+
+  return {
+    ...card,
+    recoBotResult : null,
+    // 방금 새로 만든 카드는 아직 RecoBot 추천을 받은 적 없는 상태니까 null로 시작
   };
 };
 
@@ -124,19 +148,23 @@ export interface UpdateBrainstormCardRequest {
 export const UpdateMockBrainstormCard = async (
   cardId: string,
   request: UpdateBrainstormCardRequest,
-): Promise<UpdateBrainstormCardRequest> => {
+): Promise<BrainstormCard> => {
   await new Promise((r) => setTimeout(r, 500));
 
-  //request에 id, createdAt이 없으므로 카들르 찾아서 새 값으로 덮어써야됨
-  // id = card2 → { id: 'card2', title: '스터디 매칭 서비스', ... } 이 객체를 찾아서 돌려줌
-  const existingCard = mockBrainstormCards.find((c) => c.id === cardId);
-  if (!existingCard) {
-    throw { message: '존재하지 않는 카드예요' };
+  const index = mockBrainstormCards.findIndex((c) => c.id === cardId);
+  if(index === -1){
+    throw {message: '존재하지 않는 카드예요'};
   }
-  return {
-    ...existingCard, // 먼저 기존 카드 필드를 다 펼침
-    ...request, // 그 위에 request 필드를 덮어씀
-  };
+
+  const updatedCard : BrainstormCard = {
+    ...mockBrainstormCards[index], // 기존 카드 필드 다 펼침
+    ...request, //그 위에 새로 입력한 값으로 덮어씀
+  }
+
+  mockBrainstormCards[index] = updatedCard;
+  //배열의 해당 인덱스를 새 객체로 실제로 교체함
+
+  return updatedCard;
 };
 
 // ===== 카드 삭제 =====
@@ -147,10 +175,12 @@ export const deleteMockBrainstormCard = async (
   await new Promise((r) => setTimeout(r, 500));
 
   //배열을 하나씩 보면서 이 카드의 id가 지우려는 cardId랑 같은 게 있는지 체크
-  const exists = mockBrainstormCards.some((c) => c.id === cardId);
-  if (!exists) {
+  const index = mockBrainstormCards.findIndex((c) => c.id === cardId);
+  if (index === -1) {
     throw { message: '존재하지 않는 카드예요' };
   }
+  mockBrainstormCards.splice(index, 1)
+  //findIndex로 지울 카드의 배열 위치를 찾고, splice로 그위치에서 실제로 1개를 제거함.
 
   return { success: true };
 };
