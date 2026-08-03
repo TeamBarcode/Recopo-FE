@@ -7,6 +7,8 @@ import IdeaPage from '@/pages/IdeaPage';
 import IdeaDetailPage from '@/pages/IdeaDetailPage';
 import LoginPage from '@/pages/LoginPage';
 import MyPage from '@/pages/MyPage';
+import EditProfilePage from '@/pages/EditProfilePage';
+import LikedIdeasPage from '@/pages/LikedIdeasPage';
 import SignupPage from '@/pages/SignupPage';
 import ProfileSetupPage from '@/pages/ProfileSetupPage';
 import RecordPage from '@/pages/RecordPage';
@@ -50,6 +52,14 @@ const router = createBrowserRouter([
       {
         path: '/mypage',
         element: <MyPage />,
+      },
+      {
+        path: '/mypage/edit',
+        element: <EditProfilePage />,
+      },
+      {
+        path: '/mypage/liked',
+        element: <LikedIdeasPage />,
       },
     ],
   },

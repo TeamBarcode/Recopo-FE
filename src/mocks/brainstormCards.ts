@@ -24,7 +24,7 @@ export const mockBrainstormCards: BrainstormCard[] = [
     title: 'React Todo 앱',
     content: '할 일 추가·삭제·완료 기능이 있는 Todo 앱. 상태 관리 라이브러리도 같이 써보고 싶음.',
     tags: ['#React', '#몰라'],
-    category: '생산성',
+    category: '업무/도구',
     createdAt: '2026.06.24',
   },
   {
@@ -32,7 +32,7 @@ export const mockBrainstormCards: BrainstormCard[] = [
     title: '스터디 매칭 서비스',
     content: '근처에서 같은 과목 공부하는 사람 찾기',
     tags: ['#학습'],
-    category: '교육',
+    category: '사람',
     createdAt: '2026.06.20',
   },
   {

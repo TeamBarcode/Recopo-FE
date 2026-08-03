@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import {useNavigate} from 'react-router-dom';
 import Tag from '@/components/common/Tag';
 import {tokens} from '@/styles/tokens';
+import {useCardColorSettingStore} from '@/store/cardColorSettingStore';
 import tape from '@/assets/tape.svg';
 
 interface BrainstormCardPreviewProps {
@@ -10,8 +11,24 @@ interface BrainstormCardPreviewProps {
 }
 // 카드마다 다른 데이터를 보여줘야 하니까, 어떤 카드를 그릴지 부모(BrainstormBoard)한테서 값을 받아와야 함 → props로 전달받음
 
+const CATEGORY_COLOR_MAP : Record<string, string> = {
+    '콘텐츠/미디어': tokens.colors.category.contentMedia,
+    '생활': tokens.colors.category.lifestyle,
+    '건강': tokens.colors.category.health,
+    '업무/도구': tokens.colors.category.workTool,
+    '개발/디자인': tokens.colors.category.developmentDesign,
+    '사람': tokens.colors.category.people,
+    '기타': tokens.colors.category.other,
+};
+
+const DEFAULT_CARD_COLOR = '#FFFD92';
+
 function BrainstormCardPreview({card}: BrainstormCardPreviewProps) {
     const navigate = useNavigate();
+    const isCategoryColorEnabled = useCardColorSettingStore((state) => state.isCategoryColorEnabled);
+    const backgroundColor = isCategoryColorEnabled
+        ? CATEGORY_COLOR_MAP[card.category] ?? DEFAULT_CARD_COLOR
+        : DEFAULT_CARD_COLOR;
 
     const handleClick = () => {
         navigate(`/brainstorm/${card.id}`);
@@ -32,7 +49,7 @@ function BrainstormCardPreview({card}: BrainstormCardPreviewProps) {
     };
 
     return (
-        <CardWrapper draggable onDragStart={handleDragStart} onClick={handleClick}>
+        <CardWrapper $color={backgroundColor} draggable onDragStart={handleDragStart} onClick={handleClick}>
             <Tape src={tape} alt="" />
             <StatusDot>
                 <Dot $filled />
@@ -56,13 +73,13 @@ function BrainstormCardPreview({card}: BrainstormCardPreviewProps) {
 
 export default BrainstormCardPreview;
 
-const CardWrapper = styled.div`
+const CardWrapper = styled.div<{ $color : string }>`
     position : relative;
     display : flex;
     flex-direction : column;
     width : 196px;
     height : 211px;
-    background : #FFFD92;
+    background : ${({ $color }) => $color};
     padding : 35px 10px 10px 12px;
     cursor : grab;
     user-select : none;

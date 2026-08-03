@@ -89,11 +89,15 @@ function CardDetail({ onRecommend }: CardDetailProps, ref: React.ForwardedRef<Ca
         setIsSaveIdeaModalOpen(true);
     };
 
+    // 추천을 아직 안 받은 카드도 추천 결과 없이 바로 아이디어로 저장할 수 있게 함
+    const handleSaveIdeaWithoutRecoClick = () => {
+        setIsSaveIdeaModalOpen(true);
+    };
+
     // 공개(네) / 비공개(아니오) 버튼을 누르는 것 자체가 공개 여부 선택임
     const handleConfirmSaveIdea = async (isPublic: boolean) => {
         const selected: RecoItem | undefined = card.recoBotResult?.find((item) => item.id === selectedRecoId);
         setIsSaveIdeaModalOpen(false);
-        if (!selected) return;
 
         // 아이디어 상세 화면은 다른 팀원 담당이라 여기서는 저장만 하고 이동은 하지 않음
         await createMockIdeaFromRecommendation({
@@ -116,15 +120,16 @@ function CardDetail({ onRecommend }: CardDetailProps, ref: React.ForwardedRef<Ca
                     <SmallButton variant="danger" onClick={handleDelete}>삭제</SmallButton>
                 </TopRight>
 
-                <TitleRow>
-                    {/* card.title 표시 */}
-                    <Title>{card.title}</Title>
+                {/* card.title 표시 */}
+                <Title>{card.title}</Title>
+
+                <TagRow>
                     {/* card.tags?.map(tag => <Chip key={tag}>{tag}</Chip>) */}
                     {card.tags?.map((tag) => (
                         <Tag key={tag} variant="hashtag" usage="brainstorm">{tag}</Tag>
                     ))}
                     <Tag variant="hashtag" usage="brainstorm">{card.category}</Tag>
-                </TitleRow>
+                </TagRow>
 
                 <Content>{card.content}</Content>
 
@@ -136,7 +141,12 @@ function CardDetail({ onRecommend }: CardDetailProps, ref: React.ForwardedRef<Ca
             <RecoSection>
                 {card.recoBotResult === null ? (
                     <>
-                        <RecoSectionLabel>RecoBot의 추천결과</RecoSectionLabel>
+                        <NoRecoHeaderRow>
+                            <RecoSectionLabel>RecoBot의 추천결과</RecoSectionLabel>
+                            <RecoActionButton type="button" onClick={handleSaveIdeaWithoutRecoClick}>
+                                아이디어로 저장
+                            </RecoActionButton>
+                        </NoRecoHeaderRow>
                         <NoRecoState>
                             <NoRecoText>
                                 아직 추천받지 않은 아이디어예요.
@@ -258,15 +268,18 @@ const SmallButton = styled(Button)`
     border : none;
 `
 
-const TitleRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 21px; /* 제목-태그 사이 간격 */
-`;
-
-const Title = styled.span`
+const Title = styled.div`
   font-size: 20px;
   font-weight: ${tokens.fontWeight.regular};
+  margin-bottom: 18px;
+`;
+
+const TagRow = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
 `;
 
 const Content = styled.p`
@@ -313,6 +326,18 @@ const RecoHeaderRow = styled.div`
     display: flex;
     align-items: center;
     gap: 40px;
+    margin-bottom: 40px;
+
+    ${RecoSectionLabel} {
+        margin-bottom: 0;
+    }
+`;
+
+/* 추천을 아직 안 받은 상태에서도 라벨 옆에 '아이디어로 저장' 버튼을 둘 수 있게 함 */
+const NoRecoHeaderRow = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 41px;
     margin-bottom: 40px;
 
     ${RecoSectionLabel} {

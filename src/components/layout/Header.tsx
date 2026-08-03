@@ -5,6 +5,7 @@ import notificationIcon from '@/assets/notification.svg';
 import Avatar from '@/components/common/Avatar';
 import IconButton from '@/components/common/IconButton';
 import { tokens } from '@/styles/tokens';
+import { mockUser } from '@/mocks/user';
 
 function Header() {
   return (
@@ -59,7 +60,7 @@ function Header() {
             isActive ? (
               <MyPageActiveIcon>MY</MyPageActiveIcon>
             ) : (
-              <Avatar size="md" alt="프로필 이미지" />
+              <Avatar src={mockUser.profileImageUrl} size="md" alt="프로필 이미지" />
             )
           }
         </ProfileLink>
