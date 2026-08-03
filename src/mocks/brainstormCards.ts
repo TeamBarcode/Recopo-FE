@@ -10,6 +10,7 @@ export interface BrainstormCard {
   tags?: string[];
   category: string;
   createdAt: string;
+  hasRecommendation?: boolean; // 목록 조회 시 계산되는 파생 필드 (미리보기 카드 status dot 단계 표시용)
 }
 
 export interface BrainstormCardDetail extends BrainstormCard {
@@ -74,6 +75,23 @@ export const createMockBrainstormCard = async (
   return newCard;
 };
 
+// ===== 카드별로 "보관"하기로 확정한 RecoBot 추천 결과 =====
+// 카드 하나에 여러 개 쌓일 수 있음 (추천받기 → 보관 → 추천받기 → 보관 ...)
+const cardRecoResults: Record<string, RecoItem[]> = {};
+
+export const appendMockRecoResult = async (
+  cardId: string,
+  item: RecoItem,
+): Promise<RecoItem[]> => {
+  await new Promise((r) => setTimeout(r, 300));
+
+  const existing = cardRecoResults[cardId] ?? [];
+  const updated = [item, ...existing]; // 가장 최근에 보관한 게 목록 맨 위로
+  cardRecoResults[cardId] = updated;
+
+  return updated;
+};
+
 //카드 하나 조회하는 함수
 export const fetchMockCardDetail = async (
   cardId : string
@@ -87,8 +105,8 @@ export const fetchMockCardDetail = async (
 
   return {
     ...card,
-    recoBotResult : null,
-    // 방금 새로 만든 카드는 아직 RecoBot 추천을 받은 적 없는 상태니까 null로 시작
+    recoBotResult : cardRecoResults[cardId] ?? null,
+    // 보관된 추천 결과가 있으면 그걸, 없으면 아직 추천 안 받은 상태이므로 null
   };
 };
 
@@ -123,7 +141,11 @@ export const fetchMockCards = async (
     );
   }
 
-  return result;
+  // 카드마다 보관된 추천 결과가 있는지 계산해서 붙임 (미리보기 카드 status dot 단계 표시용)
+  return result.map((card) => ({
+    ...card,
+    hasRecommendation: (cardRecoResults[card.id]?.length ?? 0) > 0,
+  }));
 };
 
 // ===== 상세 mock 데이터 (추천 받은 경우 / 안 받은 경우) =====

@@ -132,6 +132,24 @@ export const mockIdeaDetail: IdeaDetail = {
 };
 
 
+// ===== 아이디어 상세 조회 (id로 하나) =====
+export const fetchMockIdeaDetail = async (ideaId: string): Promise<IdeaDetail> => {
+  await new Promise((r) => setTimeout(r, 300));
+
+  const idea = mockIdeaCards.find((i) => i.id === ideaId);
+  if (!idea) {
+    throw { message: '존재하지 않는 아이디어예요' };
+  }
+
+  return {
+    ...idea,
+    keywords: [],
+    expectedFeatures: [],
+    techStack: [],
+    comments: [],
+  };
+};
+
 // ===== 목록 조회 + 필터링 가짜 서버 로직 =====
 export const fetchMockIdeas = async (
     visibility? : '전체' | '공개' | '비공개',
@@ -170,6 +188,40 @@ export const fetchMockIdeas = async (
     }
 
     return result;
+};
+
+// ===== RecoBot 추천 결과 → 아이디어로 저장 =====
+export interface CreateIdeaFromRecommendationRequest {
+  cardTitle: string;
+  cardContent: string;
+  category: string;
+  tags?: string[];
+  recoItem: RecoItem;
+  isPublic: boolean;
+}
+
+export const createMockIdeaFromRecommendation = async (
+  request: CreateIdeaFromRecommendationRequest,
+): Promise<IdeaCard> => {
+  await new Promise((r) => setTimeout(r, 500));
+
+  const newIdea: IdeaCard = {
+    id: `idea_${Date.now()}`,
+    authorId: mockUser.id,
+    title: request.cardTitle,
+    summary: request.cardContent,
+    tags: request.tags,
+    category: request.category,
+    recoBotResult: [request.recoItem],
+    createdAt: new Date().toISOString(),
+    isPublic: request.isPublic,
+    likeCount: 0,
+    likedByMe: false,
+    commentCount: 0,
+  };
+
+  mockIdeaCards.push(newIdea);
+  return newIdea;
 };
 
 // ===== 아이디어 수정 =====

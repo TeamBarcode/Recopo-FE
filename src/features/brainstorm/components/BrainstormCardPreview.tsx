@@ -17,21 +17,35 @@ function BrainstormCardPreview({card}: BrainstormCardPreviewProps) {
         navigate(`/brainstorm/${card.id}`);
     };
 
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+        e.dataTransfer.setData(
+            'application/json',
+            JSON.stringify({
+                id: card.id,
+                title: card.title,
+                content: card.content,
+                category: card.category,
+                tags: card.tags,
+            }),
+        );
+        e.dataTransfer.effectAllowed = 'copy';
+    };
+
     return (
-        <CardWrapper onClick={handleClick}>
+        <CardWrapper draggable onDragStart={handleDragStart} onClick={handleClick}>
             <Tape src={tape} alt="" />
             <StatusDot>
-                <Dot />
-                <Dot />
-                <Dot />
+                <Dot $filled />
+                <Dot $filled={!!card.hasRecommendation} />
+                <Dot $filled={false} />
             </StatusDot>
             <Title>{card.title}</Title>
             <Content>{card.content}</Content>
             <TagRow>
                 {card.tags?.map((tag)=>(
-                    <Tag key={tag}>{tag}</Tag>
+                    <Tag key={tag} variant="hashtag" usage="brainstorm">{tag}</Tag>
                 ))}
-                <Tag>{card.category}</Tag>
+                <Tag variant="hashtag" usage="brainstorm">{card.category}</Tag>
             </TagRow>
             <DateBadge>
                 <DateText>{card.createdAt}</DateText>
@@ -50,6 +64,9 @@ const CardWrapper = styled.div`
     height : 211px;
     background : #FFFD92;
     padding : 35px 10px 10px 12px;
+    cursor : grab;
+    user-select : none;
+    -webkit-user-select : none;
 `;
 
 const Tape = styled.img`
@@ -66,8 +83,10 @@ const StatusDot = styled.div`
     gap : 4px;
 `;
 
-const Dot = styled.div`
-    background : #FF1313;
+const Dot = styled.div<{ $filled: boolean }>`
+    background : ${({ $filled }) => ($filled ? '#FF1313' : 'transparent')};
+    border : 1px solid #FF1313;
+    box-sizing : border-box;
     width : 5px;
     height : 5px;
     border-radius : 50%;

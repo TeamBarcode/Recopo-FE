@@ -1,12 +1,21 @@
+import { useRef } from 'react';
 import CardDetail from '@/features/brainstorm/components/CardDetail';
+import type { CardDetailHandle } from '@/features/brainstorm/components/CardDetail';
 import RecoBotPanel from '@/features/recobot/components/RecoBotPanel';
+import type { RecoBotPanelHandle } from '@/features/recobot/components/RecoBotPanel';
 import styled from 'styled-components';
 
 function BrainstormDetailPage() {
+    const recoBotPanelRef = useRef<RecoBotPanelHandle>(null);
+    const cardDetailRef = useRef<CardDetailHandle>(null);
+
     return (
         <DetailGrid>
-            <CardDetail />
-            <RecoBotPanel />
+            <CardDetail
+                ref={cardDetailRef}
+                onRecommend={(card) => recoBotPanelRef.current?.requestRecommendation(card)}
+            />
+            <RecoBotPanel ref={recoBotPanelRef} onSaved={() => cardDetailRef.current?.refetch()} />
         </DetailGrid>
     );
 }

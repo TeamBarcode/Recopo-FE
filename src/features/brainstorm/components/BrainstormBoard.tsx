@@ -23,7 +23,10 @@ function BrainstormBoard(){
 
     useEffect(() => {
         console.log('category 바뀜:', category);
-        fetchMockCards(category, sort as 'latest' | 'oldest', search).then(setCards);
+        // 드롭다운 옵션 자체가 한글 라벨('최신순'/'오래된순')이라, fetchMockCards가 기대하는
+        // 영문 값('latest'/'oldest')으로 변환해서 넘겨야 실제로 정렬이 적용됨
+        const sortBy = sort === '최신순' ? 'latest' : sort === '오래된순' ? 'oldest' : undefined;
+        fetchMockCards(category, sortBy, search).then(setCards);
         //categort, sort, search 중 하나라도 바뀌면 다시 불러옴
     }, [category, sort, search]);
 
