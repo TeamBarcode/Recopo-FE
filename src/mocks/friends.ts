@@ -147,7 +147,7 @@ export const searchMockUsers = async (
 
 // ===== 친구 요청 보내기 (내가 남에게) =====
 export const sendMockFriendRequest = async (
-  targetUserId: string
+  _targetUserId: string
 ): Promise<{ success: boolean }> => {
   await new Promise((r) => setTimeout(r, 300));
   return { success: true };
@@ -155,7 +155,7 @@ export const sendMockFriendRequest = async (
 
 // ===== 친구 요청 취소 (내가 보낸 요청을 내가 취소) =====
 export const cancelMockFriendRequest = async (
-  targetUserId: string
+  _targetUserId: string
 ): Promise<{ success: boolean }> => {
   await new Promise((r) => setTimeout(r, 300));
   return { success: true };
@@ -163,7 +163,7 @@ export const cancelMockFriendRequest = async (
 
 // ===== 친구 요청 수락 (남이 나에게 보낸 요청을 내가 수락, 알림에서) =====
 export const acceptMockFriendRequest = async (
-  requestId: string
+  _requestId: string
 ): Promise<{ success: boolean }> => {
   await new Promise((r) => setTimeout(r, 300));
   return { success: true };
@@ -171,7 +171,7 @@ export const acceptMockFriendRequest = async (
 
 // ===== 친구 요청 거절 (남이 나에게 보낸 요청을 내가 거절, 알림에서) =====
 export const rejectMockFriendRequest = async (
-  requestId: string
+  _requestId: string
 ): Promise<{ success: boolean }> => {
   await new Promise((r) => setTimeout(r, 300));
   return { success: true };
