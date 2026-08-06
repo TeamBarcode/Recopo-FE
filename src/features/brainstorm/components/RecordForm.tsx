@@ -9,11 +9,14 @@ import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import { createMockBrainstormCard, UpdateMockBrainstormCard } from '@/mocks/brainstormCards';
 import tape from '@/assets/tape.svg';
+import profileEditIcon from '@/assets/profile_edit.svg';
 import type {BrainstormCard} from '@/mocks/brainstormCards';
 
 const CATEGORY_OPTIONS = [
   '콘텐츠/미디어', '생활', '건강', '업무/도구', '개발/디자인', '사람', '기타',
 ];
+
+const MAX_TAGS = 5;
 
 interface RecordFormProps {
     mode? : 'create' | 'edit';
@@ -28,6 +31,10 @@ function RecordForm({mode = 'create', cardId, initialData} : RecordFormProps) {
     const[content, setContent] = useState(initialData?.content ?? '');
     const[category, setCategory] = useState(initialData?.category ?? '');
 
+    const [tags, setTags] = useState<string[]>(initialData?.tags ?? []);
+    const [tagInput, setTagInput] = useState('');
+    const [editingTagIndex, setEditingTagIndex] = useState<number | null>(null);
+
     const navigate = useNavigate();
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -41,24 +48,49 @@ function RecordForm({mode = 'create', cardId, initialData} : RecordFormProps) {
         }
     }, [content]); // content가 바뀔 때마다(=타이핑할 때마다) 이 effect 다시 실행됨
 
-    const handleSubmit = async() => {
-        // 1) content 문자열에서 #태그 뽑기
-        const extractedTags = content.match(/#[^\s#]+/g) ?? [];
-        // content가 "todo 앱 #React #공부" 라면 → extractedTags는 ["#React", "#공부"]
-        // 만약 #이 하나도 없으면 match()가 null을 주니까 ?? []로 빈 배열 처리
+    const handleConfirmTag = () => {
+        const trimmed = tagInput.trim();
+        if (!trimmed) return;
+        const formatted = trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
 
+        if (editingTagIndex !== null) {
+            // 수정 모드면 새 태그를 추가하는 게 아니라 그 자리 태그 내용만 바꿈
+            setTags((prev) => prev.map((t, i) => (i === editingTagIndex ? formatted : t)));
+            setEditingTagIndex(null);
+        } else {
+            if (tags.length >= MAX_TAGS) return;
+            setTags((prev) => [...prev, formatted]);
+        }
+
+        setTagInput('');
+    };
+
+    const handleRemoveTag = (index: number) => {
+        setTags((prev) => prev.filter((_, i) => i !== index));
+        if (editingTagIndex === index) {
+            setEditingTagIndex(null);
+            setTagInput('');
+        }
+    };
+
+    const handleEditTag = (index: number) => {
+        setTagInput(tags[index].replace(/^#/, ''));
+        setEditingTagIndex(index);
+    };
+
+    const handleSubmit = async() => {
         //저장버튼 눌렀을 때 새 카드 생성인지 수정인지에 따라 다른 mock 함수 호출
         if(mode === 'edit' && cardId){
-            await UpdateMockBrainstormCard(cardId, {title, content, category, tags: extractedTags});
+            await UpdateMockBrainstormCard(cardId, {title, content, category, tags});
             navigate(`/brainstorm/${cardId}`);
         }else {
-            // 2) mock 서버(가짜 API)한테 카드 생성 요청 보내고, 응답 기다리기
+            // mock 서버(가짜 API)한테 카드 생성 요청 보내고, 응답 기다리기
             const newCard = await createMockBrainstormCard({
-                title, content, category, tags: extractedTags,
+                title, content, category, tags,
             });
             // await가 있어서 여기서 500ms 동안 멈춰있다가 서버가 만들어준 완성된 카드(id 포함)를 newCard에 받음
 
-            // 3) 방금 만든 카드의 id로 상세 페이지 이동
+            // 방금 만든 카드의 id로 상세 페이지 이동
             navigate(`/brainstorm/${newCard.id}`);
         }
     };
@@ -71,8 +103,43 @@ function RecordForm({mode = 'create', cardId, initialData} : RecordFormProps) {
                 <Dropdown options={CATEGORY_OPTIONS} value={category} onChange={setCategory} size="md" placeholder="카테고리" />
                 <SaveButton variant="primary" onClick={handleSubmit}>저장하기</SaveButton>
             </RightControls>
-            
+
             <TitleInput size="lg" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="제목" />
+
+            <HashtagLabelRow>
+                <HashtagLabel>해시태그 (최대 {MAX_TAGS}개)</HashtagLabel>
+                <TagChipList>
+                    {tags.map((tag, index) => (
+                        <TagChipWrapper key={`${tag}-${index}`}>
+                            <TagChip>
+                                <RemoveTagButton type="button" onClick={() => handleRemoveTag(index)} aria-label="해시태그 삭제">
+                                    ×
+                                </RemoveTagButton>
+                                <TagChipText>{tag}</TagChipText>
+                            </TagChip>
+                            <EditTagButton type="button" onClick={() => handleEditTag(index)} aria-label="해시태그 수정">
+                                <img src={profileEditIcon} alt="" />
+                            </EditTagButton>
+                        </TagChipWrapper>
+                    ))}
+                </TagChipList>
+            </HashtagLabelRow>
+
+            <HashtagInputRow>
+                <HashtagTextInput
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleConfirmTag();
+                        }
+                    }}
+                    placeholder="해시태그를 입력하세요"
+                />
+                <ConfirmTagButton type="button" onClick={handleConfirmTag}>확인</ConfirmTagButton>
+            </HashtagInputRow>
+
             <ContentTextArea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} placeholder="내용을 입력하세요" />
         </NoteWrapper>
     );
@@ -91,8 +158,8 @@ const NoteWrapper = styled.div`
     background : #FFFD92;
     box-shadow : 0px 3px 3px rgba(0,0,0,0.25);
 `;
-/* 
-height는 따로 안 정함 — 내용 늘어나면 min-height 넘어서 자연스럽게 커짐 
+/*
+height는 따로 안 정함 — 내용 늘어나면 min-height 넘어서 자연스럽게 커짐
 margin: 0 auto 추가 → 페이지 안에서 좌우 중앙 정렬
 */
 
@@ -125,10 +192,138 @@ const SaveButton = styled(Button)`
 `;
 
 const TitleInput = styled(Input)`
-  margin-bottom: 25px;
+  margin-bottom: 18px;
   padding-left: 0;
+
+  &::placeholder {
+    color: #626262;
+  }
 `;
 //padding-left: 0 추가 → Input.tsx의 기본 좌측 패딩(16px) 제거해서 ContentTextarea와 왼쪽 정렬 맞춤
+
+const HashtagLabelRow = styled.div`
+    display : flex;
+    align-items : center;
+    flex-wrap : wrap;
+    row-gap : 8px;
+    margin-bottom : 18px;
+`;
+
+const HashtagLabel = styled.span`
+    flex-shrink : 0;
+    font-size : 16px;
+    font-weight : ${tokens.fontWeight.regular};
+    color : #626262;
+`;
+
+const TagChipList = styled.div`
+    display : flex;
+    flex-wrap : wrap;
+    align-items : center;
+    gap : 12px;
+    margin-left : 42px;
+`;
+
+const TagChipWrapper = styled.div`
+    display : flex;
+    align-items : center;
+    gap : 3px;
+`;
+
+const TagChip = styled.div`
+    position : relative;
+    display : flex;
+    align-items : center;
+    padding : 4px 10px;
+    border-radius : 9999px;
+    background : ${tokens.colors.button.light};
+`;
+
+const RemoveTagButton = styled.button`
+    position : absolute;
+    top : -6px;
+    left : -6px;
+    width : 14px;
+    height : 14px;
+    border-radius : 50%;
+    border : none;
+    background : #FFFFFF;
+    box-shadow : 0px 1px 2px rgba(0, 0, 0, 0.25);
+    font-size : 9px;
+    line-height : 1;
+    color : ${tokens.colors.text.primary};
+    cursor : pointer;
+    display : flex;
+    align-items : center;
+    justify-content : center;
+    padding : 0;
+`;
+
+const TagChipText = styled.span`
+    font-size : 12px;
+    font-weight : ${tokens.fontWeight.regular};
+`;
+
+const EditTagButton = styled.button`
+    flex-shrink : 0;
+    width : 18px;
+    height : 18px;
+    border : none;
+    background : none;
+    padding : 0;
+    cursor : pointer;
+    display : flex;
+    align-items : center;
+    justify-content : center;
+
+    img {
+        width : 100%;
+        height : 100%;
+    }
+`;
+
+const HashtagInputRow = styled.div`
+    width : 672px;
+    display : flex;
+    align-items : center;
+    gap : 12px;
+    margin-bottom : 30px;
+`;
+
+const HashtagTextInput = styled.input`
+    flex : 1;
+    border : none;
+    border-bottom : 1px solid #626262;
+    background : transparent;
+    padding : 0 0 6px;
+    font-size : 15px;
+    font-family : inherit;
+
+    &::placeholder {
+        color : #626262;
+    }
+
+    &:focus {
+        outline : none;
+    }
+`;
+
+const ConfirmTagButton = styled.button`
+    flex-shrink : 0;
+    width : 50px;
+    height : 25px;
+    margin-right : 7px;
+    border : none;
+    border-radius : 10px;
+    background : #FFFFFF;
+    font-size : 12px;
+    font-weight : ${tokens.fontWeight.regular};
+    cursor : pointer;
+
+    &:active {
+        opacity : 0.6;
+    }
+`;
 
 const ContentTextArea = styled.textarea`
     width : 672px;
@@ -140,7 +335,7 @@ const ContentTextArea = styled.textarea`
     background : transparent;
 
     &::placeholder {
-    color: ${tokens.colors.text.placeholder};
+    color: #626262;
     }
 
     &:focus {
