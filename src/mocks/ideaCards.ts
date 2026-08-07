@@ -116,6 +116,48 @@ export const mockIdeaCards : IdeaCard[] =[
     likedByMe: true,
     commentCount: 87,
   },
+  {
+    id: 'idea4',
+    authorId: 'friend1',
+    title: '반려식물 물주기 알림 앱',
+    summary: '반려식물마다 물 주기 주기를 설정하고 알림을 받는 앱에 대한 아이디어 요약',
+    tags: ['#반려식물', '#알림'],
+    category: '생활',
+    recoBotResult: mockRecoSuccess,
+    createdAt: '2026.06.18',
+    isPublic: true,
+    likeCount: 34,
+    likedByMe: true,
+    commentCount: 5,
+  },
+  {
+    id: 'idea5',
+    authorId: 'friend2',
+    title: '동네 맛집 랜덤 추천 서비스로 매번 뭐 먹을지 고민하는 시간을 줄여주는 아이디어',
+    summary: '오늘 뭐 먹을지 고민하는 시간을 줄여주는 랜덤 맛집 추천 서비스 요약',
+    tags: ['#맛집', '#추천'],
+    category: '생활',
+    recoBotResult: mockRecoEmpty,
+    createdAt: '2026.06.10',
+    isPublic: true,
+    likeCount: 7,
+    likedByMe: true,
+    commentCount: 1,
+  },
+  {
+    id: 'idea6',
+    authorId: 'friend3',
+    title: '운동 루틴 공유 커뮤니티',
+    summary: '나만의 운동 루틴을 기록하고 다른 사람들과 공유하는 커뮤니티 서비스 요약',
+    tags: ['#운동', '#커뮤니티'],
+    category: '건강',
+    recoBotResult: mockRecoSuccess,
+    createdAt: '2026.06.05',
+    isPublic: true,
+    likeCount: 21,
+    likedByMe: true,
+    commentCount: 3,
+  },
 ];
 
 export const mockIdeaCardsEmpty: IdeaCard[] = [];
@@ -131,6 +173,24 @@ export const mockIdeaDetail: IdeaDetail = {
   comments: mockComments,
 };
 
+
+// ===== 아이디어 상세 조회 (id로 하나) =====
+export const fetchMockIdeaDetail = async (ideaId: string): Promise<IdeaDetail> => {
+  await new Promise((r) => setTimeout(r, 300));
+
+  const idea = mockIdeaCards.find((i) => i.id === ideaId);
+  if (!idea) {
+    throw { message: '존재하지 않는 아이디어예요' };
+  }
+
+  return {
+    ...idea,
+    keywords: [],
+    expectedFeatures: [],
+    techStack: [],
+    comments: [],
+  };
+};
 
 // ===== 목록 조회 + 필터링 가짜 서버 로직 =====
 export const fetchMockIdeas = async (
@@ -170,6 +230,40 @@ export const fetchMockIdeas = async (
     }
 
     return result;
+};
+
+// ===== RecoBot 추천 결과 → 아이디어로 저장 =====
+export interface CreateIdeaFromRecommendationRequest {
+  cardTitle: string;
+  cardContent: string;
+  category: string;
+  tags?: string[];
+  recoItem?: RecoItem;
+  isPublic: boolean;
+}
+
+export const createMockIdeaFromRecommendation = async (
+  request: CreateIdeaFromRecommendationRequest,
+): Promise<IdeaCard> => {
+  await new Promise((r) => setTimeout(r, 500));
+
+  const newIdea: IdeaCard = {
+    id: `idea_${Date.now()}`,
+    authorId: mockUser.id,
+    title: request.cardTitle,
+    summary: request.cardContent,
+    tags: request.tags,
+    category: request.category,
+    recoBotResult: request.recoItem ? [request.recoItem] : [],
+    createdAt: new Date().toISOString(),
+    isPublic: request.isPublic,
+    likeCount: 0,
+    likedByMe: false,
+    commentCount: 0,
+  };
+
+  mockIdeaCards.push(newIdea);
+  return newIdea;
 };
 
 // ===== 아이디어 수정 =====

@@ -22,10 +22,10 @@ interface DropdownProps {
 /*스타일*/
 const StyledTrigger = styled.button<{
   size: string;
-  isOpen: boolean;
+  $isOpen: boolean;
   $width?: number;
 }>`
-  ${({ $width }) => $width && `width: ${$width}px;`} 
+  ${({ $width }) => $width && `width: ${$width}px;`}
   box-sizing: border-box;
   text-align: center;
   background-color: ${tokens.colors.button.primary};
@@ -36,8 +36,8 @@ const StyledTrigger = styled.button<{
   box-shadow: none;
   border: none;
 
-  ${({ isOpen }) =>
-    isOpen &&
+  ${({ $isOpen }) =>
+    $isOpen &&
     `
       background-color: ${tokens.colors.border.secondary};
     `}
@@ -58,15 +58,15 @@ const StyledTrigger = styled.button<{
       font-size: ${tokens.fontSize.md};
     `}
 
-  ${({ isOpen, size }) =>
-    isOpen &&
+  ${({ $isOpen, size }) =>
+    $isOpen &&
     size === 'sm' &&
     `
       border-radius: ${tokens.radius.xs} ${tokens.radius.xs} 0 0;
     `}
 
-  ${({ isOpen, size }) =>
-    isOpen &&
+  ${({ $isOpen, size }) =>
+    $isOpen &&
     size === 'md' &&
     `
       border-radius: 9px 9px 0 0;
@@ -145,6 +145,7 @@ function Dropdown({
   className,
 }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const open = isOpen && !disabled;
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   /*useState는 잰 숫자(너비값)를 기억해뒀다가 나중에 StyledTrigger한테 넘겨줌*/
@@ -177,21 +178,14 @@ function Dropdown({
     };
   }, [isOpen]);
 
-  /*열려 있는 상태에서 disabled가 되면 닫기*/
-  useEffect(() => {
-    if (disabled) {
-      setIsOpen(false);
-    }
-  }, [disabled]);
-
   return (
     <Wrapper ref={wrapperRef} className={className}>
       <StyledTrigger
         type="button"
         size={size}
-        isOpen={isOpen}
+        $isOpen={open}
         disabled={disabled}
-        $width={isOpen ? contentWidth : undefined}
+        $width={open ? contentWidth : undefined}
         onClick={() => {
           if (!disabled) {
             setIsOpen((previous) => !previous);
@@ -201,7 +195,7 @@ function Dropdown({
         {value || placeholder} ▼
       </StyledTrigger>
 
-      {isOpen && (
+      {open && (
         <StyledContent ref={contentRef} size={size}>
           {options.map((option) => (
             <StyledItem

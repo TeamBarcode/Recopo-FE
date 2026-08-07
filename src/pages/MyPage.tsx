@@ -1,5 +1,7 @@
+import MyPageBoard from '@/features/mypage/components/MyPageBoard';
+
 function MyPage() {
-  return <div>MyPage</div>;
+  return <MyPageBoard />;
 }
 
 export default MyPage;

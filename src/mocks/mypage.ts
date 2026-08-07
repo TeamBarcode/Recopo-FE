@@ -1,5 +1,43 @@
 import { type User, mockUser } from './user';
 import { type IdeaCard, mockIdeaCards } from './ideaCards';
+import { mockBrainstormCards } from './brainstormCards';
+
+// ===== 마이페이지 요약 정보 조회 =====
+export interface MyPageSummary {
+  nickname: string;
+  userId: string;
+  profileImageUrl?: string;
+  email: string;
+  brainstormingCount: number;
+  ideaCount: number;
+}
+
+export const fetchMockMyPageSummary = async (): Promise<MyPageSummary> => {
+  await new Promise((r) => setTimeout(r, 300));
+
+  return {
+    nickname: mockUser.nickname,
+    userId: mockUser.userId,
+    profileImageUrl: mockUser.profileImageUrl,
+    email: mockUser.email,
+    brainstormingCount: mockBrainstormCards.length,
+    ideaCount: mockIdeaCards.filter((idea) => idea.authorId === mockUser.id).length,
+  };
+};
+
+// ===== 로그아웃 =====
+export const logoutMock = async (): Promise<{ success: boolean }> => {
+  await new Promise((r) => setTimeout(r, 300));
+
+  return { success: true };
+};
+
+// ===== 회원 탈퇴 =====
+export const withdrawMockUser = async (): Promise<{ success: boolean }> => {
+  await new Promise((r) => setTimeout(r, 500));
+
+  return { success: true };
+};
 
 // ===== 닉네임 변경 =====
 export interface UpdateNicknameRequest {
@@ -146,10 +184,12 @@ export const unlikeMockIdea = async (
 ): Promise<{ success: boolean }> => {
   await new Promise((r) => setTimeout(r, 300));
 
-  const exists = mockIdeaCards.some((idea) => idea.id === ideaId);
-  if (!exists) {
+  const idea = mockIdeaCards.find((idea) => idea.id === ideaId);
+  if (!idea) {
     throw { message: '존재하지 않는 아이디어예요' };
   }
+
+  idea.likedByMe = false;
 
   return { success: true };
 };

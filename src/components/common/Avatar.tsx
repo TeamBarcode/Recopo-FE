@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import defaultProfile from '@/assets/profile.svg';
 
 /*Props 타입 정의*/
 interface AvatarProps {
@@ -21,7 +22,7 @@ const StyledAvatar = styled.div<{ size: 'xs' | 'sm' | 'md' | 'lg'; src?: string 
   height: ${({ size }) => sizeMap[size]};
   border-radius: 50%;
   background-color: #d9d9d9;
-  background-image: ${({ src }) => `url(${src || '/default-profile.svg'})`};
+  background-image: ${({ src }) => `url("${src || defaultProfile}")`};
   background-size: cover;
   background-position: center;
 `;
