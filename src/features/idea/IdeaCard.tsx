@@ -9,6 +9,7 @@ import heartIcon from '@/assets/idea-heart.svg';
 import commentIcon from '@/assets/idea-comment.svg';
 import visibilityPublicIcon from '@/assets/idea-visibility-public.svg';
 import visibilityPrivateIcon from '@/assets/idea-visibility-private.svg';
+import clipIcon from '@/assets/idea-clip.svg';
 
 interface IdeaCardProps { idea: IdeaCardData; onClick: () => void; }
 
@@ -19,7 +20,7 @@ function IdeaCard({ idea, onClick }: IdeaCardProps) {
 
   return (
     <Card tabIndex={0} role="link" onClick={onClick} onKeyDown={handleKeyDown}>
-      <Clip aria-hidden="true"><ClipRing /><ClipBar /></Clip>
+      <Clip src={clipIcon} alt="" aria-hidden="true" />
       <CardBody>
         <TopRow>
           <Title>{idea.title}</Title>
@@ -58,12 +59,7 @@ const CardBody = styled.div`
   position: relative; height: 301px; padding: 26px 21px 12px; background: white;
   border: 1px solid ${tokens.colors.border.primary}; box-shadow: 0 3px 3px rgba(0,0,0,.25);
 `;
-const Clip = styled.div`position:absolute; z-index:1; top:0; left:50%; width:55px; height:51px; transform:translateX(-50%);`;
-const ClipRing = styled.span`position:absolute; top:0; left:21px; width:14px; height:14px; border:5px solid #5d5d5d; border-radius:50%; background:white;`;
-const ClipBar = styled.span`
-  position:absolute; bottom:2px; left:7px; width:42px; height:11px; border:5px solid #5d5d5d; border-radius:8px;
-  &::before { content:''; position:absolute; bottom:6px; left:14px; width:5px; height:18px; background:#5d5d5d; }
-`;
+const Clip = styled.img`position:absolute; z-index:1; top:0; left:50%; width:55px; height:51px; transform:translateX(-50%);`;
 const TopRow = styled.div`display:flex; align-items:center; justify-content:space-between; gap:12px;`;
 const Title = styled.h2`margin:0; overflow:hidden; font-size:${tokens.fontSize.xl}; font-weight:400; line-height:1.2; text-overflow:ellipsis; white-space:nowrap;`;
 const VisibilityIcon = styled.img`flex-shrink:0; width:21px; height:21px;`;

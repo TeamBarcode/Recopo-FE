@@ -47,8 +47,8 @@ function IdeaPage() {
       <Toolbar>
         <Filters>
           <Dropdown options={visibilityOptions} value={visibility} onChange={(value) => setVisibility(value || '전체')} size="sm" placeholder="전체" />
-          <Dropdown options={categoryOptions} value={category === '전체' ? '' : category} onChange={(value) => setCategory(value || '전체')} size="sm" placeholder="카테고리" />
-          <Dropdown options={sortOptions} value={sort === '최신순' ? '' : sort} onChange={(value) => setSort(value || '최신순')} size="sm" placeholder="정렬" />
+          <Dropdown options={categoryOptions} value={category} onChange={(value) => setCategory(value || '전체')} size="sm" placeholder="카테고리" />
+          <Dropdown options={sortOptions} value={sort} onChange={(value) => setSort(value || '최신순')} size="sm" placeholder="정렬" />
         </Filters>
         <SearchForm onSubmit={handleSearch} role="search">
           <SearchInput value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="제목 또는 해시태그 검색" aria-label="아이디어 검색" />

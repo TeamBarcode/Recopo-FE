@@ -20,6 +20,7 @@ import Avatar from '@/components/common/Avatar';
 import heartIcon from '@/assets/idea-heart.svg';
 import commentIcon from '@/assets/idea-comment.svg';
 import sendArrowIcon from '@/assets/comment-send-arrow.svg';
+import clipIcon from '@/assets/idea-clip.svg';
 
 const formatCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k` : String(n));
 
@@ -64,7 +65,7 @@ function IdeaDetailPage() {
                 </Header>
 
                 <MetaBox>
-                    <MetaClip aria-hidden="true"><MetaClipRing /><MetaClipBar /></MetaClip>
+                    <MetaClip src={clipIcon} alt="" aria-hidden="true" />
                     <MetaRow>
                         <MetaLabel>카테고리</MetaLabel>
                         <MetaTagList>
@@ -362,34 +363,13 @@ const MetaBox = styled.div`
     box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.25);
 `;
 
-const MetaClip = styled.div`
+const MetaClip = styled.img`
     position: absolute;
     top: -18px;
     left: 50%;
     width: 40px;
     height: 36px;
     transform: translateX(-50%);
-`;
-
-const MetaClipRing = styled.span`
-    position: absolute;
-    top: 0;
-    left: 13px;
-    width: 10px;
-    height: 10px;
-    border: 4px solid #5d5d5d;
-    border-radius: 50%;
-    background: white;
-`;
-
-const MetaClipBar = styled.span`
-    position: absolute;
-    bottom: 2px;
-    left: 5px;
-    width: 30px;
-    height: 8px;
-    border: 4px solid #5d5d5d;
-    border-radius: 6px;
 `;
 
 const MetaRow = styled.div`
