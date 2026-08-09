@@ -52,7 +52,7 @@ const Title = styled.h2`margin:0; overflow:hidden; font-size:${tokens.fontSize.x
 const Visibility = styled.span`flex-shrink:0; color:${tokens.colors.text.light}; font-size:20px; line-height:1;`;
 const TagRow = styled.div`min-height:21px; margin-top:22px; display:flex; align-items:center; gap:8px; overflow:hidden;`;
 const Tag = styled.span`flex-shrink:0; padding:5px 11px; border-radius:13px; background:${tokens.colors.button.light}; font-size:10px; line-height:1;`;
-const Category = styled(Tag)`background:${tokens.colors.card};`;
+const Category = styled(Tag)`background:${tokens.colors.button.focus};`;
 const RepositoryCount = styled.p`margin:17px 4px 0; color:${tokens.colors.text.semiLight}; font-size:${tokens.fontSize.md};`;
 const Summary = styled.p`
   margin:13px 4px 0; display:-webkit-box; overflow:hidden; font-size:${tokens.fontSize.md}; line-height:1.4;
