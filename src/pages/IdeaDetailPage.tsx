@@ -53,8 +53,8 @@ function IdeaDetailPage() {
     return (
         <Wrapper>
             <TopRow>
-                <Button variant="edit" size="sm" onClick={handleEdit}>수정</Button>
-                <Button variant="danger" size="sm" onClick={() => setIsDeleteModalOpen(true)}>삭제</Button>
+                <SmallButton variant="edit" onClick={handleEdit}>수정</SmallButton>
+                <SmallButton variant="danger" onClick={() => setIsDeleteModalOpen(true)}>삭제</SmallButton>
             </TopRow>
 
             <HeaderRow>
@@ -322,6 +322,16 @@ const TopRow = styled.div`
     margin-bottom: 12px;
 `;
 
+const SmallButton = styled(Button)`
+    width: 44px;
+    height: 18px;
+    padding: 0;
+    border-radius: 15px;
+    font-size: 10px;
+    border: none;
+    ${({ variant }) => variant === 'edit' && `background-color: ${tokens.colors.button.light};`}
+`;
+
 const HeaderRow = styled.div`
     position: relative;
 `;
@@ -511,6 +521,7 @@ const CommentWrapper = styled.div`
 `;
 
 const CommentItem = styled.div`
+    position: relative;
     display: flex;
     gap: 10px;
 `;

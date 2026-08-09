@@ -337,11 +337,9 @@ export const createMockComment = async (request: CreateCommentRequest): Promise<
 export const deleteMockComment = async (commentId: string): Promise<{ success: boolean }> => {
   await new Promise((r) => setTimeout(r, 300));
 
-  const exists = mockComments.some((comment) => comment.id === commentId);
-  if (!exists) {
-    throw { message: '존재하지 않는 댓글이에요' };
-  }
-
+  // 댓글 목록은 컴포넌트가 로컬 state로 들고 있고(새로 작성한 댓글도 여기 포함) 이 mockComments 배열엔 안 들어가므로,
+  // 여기서 존재 여부를 mockComments 기준으로 검사하면 새로 쓴 댓글은 전부 삭제 실패로 처리되는 버그가 있었음
+  void commentId;
   return { success: true };
 };
 
