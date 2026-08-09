@@ -81,8 +81,7 @@ const PageTitle = styled.h1`margin:0; font-family:${tokens.fontFamily.logo}; fon
 const Toolbar = styled.div`margin-top:14px; display:flex; align-items:flex-start; justify-content:flex-end; gap:37px;`;
 const Filters = styled.div`
   position:relative; z-index:10; display:flex; align-items:flex-start; gap:12px;
-  > div:nth-child(1) { width:70px; } > div:nth-child(2) { width:90px; } > div:nth-child(3) { width:70px; }
-  button { width:100%; white-space:nowrap; } > div > div { z-index:20; }
+  button { white-space:nowrap; } > div > div { z-index:20; }
 `;
 const SearchForm = styled.form`width:268px; height:42px; display:flex; align-items:center; border:1px solid ${tokens.colors.border.search}; border-radius:10px; background:white;`;
 const SearchInput = styled.input`
