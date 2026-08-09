@@ -6,8 +6,35 @@ import Avatar from '@/components/common/Avatar';
 import IconButton from '@/components/common/IconButton';
 import { tokens } from '@/styles/tokens';
 import { mockUser } from '@/mocks/user';
+import NotificationPanel from './NotificationPanel';
+import { useEffect, useRef, useState } from 'react';
+import { hasUnreadNotification } from '@/mocks/notifications';
 
 function Header() {
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [hasUnread, setHasUnread] = useState(hasUnreadNotification());
+  const notificationRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isNotificationOpen) return;
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setIsNotificationOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsNotificationOpen(false);
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isNotificationOpen]);
+
   return (
     <HeaderContainer>
       <LogoLink to="/">
@@ -45,14 +72,17 @@ function Header() {
       </NavArea>
 
       <RightArea>
-        <NotificationWrapper>
+        <NotificationWrapper ref={notificationRef}>
           <IconButton
             size="lg"
             ariaLabel="알림"
-            onClick={() => {}}
+            onClick={() => setIsNotificationOpen((prev) => !prev)}
             icon={<NotificationIcon src={notificationIcon} alt="" />}
           />
-          <NotificationDot />
+          {hasUnread && <NotificationDot />}
+          {isNotificationOpen && (
+            <NotificationPanel onUnreadChange={setHasUnread} />
+          )}
         </NotificationWrapper>
 
         <ProfileLink to="/mypage" aria-label="마이페이지">
