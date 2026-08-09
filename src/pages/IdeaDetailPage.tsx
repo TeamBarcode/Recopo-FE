@@ -174,6 +174,18 @@ function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionPr
         setOpenReplyCommentId(null);
     };
 
+    // 답글 삭제 mock API가 따로 없어서 로컬 상태에서만 제거
+    const handleDeleteReply = (commentId: string, replyId: string) => {
+        onCommentsChange(
+            comments.map((comment) =>
+                comment.id === commentId
+                    ? { ...comment, replies: comment.replies.filter((reply) => reply.id !== replyId) }
+                    : comment,
+            ),
+            -1,
+        );
+    };
+
     return (
         <CommentWrapper>
             {comments.map((comment) => (
@@ -210,6 +222,16 @@ function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionPr
                                         <CommentDate>{reply.createdAt}</CommentDate>
                                     </CommentHeader>
                                     <CommentContent>{reply.content}</CommentContent>
+                                    {reply.authorNickname === mockUser.nickname && (
+                                        <CommentActions>
+                                            <Button
+                                                variant="text"
+                                                onClick={() => handleDeleteReply(comment.id, reply.id)}
+                                            >
+                                                삭제
+                                            </Button>
+                                        </CommentActions>
+                                    )}
                                 </CommentBody>
                             </ReplyItem>
                         ))}
