@@ -9,6 +9,7 @@ import { categoryOptions, sortOptions, visibilityOptions } from '@/features/idea
 import { fetchMockIdeas } from '@/mocks/ideaCards';
 import type { IdeaCard as IdeaCardData } from '@/mocks/ideaCards';
 import { tokens } from '@/styles/tokens';
+import clipIcon from '@/assets/idea-clip.svg';
 
 const SORT_VALUE_MAP = {
   최신순: 'latest',
@@ -63,7 +64,7 @@ function IdeaPage() {
       ) : (
         <EmptyArea>
           <EmptyCard>
-            <EmptyClip aria-hidden="true" />
+            <EmptyClip src={clipIcon} alt="" aria-hidden="true" />
             <EmptyTitle>{searchEmpty ? '검색 결과 없음' : '아이디어가 없어요!'}</EmptyTitle>
             {!searchEmpty && <EmptyDescription><strong>Recobot</strong>과 함께 브레인스토밍 카드를<br />아이디어로 만들어 보세요</EmptyDescription>}
           </EmptyCard>
@@ -100,7 +101,7 @@ const IdeaGrid = styled.div`
 `;
 const EmptyArea = styled.div`margin-top:42px; display:flex; align-items:center; gap:95px;`;
 const EmptyCard = styled.div`position:relative; width:270px; height:301px; padding:112px 18px 20px; border:1px dashed #8c8c8c; border-radius:10px; color:${tokens.colors.text.extraLight}; text-align:center;`;
-const EmptyClip = styled.span`position:absolute; top:-36px; left:108px; width:55px; height:51px; border-bottom:10px double #8c8c8c;`;
+const EmptyClip = styled.img`position:absolute; top:-36px; left:108px; width:55px; height:51px;`;
 const EmptyTitle = styled.h2`margin:0; font-size:${tokens.fontSize.xl}; font-weight:${tokens.fontWeight.medium};`;
 const EmptyDescription = styled.p`margin:18px 0 0; font-size:13px; line-height:1.45;`;
 const SearchEmptyDescription = styled.p`margin:0; color:${tokens.colors.text.extraLight}; font-size:${tokens.fontSize.xl};`;
