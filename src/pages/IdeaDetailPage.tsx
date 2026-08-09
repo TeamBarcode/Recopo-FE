@@ -15,10 +15,11 @@ import { mockUser } from '@/mocks/user';
 import Button from '@/components/common/Button';
 import Modal from '@/components/common/Modal';
 import Tag from '@/components/common/Tag';
+import type { Category } from '@/components/common/Tag';
 import Avatar from '@/components/common/Avatar';
-import TextArea from '@/components/common/TextArea';
 import heartIcon from '@/assets/idea-heart.svg';
 import commentIcon from '@/assets/idea-comment.svg';
+import sendArrowIcon from '@/assets/comment-send-arrow.svg';
 
 const formatCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k` : String(n));
 
@@ -56,17 +57,30 @@ function IdeaDetailPage() {
                 <Button variant="danger" size="sm" onClick={() => setIsDeleteModalOpen(true)}>삭제</Button>
             </TopRow>
 
-            <Header>
-                <Title>{idea.title}</Title>
-                <DateText>{idea.createdAt}</DateText>
-            </Header>
+            <HeaderRow>
+                <Header>
+                    <Title>{idea.title}</Title>
+                    <DateText>{idea.createdAt}</DateText>
+                </Header>
 
-            <TagRow>
-                <Tag variant="hashtag" usage="idea">{idea.category}</Tag>
-                {idea.tags?.map((tag) => (
-                    <Tag key={tag} variant="hashtag" usage="idea">{tag}</Tag>
-                ))}
-            </TagRow>
+                <MetaBox>
+                    <MetaClip aria-hidden="true"><MetaClipRing /><MetaClipBar /></MetaClip>
+                    <MetaRow>
+                        <MetaLabel>카테고리</MetaLabel>
+                        <MetaTagList>
+                            <Tag variant="category" usage="idea" category={idea.category as Category}>{idea.category}</Tag>
+                        </MetaTagList>
+                    </MetaRow>
+                    <MetaRow>
+                        <MetaLabel>해시태그</MetaLabel>
+                        <MetaTagList>
+                            {idea.tags?.map((tag) => (
+                                <Tag key={tag} variant="hashtag" usage="idea">{tag}</Tag>
+                            ))}
+                        </MetaTagList>
+                    </MetaRow>
+                </MetaBox>
+            </HeaderRow>
 
             <ContentBox>
                 <Section>
@@ -146,6 +160,7 @@ function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionPr
     const [newComment, setNewComment] = useState('');
     const [openReplyCommentId, setOpenReplyCommentId] = useState<string | null>(null);
     const [replyInput, setReplyInput] = useState('');
+    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
     const handleSubmitComment = async () => {
         const content = newComment.trim();
@@ -210,11 +225,6 @@ function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionPr
                             >
                                 답글달기
                             </Button>
-                            {comment.authorNickname === mockUser.nickname && (
-                                <Button variant="text" onClick={() => handleDeleteComment(comment.id)}>
-                                    삭제
-                                </Button>
-                            )}
                         </CommentActions>
 
                         {comment.replies.map((reply) => (
@@ -242,33 +252,59 @@ function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionPr
 
                         {openReplyCommentId === comment.id && (
                             <ReplyInputRow>
-                                <TextArea
-                                    size="sm"
-                                    width="100%"
+                                <Avatar size="xs" src={mockUser.profileImageUrl} />
+                                <PillInput
                                     value={replyInput}
                                     onChange={(e) => setReplyInput(e.target.value)}
                                     placeholder="답글을 입력해주세요"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleSubmitReply(comment.id);
+                                        }
+                                    }}
                                 />
-                                <Button variant="primary" size="sm" onClick={() => handleSubmitReply(comment.id)}>
-                                    등록
-                                </Button>
+                                <SendButton type="button" aria-label="답글 등록" onClick={() => handleSubmitReply(comment.id)}>
+                                    <img src={sendArrowIcon} alt="" />
+                                </SendButton>
                             </ReplyInputRow>
                         )}
                     </CommentBody>
+                    {comment.authorNickname === mockUser.nickname && (
+                        <MenuWrapper>
+                            <MenuButton
+                                type="button"
+                                aria-label="댓글 메뉴"
+                                onClick={() => setOpenMenuId((prev) => (prev === comment.id ? null : comment.id))}
+                            >
+                                ···
+                            </MenuButton>
+                            {openMenuId === comment.id && (
+                                <MenuPopup type="button" onClick={() => handleDeleteComment(comment.id)}>
+                                    삭제
+                                </MenuPopup>
+                            )}
+                        </MenuWrapper>
+                    )}
                 </CommentItem>
             ))}
 
             <NewCommentRow>
-                <TextArea
-                    size="sm"
-                    width="100%"
+                <Avatar size="xs" src={mockUser.profileImageUrl} />
+                <PillInput
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="댓글을 입력해주세요"
+                    placeholder="회원님의 생각을 남겨보세요"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleSubmitComment();
+                        }
+                    }}
                 />
-                <Button variant="primary" size="sm" onClick={handleSubmitComment}>
-                    등록
-                </Button>
+                <SendButton type="button" aria-label="댓글 등록" onClick={handleSubmitComment}>
+                    <img src={sendArrowIcon} alt="" />
+                </SendButton>
             </NewCommentRow>
         </CommentWrapper>
     );
@@ -284,6 +320,10 @@ const TopRow = styled.div`
     display: flex;
     gap: 8px;
     margin-bottom: 12px;
+`;
+
+const HeaderRow = styled.div`
+    position: relative;
 `;
 
 const Header = styled.div`
@@ -302,11 +342,65 @@ const DateText = styled.span`
     color: ${tokens.colors.text.extraLight};
 `;
 
-const TagRow = styled.div`
+const MetaBox = styled.div`
+    position: absolute;
+    top: -18px;
+    right: -20px;
+    width: 180px;
+    padding: 24px 12px 12px;
+    background: ${tokens.colors.background};
+    box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.25);
+`;
+
+const MetaClip = styled.div`
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    width: 40px;
+    height: 36px;
+    transform: translateX(-50%);
+`;
+
+const MetaClipRing = styled.span`
+    position: absolute;
+    top: 0;
+    left: 13px;
+    width: 10px;
+    height: 10px;
+    border: 4px solid #5d5d5d;
+    border-radius: 50%;
+    background: white;
+`;
+
+const MetaClipBar = styled.span`
+    position: absolute;
+    bottom: 2px;
+    left: 5px;
+    width: 30px;
+    height: 8px;
+    border: 4px solid #5d5d5d;
+    border-radius: 6px;
+`;
+
+const MetaRow = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    & + & {
+        margin-top: 10px;
+    }
+`;
+
+const MetaLabel = styled.span`
+    font-size: ${tokens.fontSize.sm};
+    color: ${tokens.colors.text.extraLight};
+`;
+
+const MetaTagList = styled.div`
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 12px;
+    gap: 6px;
 `;
 
 const ContentBox = styled.div`
@@ -462,13 +556,87 @@ const ReplyItem = styled.div`
 const ReplyInputRow = styled.div`
     display: flex;
     gap: 8px;
-    align-items: flex-end;
+    align-items: center;
     margin-top: 10px;
     margin-left: 20px;
 `;
 
 const NewCommentRow = styled.div`
     display: flex;
-    gap: 8px;
-    align-items: flex-end;
+    gap: 10px;
+    align-items: center;
+`;
+
+const PillInput = styled.input`
+    flex: 1;
+    height: 42px;
+    padding: 0 16px;
+    border: 1px solid ${tokens.colors.border.secondary};
+    border-radius: 9999px;
+    background: transparent;
+    font-size: ${tokens.fontSize.md};
+
+    &::placeholder {
+        color: ${tokens.colors.text.placeholder};
+    }
+
+    &:focus {
+        outline: none;
+    }
+`;
+
+const SendButton = styled.button`
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: ${tokens.colors.button.light};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    img {
+        width: 13px;
+        height: 13px;
+    }
+
+    &:active {
+        opacity: 0.6;
+    }
+`;
+
+const MenuWrapper = styled.div`
+    position: relative;
+    flex-shrink: 0;
+`;
+
+const MenuButton = styled.button`
+    border: none;
+    background: none;
+    padding: 4px;
+    font-size: ${tokens.fontSize.lg};
+    letter-spacing: -1px;
+    color: ${tokens.colors.text.extraLight};
+    cursor: pointer;
+`;
+
+const MenuPopup = styled.button`
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    padding: 6px 14px;
+    border: none;
+    border-radius: 9999px;
+    background: ${tokens.colors.button.light};
+    box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.15);
+    font-size: ${tokens.fontSize.sm};
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:active {
+        opacity: 0.6;
+    }
 `;
