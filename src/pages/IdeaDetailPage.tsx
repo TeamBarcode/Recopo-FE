@@ -17,6 +17,10 @@ import Modal from '@/components/common/Modal';
 import Tag from '@/components/common/Tag';
 import Avatar from '@/components/common/Avatar';
 import TextArea from '@/components/common/TextArea';
+import heartIcon from '@/assets/idea-heart.svg';
+import commentIcon from '@/assets/idea-comment.svg';
+
+const formatCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k` : String(n));
 
 function IdeaDetailPage() {
     const { ideaId } = useParams();
@@ -89,7 +93,7 @@ function IdeaDetailPage() {
                             <RepoDescription>{recommendedRepo.description}</RepoDescription>
                             <RepoReason>추천 이유: {recommendedRepo.reason}</RepoReason>
                             <RepoMeta>
-                                ⭐ {(recommendedRepo.stars / 1000).toFixed(1)}k | GitHub 바로가기
+                                ⭐ {formatCount(recommendedRepo.stars)} · Fork {formatCount(recommendedRepo.forks)}
                             </RepoMeta>
                         </RepoCard>
                     </Section>
@@ -97,9 +101,9 @@ function IdeaDetailPage() {
             </ContentBox>
 
             <Footer>
-                <FooterItem>♡ {idea.likeCount}개</FooterItem>
+                <FooterItem><FooterIcon src={heartIcon} alt="" />{idea.likeCount}개</FooterItem>
                 <FooterItemButton type="button" onClick={() => setIsCommentSectionOpen((prev) => !prev)}>
-                    💬 {idea.commentCount}개
+                    <FooterIcon src={commentIcon} alt="" />{idea.commentCount}개
                 </FooterItemButton>
             </Footer>
 
@@ -380,10 +384,21 @@ const Footer = styled.div`
 `;
 
 const FooterItem = styled.span`
+    display: flex;
+    align-items: center;
+    gap: 6px;
     color: ${tokens.colors.text.light};
 `;
 
+const FooterIcon = styled.img`
+    width: 15px;
+    height: 15px;
+`;
+
 const FooterItemButton = styled.button`
+    display: flex;
+    align-items: center;
+    gap: 6px;
     border: none;
     background: none;
     padding: 0;

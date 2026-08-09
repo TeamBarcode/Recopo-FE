@@ -5,6 +5,10 @@ import type { IdeaCard as IdeaCardData } from '@/mocks/ideaCards';
 import type { Category } from '@/components/common/Tag';
 import Tag from '@/components/common/Tag';
 import { tokens } from '@/styles/tokens';
+import heartIcon from '@/assets/idea-heart.svg';
+import commentIcon from '@/assets/idea-comment.svg';
+import visibilityPublicIcon from '@/assets/idea-visibility-public.svg';
+import visibilityPrivateIcon from '@/assets/idea-visibility-private.svg';
 
 interface IdeaCardProps { idea: IdeaCardData; onClick: () => void; }
 
@@ -17,7 +21,13 @@ function IdeaCard({ idea, onClick }: IdeaCardProps) {
     <Card tabIndex={0} role="link" onClick={onClick} onKeyDown={handleKeyDown}>
       <Clip aria-hidden="true"><ClipRing /><ClipBar /></Clip>
       <CardBody>
-        <TopRow><Title>{idea.title}</Title><Visibility aria-label={idea.isPublic ? '공개' : '비공개'}>{idea.isPublic ? '◎' : '▣'}</Visibility></TopRow>
+        <TopRow>
+          <Title>{idea.title}</Title>
+          <VisibilityIcon
+            src={idea.isPublic ? visibilityPublicIcon : visibilityPrivateIcon}
+            alt={idea.isPublic ? '공개' : '비공개'}
+          />
+        </TopRow>
         <TagRow>
           {idea.tags?.map((tag) => (
             <Tag key={tag} variant="hashtag" usage="idea">{tag}</Tag>
@@ -28,7 +38,10 @@ function IdeaCard({ idea, onClick }: IdeaCardProps) {
         <Summary>{idea.summary}</Summary>
         <Footer>
           <Date>{idea.createdAt}</Date>
-          <Reactions><span>♡ {idea.likeCount}개</span><span>◌ {idea.commentCount}개</span></Reactions>
+          <Reactions>
+            <span><ReactionIcon src={heartIcon} alt="" />{idea.likeCount}개</span>
+            <span><ReactionIcon src={commentIcon} alt="" />{idea.commentCount}개</span>
+          </Reactions>
         </Footer>
       </CardBody>
     </Card>
@@ -53,7 +66,7 @@ const ClipBar = styled.span`
 `;
 const TopRow = styled.div`display:flex; align-items:center; justify-content:space-between; gap:12px;`;
 const Title = styled.h2`margin:0; overflow:hidden; font-size:${tokens.fontSize.xl}; font-weight:400; line-height:1.2; text-overflow:ellipsis; white-space:nowrap;`;
-const Visibility = styled.span`flex-shrink:0; color:${tokens.colors.text.light}; font-size:20px; line-height:1;`;
+const VisibilityIcon = styled.img`flex-shrink:0; width:21px; height:21px;`;
 const TagRow = styled.div`min-height:21px; margin-top:22px; display:flex; align-items:center; gap:8px; overflow:hidden;`;
 const RepositoryCount = styled.p`margin:17px 4px 0; color:${tokens.colors.text.semiLight}; font-size:${tokens.fontSize.md};`;
 const Summary = styled.p`
@@ -62,4 +75,8 @@ const Summary = styled.p`
 `;
 const Footer = styled.div`position:absolute; right:12px; bottom:11px; left:12px; display:flex; align-items:center; justify-content:space-between;`;
 const Date = styled.span`padding:3px 7px; background:${tokens.colors.button.light}; font-size:${tokens.fontSize.sm};`;
-const Reactions = styled.div`display:flex; gap:13px; color:${tokens.colors.text.light}; font-size:11px;`;
+const Reactions = styled.div`
+  display:flex; gap:13px; color:${tokens.colors.text.light}; font-size:11px;
+  span { display:flex; align-items:center; gap:4px; }
+`;
+const ReactionIcon = styled.img`width:13px; height:13px;`;
