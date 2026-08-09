@@ -92,7 +92,7 @@ export const mockIdeaCards: IdeaCard[] = [
     title: '스터디 매칭 서비스',
     summary: '근처에서 같은 과목 공부하는 사람 찾기 프로젝트를 위한 AI 분석 요약',
     tags: ['#학습'],
-    category: '교육',
+    category: '사람',
     recoBotResult: mockRecoSuccess,
     createdAt: '2026.06.20',
     isPublic: false,
