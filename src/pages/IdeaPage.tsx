@@ -1,12 +1,20 @@
 import type { FormEvent } from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 import Dropdown from '@/components/common/Dropdown';
 import IdeaCard from '@/features/idea/IdeaCard';
-import { categoryOptions, mockIdeas, sortOptions, visibilityOptions } from '@/features/idea/ideaData';
+import { categoryOptions, sortOptions, visibilityOptions } from '@/features/idea/ideaData';
+import { fetchMockIdeas } from '@/mocks/ideaCards';
+import type { IdeaCard as IdeaCardData } from '@/mocks/ideaCards';
 import { tokens } from '@/styles/tokens';
+
+const SORT_VALUE_MAP = {
+  최신순: 'latest',
+  오래된순: 'oldest',
+  좋아요순: 'popular',
+} as const;
 
 function IdeaPage() {
   const navigate = useNavigate();
@@ -15,19 +23,15 @@ function IdeaPage() {
   const [sort, setSort] = useState('최신순');
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [filteredIdeas, setFilteredIdeas] = useState<IdeaCardData[]>([]);
 
-  const filteredIdeas = useMemo(() => {
-    const keyword = searchTerm.trim().toLowerCase().replace(/^#/, '');
-    return mockIdeas
-      .filter((idea) => visibility === '전체' || idea.visibility === visibility)
-      .filter((idea) => category === '전체' || idea.category === category)
-      .filter((idea) => !keyword || idea.title.toLowerCase().includes(keyword) || idea.tags.some((tag) => tag.toLowerCase().includes(keyword)))
-      .toSorted((first, second) => {
-        if (sort === '좋아요순') return second.likeCount - first.likeCount;
-        const firstDate = new Date(first.createdAt.replaceAll('.', '-')).getTime();
-        const secondDate = new Date(second.createdAt.replaceAll('.', '-')).getTime();
-        return sort === '오래된순' ? firstDate - secondDate : secondDate - firstDate;
-      });
+  useEffect(() => {
+    fetchMockIdeas(
+      visibility as '전체' | '공개' | '비공개',
+      category === '전체' ? undefined : category,
+      SORT_VALUE_MAP[sort as keyof typeof SORT_VALUE_MAP],
+      searchTerm.trim().replace(/^#/, '') || undefined,
+    ).then(setFilteredIdeas);
   }, [category, searchTerm, sort, visibility]);
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {

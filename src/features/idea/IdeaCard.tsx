@@ -1,10 +1,12 @@
 import type { KeyboardEvent } from 'react';
 import styled from 'styled-components';
 
-import type { Idea } from '@/features/idea/ideaData';
+import type { IdeaCard as IdeaCardData } from '@/mocks/ideaCards';
+import type { Category } from '@/components/common/Tag';
+import Tag from '@/components/common/Tag';
 import { tokens } from '@/styles/tokens';
 
-interface IdeaCardProps { idea: Idea; onClick: () => void; }
+interface IdeaCardProps { idea: IdeaCardData; onClick: () => void; }
 
 function IdeaCard({ idea, onClick }: IdeaCardProps) {
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
@@ -15,12 +17,14 @@ function IdeaCard({ idea, onClick }: IdeaCardProps) {
     <Card tabIndex={0} role="link" onClick={onClick} onKeyDown={handleKeyDown}>
       <Clip aria-hidden="true"><ClipRing /><ClipBar /></Clip>
       <CardBody>
-        <TopRow><Title>{idea.title}</Title><Visibility aria-label={idea.visibility}>{idea.visibility === '공개' ? '◎' : '▣'}</Visibility></TopRow>
+        <TopRow><Title>{idea.title}</Title><Visibility aria-label={idea.isPublic ? '공개' : '비공개'}>{idea.isPublic ? '◎' : '▣'}</Visibility></TopRow>
         <TagRow>
-          {idea.tags.map((tag) => <Tag key={tag}>#{tag}</Tag>)}
-          <Category>{idea.category}</Category>
+          {idea.tags?.map((tag) => (
+            <Tag key={tag} variant="hashtag" usage="idea">{tag}</Tag>
+          ))}
+          <Tag variant="category" usage="idea" category={idea.category as Category}>{idea.category}</Tag>
         </TagRow>
-        <RepositoryCount>레포 {idea.repositoryCount}개</RepositoryCount>
+        <RepositoryCount>레포 {idea.recoBotResult.length}개</RepositoryCount>
         <Summary>{idea.summary}</Summary>
         <Footer>
           <Date>{idea.createdAt}</Date>
@@ -51,8 +55,6 @@ const TopRow = styled.div`display:flex; align-items:center; justify-content:spac
 const Title = styled.h2`margin:0; overflow:hidden; font-size:${tokens.fontSize.xl}; font-weight:400; line-height:1.2; text-overflow:ellipsis; white-space:nowrap;`;
 const Visibility = styled.span`flex-shrink:0; color:${tokens.colors.text.light}; font-size:20px; line-height:1;`;
 const TagRow = styled.div`min-height:21px; margin-top:22px; display:flex; align-items:center; gap:8px; overflow:hidden;`;
-const Tag = styled.span`flex-shrink:0; padding:5px 11px; border-radius:13px; background:${tokens.colors.button.light}; font-size:10px; line-height:1;`;
-const Category = styled(Tag)`background:${tokens.colors.button.focus};`;
 const RepositoryCount = styled.p`margin:17px 4px 0; color:${tokens.colors.text.semiLight}; font-size:${tokens.fontSize.md};`;
 const Summary = styled.p`
   margin:13px 4px 0; display:-webkit-box; overflow:hidden; font-size:${tokens.fontSize.md}; line-height:1.4;

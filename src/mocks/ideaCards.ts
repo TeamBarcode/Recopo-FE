@@ -78,7 +78,7 @@ export const mockIdeaCards: IdeaCard[] = [
     title: 'React Todo 앱',
     summary: '아이디어 내용 미리보기 브레인스토밍 카드 Recobot이 분석, 정리해준 핵심요약',
     tags: ['#React', '#몰라'],
-    category: '생산성',
+    category: '업무/도구',
     recoBotResult: mockRecoSuccess,
     createdAt: '2026.06.24',
     isPublic: true,
