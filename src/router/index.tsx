@@ -5,6 +5,7 @@ import FriendsPage from '@/pages/FriendsPage';
 import HomePage from '@/pages/HomePage';
 import IdeaPage from '@/pages/IdeaPage';
 import IdeaDetailPage from '@/pages/IdeaDetailPage';
+import EditIdeaPage from '@/pages/EditIdeaPage';
 import LoginPage from '@/pages/LoginPage';
 import MyPage from '@/pages/MyPage';
 import EditProfilePage from '@/pages/EditProfilePage';
@@ -44,6 +45,10 @@ const router = createBrowserRouter([
       {
         path: '/ideas/:ideaId',
         element: <IdeaDetailPage />,
+      },
+      {
+        path: '/ideas/:ideaId/edit',
+        element: <EditIdeaPage />,
       },
       {
         path: '/friends',
