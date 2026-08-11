@@ -369,7 +369,7 @@ const Header = styled.div`
     flex-wrap: wrap;
     align-items: baseline;
     gap: 20px;
-    max-width: calc(100% - 190px);
+    max-width: calc(100% - 260px);
 `;
 
 const Title = styled.h1`
@@ -399,7 +399,7 @@ const DateText = styled.span`
 const MetaBox = styled.div`
     position: absolute;
     top: -24px;
-    right: -20px;
+    right: 70px;
     width: 180px;
     padding: 24px 12px 12px;
     background: ${tokens.colors.background};
