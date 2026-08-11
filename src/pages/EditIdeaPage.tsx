@@ -95,12 +95,12 @@ function EditIdeaPage() {
 
             <FieldRow>
                 <Label>제목</Label>
-                <Input size="lg" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="제목" />
+                <TitleInput size="lg" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="제목" />
             </FieldRow>
 
             <FieldRow>
                 <Label>카테고리</Label>
-                <Dropdown options={CATEGORY_OPTIONS} value={category} onChange={setCategory} size="md" placeholder="카테고리" />
+                <Dropdown options={CATEGORY_OPTIONS} value={category} onChange={setCategory} size="sm" placeholder="카테고리" />
             </FieldRow>
 
             <FieldRow>
@@ -115,12 +115,12 @@ function EditIdeaPage() {
                 </VisibilityRow>
             </FieldRow>
 
-            <FieldRow>
+            <FieldRow style={{ gap: '14px' }}>
                 <Label>해시태그 (최대 {MAX_TAGS}개)</Label>
                 <TagChipList>
                     {tags.map((tag, index) => (
                         <TagChipWrapper key={`${tag}-${index}`}>
-                            <TagChip>
+                            <TagChip $editing={editingTagIndex === index}>
                                 <RemoveTagButton type="button" onClick={() => handleRemoveTag(index)} aria-label="해시태그 삭제">
                                     ×
                                 </RemoveTagButton>
@@ -154,20 +154,25 @@ function EditIdeaPage() {
                 onClose={() => setIsSaveModalOpen(false)}
                 onConfirm={handleConfirmSave}
                 message="수정사항을 저장할까요?"
+                messageFontSize={tokens.fontSize.xl}
             />
             <Modal
                 type="confirm"
                 isOpen={isCancelModalOpen}
                 onClose={() => setIsCancelModalOpen(false)}
                 onConfirm={handleConfirmCancel}
-                message="수정을 취소할까요? 변경사항은 저장되지 않아요"
-                messageFontSize={tokens.fontSize.lg}
+                message={'수정을 취소할까요?\n변경사항은 저장되지 않아요'}
+                messageFontSize={tokens.fontSize.xl}
             />
         </Wrapper>
     );
 }
 
 export default EditIdeaPage;
+
+const TitleInput = styled(Input)`
+    border-bottom: 1px solid ${tokens.colors.border.secondary};
+`;
 
 const Wrapper = styled.div`
     max-width: 560px;
@@ -188,7 +193,7 @@ const FieldRow = styled.div`
 `;
 
 const Label = styled.div`
-    font-size: ${tokens.fontSize.md};
+    font-size: ${tokens.fontSize.lg};
     color: ${tokens.colors.text.light};
 `;
 
@@ -229,13 +234,13 @@ const TagChipWrapper = styled.div`
     gap: 3px;
 `;
 
-const TagChip = styled.div`
+const TagChip = styled.div<{ $editing?: boolean }>`
     position: relative;
     display: flex;
     align-items: center;
-    padding: 4px 10px;
+    padding: 6px 14px;
     border-radius: 9999px;
-    background: ${tokens.colors.button.light};
+    background: ${({ $editing }) => ($editing ? tokens.colors.button.focus : tokens.colors.button.light)};
 `;
 
 const RemoveTagButton = styled.button`
@@ -259,7 +264,7 @@ const RemoveTagButton = styled.button`
 `;
 
 const TagChipText = styled.span`
-    font-size: 12px;
+    font-size: 14px;
     font-weight: ${tokens.fontWeight.regular};
 `;
 
@@ -290,14 +295,15 @@ const HashtagInputRow = styled.div`
 const HashtagTextInput = styled.input`
     flex: 1;
     border: none;
-    border-bottom: 1px solid #626262;
+    border-bottom: 1px solid ${tokens.colors.border.secondary};
     background: transparent;
     padding: 0 0 6px;
     font-size: 15px;
     font-family: inherit;
 
     &::placeholder {
-        color: #626262;
+        color: ${tokens.colors.text.placeholder};
+        font-size: ${tokens.fontSize.md};
     }
 
     &:focus {

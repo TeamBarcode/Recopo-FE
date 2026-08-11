@@ -156,6 +156,7 @@ function IdeaDetailPage() {
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={handleConfirmDelete}
                 message="카드를 삭제할까요?"
+                messageFontSize={tokens.fontSize.xl}
             />
         </Wrapper>
     );

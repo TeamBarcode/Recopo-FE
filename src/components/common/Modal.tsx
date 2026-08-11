@@ -102,6 +102,7 @@ const ConfirmMessage = styled.p<{ $fontSize?: string }>`
   font-weight: ${tokens.fontWeight.semibold};
   color: ${tokens.colors.text.primary};
   text-align: center;
+  white-space: pre-line;
 `;
 
 const ConfirmButtonWrapper = styled.div`
