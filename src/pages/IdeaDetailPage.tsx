@@ -24,6 +24,10 @@ import clipIcon from '@/assets/idea-clip.svg';
 
 const formatCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k` : String(n));
 
+// 댓글 개수엔 답글도 포함해서 세야 함
+const countCommentsAndReplies = (comments: Comment[]) =>
+    comments.reduce((sum, comment) => sum + 1 + comment.replies.length, 0);
+
 function IdeaDetailPage() {
     const { ideaId } = useParams();
     const navigate = useNavigate();
@@ -33,7 +37,9 @@ function IdeaDetailPage() {
 
     useEffect(() => {
         if (!ideaId) return;
-        fetchMockIdeaDetail(ideaId).then(setIdea);
+        fetchMockIdeaDetail(ideaId).then((detail) =>
+            setIdea({ ...detail, commentCount: countCommentsAndReplies(detail.comments) }),
+        );
     }, [ideaId]);
 
     if (!idea) return <div>로딩중...</div>;
@@ -126,10 +132,10 @@ function IdeaDetailPage() {
                 <CommentSection
                     ideaId={ideaId!}
                     comments={idea.comments}
-                    onCommentsChange={(comments, countDelta) =>
+                    onCommentsChange={(comments) =>
                         setIdea((prev) =>
                             prev
-                                ? { ...prev, comments, commentCount: prev.commentCount + countDelta }
+                                ? { ...prev, comments, commentCount: countCommentsAndReplies(comments) }
                                 : prev,
                         )
                     }
@@ -154,7 +160,7 @@ export default IdeaDetailPage;
 interface CommentSectionProps {
     ideaId: string;
     comments: Comment[];
-    onCommentsChange: (comments: Comment[], countDelta: number) => void;
+    onCommentsChange: (comments: Comment[]) => void;
 }
 
 function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionProps) {
@@ -162,19 +168,20 @@ function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionPr
     const [openReplyCommentId, setOpenReplyCommentId] = useState<string | null>(null);
     const [replyInput, setReplyInput] = useState('');
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+    const [openReplyMenuId, setOpenReplyMenuId] = useState<string | null>(null);
 
     const handleSubmitComment = async () => {
         const content = newComment.trim();
         if (!content) return;
 
         const created = await createMockComment({ ideaId, content });
-        onCommentsChange([...comments, created], 1);
+        onCommentsChange([...comments, created]);
         setNewComment('');
     };
 
     const handleDeleteComment = async (commentId: string) => {
         await deleteMockComment(commentId);
-        onCommentsChange(comments.filter((comment) => comment.id !== commentId), -1);
+        onCommentsChange(comments.filter((comment) => comment.id !== commentId));
     };
 
     const handleSubmitReply = async (commentId: string) => {
@@ -188,7 +195,6 @@ function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionPr
                     ? { ...comment, replies: [...comment.replies, created] }
                     : comment,
             ),
-            1,
         );
         setReplyInput('');
         setOpenReplyCommentId(null);
@@ -202,7 +208,6 @@ function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionPr
                     ? { ...comment, replies: comment.replies.filter((reply) => reply.id !== replyId) }
                     : comment,
             ),
-            -1,
         );
     };
 
@@ -224,7 +229,7 @@ function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionPr
                                     setOpenReplyCommentId((prev) => (prev === comment.id ? null : comment.id))
                                 }
                             >
-                                답글달기
+                                답글
                             </Button>
                         </CommentActions>
 
@@ -237,17 +242,28 @@ function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionPr
                                         <CommentDate>{reply.createdAt}</CommentDate>
                                     </CommentHeader>
                                     <CommentContent>{reply.content}</CommentContent>
-                                    {reply.authorNickname === mockUser.nickname && (
-                                        <CommentActions>
-                                            <Button
-                                                variant="text"
+                                </CommentBody>
+                                {reply.authorNickname === mockUser.nickname && (
+                                    <MenuWrapper>
+                                        <MenuButton
+                                            type="button"
+                                            aria-label="답글 메뉴"
+                                            onClick={() =>
+                                                setOpenReplyMenuId((prev) => (prev === reply.id ? null : reply.id))
+                                            }
+                                        >
+                                            ···
+                                        </MenuButton>
+                                        {openReplyMenuId === reply.id && (
+                                            <MenuPopup
+                                                type="button"
                                                 onClick={() => handleDeleteReply(comment.id, reply.id)}
                                             >
                                                 삭제
-                                            </Button>
-                                        </CommentActions>
-                                    )}
-                                </CommentBody>
+                                            </MenuPopup>
+                                        )}
+                                    </MenuWrapper>
+                                )}
                             </ReplyItem>
                         ))}
 
@@ -525,13 +541,13 @@ const CommentAuthor = styled.span`
 `;
 
 const CommentDate = styled.span`
-    font-size: ${tokens.fontSize.sm};
-    color: ${tokens.colors.text.extraLight};
+    font-size: ${tokens.fontSize.xs};
+    color: #8c8c8c;
 `;
 
 const CommentContent = styled.p`
     margin-top: 4px;
-    font-size: ${tokens.fontSize.md};
+    font-size: ${tokens.fontSize.lg};
 `;
 
 const CommentActions = styled.div`
@@ -619,9 +635,10 @@ const MenuButton = styled.button`
 
 const MenuPopup = styled.button`
     position: absolute;
-    top: 100%;
-    right: 0;
-    margin-top: 4px;
+    top: 50%;
+    left: 100%;
+    margin-left: 6px;
+    transform: translateY(-50%);
     padding: 6px 14px;
     border: none;
     border-radius: 9999px;

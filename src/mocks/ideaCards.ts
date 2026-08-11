@@ -3,6 +3,14 @@ import { mockRecoSuccess } from './recobot';
 import { mockRecoEmpty } from './recobot';
 import { mockUser } from './user'; // 댓글/답글 작성자 정보용
 
+// 다른 시드 데이터('2026.06.24' 등)와 형식을 맞추기 위한 헬퍼
+const formatMockDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}.${month}.${day}`;
+};
+
 // ===== 타입 =====
 
 export interface IdeaCard {
@@ -260,7 +268,7 @@ export const createMockIdeaFromRecommendation = async (
     tags: request.tags,
     category: request.category,
     recoBotResult: request.recoItem ? [request.recoItem] : [],
-    createdAt: new Date().toISOString(),
+    createdAt: formatMockDate(new Date()),
     isPublic: request.isPublic,
     likeCount: 0,
     likedByMe: false,
