@@ -21,7 +21,7 @@ function Layout() {
 
 export default Layout;
 
-const HEADER_HEIGHT = '150px';
+const HEADER_HEIGHT = '120px';
 
 const PageWrapper = styled.div`
   min-height: 100vh;
