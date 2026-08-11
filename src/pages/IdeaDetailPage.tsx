@@ -594,6 +594,7 @@ const SendButton = styled.button`
     img {
         width: 13px;
         height: 13px;
+        transform: rotate(-90deg);
     }
 
     &:active {
@@ -626,7 +627,7 @@ const MenuPopup = styled.button`
     border-radius: 9999px;
     background: ${tokens.colors.button.light};
     box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.15);
-    font-size: ${tokens.fontSize.sm};
+    font-size: ${tokens.fontSize.md};
     white-space: nowrap;
     cursor: pointer;
 

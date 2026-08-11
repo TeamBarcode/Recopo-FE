@@ -90,7 +90,7 @@ const StyledButton = styled.button<{
       border: none;
       border-radius: 0;
       padding: 0;
-      font-size: ${tokens.fontSize.xs};
+      font-size: ${tokens.fontSize.md};
       color: ${tokens.colors.text.extraLight};
     `}
 

@@ -161,6 +161,7 @@ function EditIdeaPage() {
                 onClose={() => setIsCancelModalOpen(false)}
                 onConfirm={handleConfirmCancel}
                 message="수정을 취소할까요? 변경사항은 저장되지 않아요"
+                messageFontSize={tokens.fontSize.lg}
             />
         </Wrapper>
     );
