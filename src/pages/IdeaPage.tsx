@@ -44,17 +44,19 @@ function IdeaPage() {
 
   return (
     <Page>
-      <PageTitle>Idea</PageTitle>
       <Toolbar>
-        <Filters>
-          <Dropdown options={visibilityOptions} value={visibility} onChange={(value) => setVisibility(value || '전체')} size="sm" placeholder="전체" />
-          <Dropdown options={categoryOptions} value={category} onChange={(value) => setCategory(value)} size="sm" placeholder="카테고리" />
-          <Dropdown options={sortOptions} value={sort} onChange={(value) => setSort(value || '최신순')} size="sm" placeholder="정렬" />
-        </Filters>
-        <SearchForm onSubmit={handleSearch} role="search">
-          <SearchInput value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="제목 또는 해시태그 검색" aria-label="아이디어 검색" />
-          <SearchButton type="submit" aria-label="검색"><SearchIcon aria-hidden="true" /></SearchButton>
-        </SearchForm>
+        <PageTitle>Idea</PageTitle>
+        <FilterGroup>
+          <Filters>
+            <Dropdown options={visibilityOptions} value={visibility} onChange={(value) => setVisibility(value || '전체')} size="sm" placeholder="전체" />
+            <Dropdown options={categoryOptions} value={category} onChange={(value) => setCategory(value)} size="sm" placeholder="카테고리" />
+            <Dropdown options={sortOptions} value={sort} onChange={(value) => setSort(value || '최신순')} size="sm" placeholder="정렬" />
+          </Filters>
+          <SearchForm onSubmit={handleSearch} role="search">
+            <SearchInput value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="제목 또는 해시태그 검색" aria-label="아이디어 검색" />
+            <SearchButton type="submit" aria-label="검색"><SearchIcon aria-hidden="true" /></SearchButton>
+          </SearchForm>
+        </FilterGroup>
       </Toolbar>
 
       {filteredIdeas.length > 0 ? (
@@ -79,7 +81,8 @@ export default IdeaPage;
 
 const Page = styled.section`width:100%; padding:4px 28px 80px;`;
 const PageTitle = styled.h1`margin:0; font-family:${tokens.fontFamily.logo}; font-size:${tokens.fontSize.page}; font-weight:400;`;
-const Toolbar = styled.div`margin-top:14px; display:flex; align-items:flex-start; justify-content:flex-end; gap:37px;`;
+const Toolbar = styled.div`display:flex; align-items:center; justify-content:space-between;`;
+const FilterGroup = styled.div`display:flex; align-items:flex-start; gap:37px;`;
 const Filters = styled.div`
   position:relative; z-index:10; display:flex; align-items:flex-start; gap:12px;
   button { white-space:nowrap; } > div > div { z-index:20; }
