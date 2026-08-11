@@ -136,7 +136,7 @@ function StarIcon({ color }: IconProps) {
 
 const HeaderContainer = styled.header`
   width: 100%;
-  height: 120px;
+  height: 150px;
   padding: 0 80px;
   display: flex;
   align-items: center;
