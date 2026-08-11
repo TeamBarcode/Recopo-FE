@@ -98,8 +98,8 @@ const SearchIcon = styled.span`
   &::after { content:''; position:absolute; right:-5px; bottom:-3px; width:7px; height:2px; transform:rotate(48deg); transform-origin:left center; background:${tokens.colors.text.semiLight}; }
 `;
 const IdeaGrid = styled.div`
-  margin-top:50px; display:grid; grid-template-columns:repeat(3,minmax(220px,270px)); justify-content:space-between; gap:54px 72px;
-  @media (max-width:1000px) { grid-template-columns:repeat(2,minmax(220px,270px)); justify-content:space-around; }
+  margin-top:50px; display:grid; grid-template-columns:repeat(3,minmax(220px,270px)); justify-content:center; gap:54px 48px;
+  @media (max-width:1000px) { grid-template-columns:repeat(2,minmax(220px,270px)); justify-content:center; }
   @media (max-width:650px) { grid-template-columns:minmax(220px,270px); justify-content:center; }
 `;
 const EmptyArea = styled.div`margin-top:42px; display:flex; align-items:center; gap:95px;`;
