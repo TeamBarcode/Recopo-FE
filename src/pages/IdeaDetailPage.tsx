@@ -410,8 +410,8 @@ const MetaClip = styled.img`
     position: absolute;
     top: -14px;
     left: 50%;
-    width: 66px;
-    height: 61px;
+    width: 40px;
+    height: 36px;
     transform: translateX(-50%);
 `;
 
