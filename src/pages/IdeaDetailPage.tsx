@@ -408,10 +408,10 @@ const MetaBox = styled.div`
 
 const MetaClip = styled.img`
     position: absolute;
-    top: -18px;
+    top: -22px;
     left: 50%;
-    width: 40px;
-    height: 36px;
+    width: 66px;
+    height: 61px;
     transform: translateX(-50%);
 `;
 
