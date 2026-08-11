@@ -21,6 +21,8 @@ import heartIcon from '@/assets/idea-heart.svg';
 import commentIcon from '@/assets/idea-comment.svg';
 import sendArrowIcon from '@/assets/comment-send-arrow.svg';
 import clipIcon from '@/assets/idea-clip.svg';
+import visibilityPublicIcon from '@/assets/idea-visibility-public.svg';
+import visibilityPrivateIcon from '@/assets/idea-visibility-private.svg';
 
 const formatCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k` : String(n));
 
@@ -67,7 +69,13 @@ function IdeaDetailPage() {
             <HeaderRow>
                 <Header>
                     <Title>{idea.title}</Title>
-                    <DateText>{idea.createdAt}</DateText>
+                    <TitleMeta>
+                        <VisibilityIcon
+                            src={idea.isPublic ? visibilityPublicIcon : visibilityPrivateIcon}
+                            alt={idea.isPublic ? '공개' : '비공개'}
+                        />
+                        <DateText>{idea.createdAt}</DateText>
+                    </TitleMeta>
                 </Header>
 
                 <MetaBox>
@@ -91,7 +99,7 @@ function IdeaDetailPage() {
 
             <ContentBox>
                 <Section>
-                    <SectionTitle>아이디어 브레인스토밍</SectionTitle>
+                    <SectionTitle>아이디어</SectionTitle>
                     <BrainstormContent>{idea.brainstormContent || idea.summary}</BrainstormContent>
                 </Section>
 
@@ -122,9 +130,9 @@ function IdeaDetailPage() {
             </ContentBox>
 
             <Footer>
-                <FooterItem><FooterIcon src={heartIcon} alt="" />{idea.likeCount}개</FooterItem>
+                <FooterItem><HeartIcon src={heartIcon} alt="" />{idea.likeCount}개</FooterItem>
                 <FooterItemButton type="button" onClick={() => setIsCommentSectionOpen((prev) => !prev)}>
-                    <FooterIcon src={commentIcon} alt="" />{idea.commentCount}개
+                    <CommentIconImg src={commentIcon} alt="" />{idea.commentCount}개
                 </FooterItemButton>
             </Footer>
 
@@ -328,6 +336,7 @@ function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionPr
 }
 
 const Wrapper = styled.div`
+    position: relative;
     max-width: 744px;
     margin: 20px auto 0;
     padding: 32px 36px 40px;
@@ -352,19 +361,33 @@ const SmallButton = styled(Button)`
     ${({ variant }) => variant === 'edit' && `background-color: ${tokens.colors.button.light};`}
 `;
 
-const HeaderRow = styled.div`
-    position: relative;
-`;
+const HeaderRow = styled.div``;
 
 const Header = styled.div`
     display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
-    gap: 12px;
+    gap: 20px;
+    max-width: calc(100% - 190px);
 `;
 
 const Title = styled.h1`
+    flex: 0 1 auto;
     font-size: ${tokens.fontSize.title};
     font-weight: ${tokens.fontWeight.regular};
+`;
+
+const TitleMeta = styled.div`
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 8px;
+`;
+
+const VisibilityIcon = styled.img`
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
 `;
 
 const DateText = styled.span`
@@ -374,7 +397,7 @@ const DateText = styled.span`
 
 const MetaBox = styled.div`
     position: absolute;
-    top: -18px;
+    top: -24px;
     right: -20px;
     width: 180px;
     padding: 24px 12px 12px;
@@ -402,7 +425,7 @@ const MetaRow = styled.div`
 `;
 
 const MetaLabel = styled.span`
-    font-size: ${tokens.fontSize.sm};
+    font-size: ${tokens.fontSize.md};
     color: ${tokens.colors.text.extraLight};
 `;
 
@@ -410,6 +433,10 @@ const MetaTagList = styled.div`
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+
+    & > span {
+        font-size: 11px;
+    }
 `;
 
 const ContentBox = styled.div`
@@ -426,20 +453,20 @@ const Section = styled.div`
 `;
 
 const SectionTitle = styled.div`
-    font-size: ${tokens.fontSize.lg};
+    font-size: ${tokens.fontSize.xl};
     font-weight: ${tokens.fontWeight.semibold};
     margin-bottom: 12px;
 `;
 
 const BrainstormContent = styled.p`
-    font-size: ${tokens.fontSize.md};
+    font-size: ${tokens.fontSize.lg};
     color: ${tokens.colors.text.light};
     white-space: pre-wrap;
 `;
 
 const TechStackList = styled.ul`
     padding-left: 18px;
-    font-size: ${tokens.fontSize.md};
+    font-size: ${tokens.fontSize.lg};
     color: ${tokens.colors.text.light};
 
     li + li {
@@ -457,25 +484,25 @@ const RepoCard = styled.a`
 `;
 
 const RepoName = styled.div`
-    font-size: ${tokens.fontSize.lg};
+    font-size: ${tokens.fontSize.xl};
     font-weight: ${tokens.fontWeight.medium};
 `;
 
 const RepoDescription = styled.div`
     margin-top: 4px;
-    font-size: ${tokens.fontSize.md};
+    font-size: ${tokens.fontSize.lg};
     color: ${tokens.colors.text.light};
 `;
 
 const RepoReason = styled.div`
     margin-top: 8px;
-    font-size: ${tokens.fontSize.sm};
+    font-size: ${tokens.fontSize.md};
     color: ${tokens.colors.text.extraLight};
 `;
 
 const RepoMeta = styled.div`
     margin-top: 8px;
-    font-size: ${tokens.fontSize.sm};
+    font-size: ${tokens.fontSize.md};
     color: ${tokens.colors.text.extraLight};
 `;
 
@@ -493,9 +520,14 @@ const FooterItem = styled.span`
     color: ${tokens.colors.text.light};
 `;
 
-const FooterIcon = styled.img`
-    width: 15px;
+const HeartIcon = styled.img`
+    width: 17px;
     height: 15px;
+`;
+
+const CommentIconImg = styled.img`
+    width: 17px;
+    height: 17px;
 `;
 
 const FooterItemButton = styled.button`
