@@ -314,7 +314,10 @@ function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionPr
 const Wrapper = styled.div`
     max-width: 744px;
     margin: 20px auto 0;
-    padding-bottom: 60px;
+    padding: 32px 36px 40px;
+    border: 1px solid ${tokens.colors.border.primary};
+    box-shadow: 0 3px 3px rgba(0, 0, 0, 0.25);
+    background: white;
 `;
 
 const TopRow = styled.div`

@@ -88,6 +88,11 @@ function EditIdeaPage() {
 
     return (
         <Wrapper>
+            <ButtonRow>
+                <Button variant="cancel" onClick={() => setIsCancelModalOpen(true)}>취소</Button>
+                <Button variant="primary" onClick={() => setIsSaveModalOpen(true)}>저장</Button>
+            </ButtonRow>
+
             <FieldRow>
                 <Label>제목</Label>
                 <Input size="lg" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="제목" />
@@ -143,11 +148,6 @@ function EditIdeaPage() {
                 </HashtagInputRow>
             </FieldRow>
 
-            <ButtonRow>
-                <Button variant="cancel" onClick={() => setIsCancelModalOpen(true)}>취소</Button>
-                <Button variant="primary" onClick={() => setIsSaveModalOpen(true)}>저장</Button>
-            </ButtonRow>
-
             <Modal
                 type="confirm"
                 isOpen={isSaveModalOpen}
@@ -171,9 +171,13 @@ export default EditIdeaPage;
 const Wrapper = styled.div`
     max-width: 560px;
     margin: 20px auto 0;
+    padding: 32px 36px 40px;
     display: flex;
     flex-direction: column;
     gap: 24px;
+    border: 1px solid ${tokens.colors.border.primary};
+    box-shadow: 0 3px 3px rgba(0, 0, 0, 0.25);
+    background: white;
 `;
 
 const FieldRow = styled.div`
@@ -209,7 +213,6 @@ const ButtonRow = styled.div`
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    margin-top: 12px;
 `;
 
 const TagChipList = styled.div`

@@ -20,7 +20,7 @@ const SORT_VALUE_MAP = {
 function IdeaPage() {
   const navigate = useNavigate();
   const [visibility, setVisibility] = useState('전체');
-  const [category, setCategory] = useState('전체');
+  const [category, setCategory] = useState('');
   const [sort, setSort] = useState('최신순');
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,7 +29,7 @@ function IdeaPage() {
   useEffect(() => {
     fetchMockIdeas(
       visibility as '전체' | '공개' | '비공개',
-      category === '전체' ? undefined : category,
+      category === '전체' || !category ? undefined : category,
       SORT_VALUE_MAP[sort as keyof typeof SORT_VALUE_MAP],
       searchTerm.trim().replace(/^#/, '') || undefined,
     ).then(setFilteredIdeas);
@@ -48,7 +48,7 @@ function IdeaPage() {
       <Toolbar>
         <Filters>
           <Dropdown options={visibilityOptions} value={visibility} onChange={(value) => setVisibility(value || '전체')} size="sm" placeholder="전체" />
-          <Dropdown options={categoryOptions} value={category} onChange={(value) => setCategory(value || '전체')} size="sm" placeholder="카테고리" />
+          <Dropdown options={categoryOptions} value={category} onChange={(value) => setCategory(value)} size="sm" placeholder="카테고리" />
           <Dropdown options={sortOptions} value={sort} onChange={(value) => setSort(value || '최신순')} size="sm" placeholder="정렬" />
         </Filters>
         <SearchForm onSubmit={handleSearch} role="search">
