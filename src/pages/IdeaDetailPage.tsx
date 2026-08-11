@@ -339,7 +339,7 @@ function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionPr
 const Wrapper = styled.div`
     position: relative;
     max-width: 744px;
-    margin: 20px auto 0;
+    margin: 20px auto 80px;
     padding: 32px 36px 40px;
     border: 1px solid ${tokens.colors.border.primary};
     box-shadow: 0 3px 3px rgba(0, 0, 0, 0.25);
@@ -398,7 +398,7 @@ const DateText = styled.span`
 
 const MetaBox = styled.div`
     position: absolute;
-    top: -24px;
+    top: 4px;
     right: 70px;
     width: 180px;
     padding: 24px 12px 12px;
@@ -408,7 +408,7 @@ const MetaBox = styled.div`
 
 const MetaClip = styled.img`
     position: absolute;
-    top: -22px;
+    top: -14px;
     left: 50%;
     width: 66px;
     height: 61px;
@@ -421,7 +421,7 @@ const MetaRow = styled.div`
     gap: 6px;
 
     & + & {
-        margin-top: 10px;
+        margin-top: 16px;
     }
 `;
 
