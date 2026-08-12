@@ -11,9 +11,9 @@ import visibilityPublicIcon from '@/assets/idea-visibility-public.svg';
 import visibilityPrivateIcon from '@/assets/idea-visibility-private.svg';
 import clipIcon from '@/assets/idea-clip.svg';
 
-interface IdeaCardProps { idea: IdeaCardData; onClick: () => void; }
+interface IdeaCardProps { idea: IdeaCardData; onClick: () => void; hideVisibility?: boolean; }
 
-function IdeaCard({ idea, onClick }: IdeaCardProps) {
+function IdeaCard({ idea, onClick, hideVisibility }: IdeaCardProps) {
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onClick(); }
   };
@@ -24,10 +24,12 @@ function IdeaCard({ idea, onClick }: IdeaCardProps) {
       <CardBody>
         <TopRow>
           <Title>{idea.title}</Title>
-          <VisibilityIcon
-            src={idea.isPublic ? visibilityPublicIcon : visibilityPrivateIcon}
-            alt={idea.isPublic ? '공개' : '비공개'}
-          />
+          {!hideVisibility && (
+            <VisibilityIcon
+              src={idea.isPublic ? visibilityPublicIcon : visibilityPrivateIcon}
+              alt={idea.isPublic ? '공개' : '비공개'}
+            />
+          )}
         </TopRow>
         <TagRow>
           {idea.tags?.map((tag) => (

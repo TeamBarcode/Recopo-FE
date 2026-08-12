@@ -251,7 +251,7 @@ function FriendsPage() {
                         {friendIdeas.length > 0 ? (
                             <IdeaGrid>
                                 {friendIdeas.map((idea) => (
-                                    <IdeaCard key={idea.id} idea={idea} onClick={() => handleOpenIdea(idea.id)} />
+                                    <IdeaCard key={idea.id} idea={idea} onClick={() => handleOpenIdea(idea.id)} hideVisibility />
                                 ))}
                             </IdeaGrid>
                         ) : (
@@ -271,11 +271,6 @@ function FriendsPage() {
                     <DetailWrapper>
                         <DetailScroll>
                             <DetailHeaderRow>
-                                <DetailHeader>
-                                    <DetailTitle>{openIdea.title}</DetailTitle>
-                                    <DetailDate>{openIdea.createdAt}</DetailDate>
-                                </DetailHeader>
-
                                 <DetailMetaBox>
                                     <DetailMetaClip src={clipIcon} alt="" aria-hidden="true" />
                                     <DetailMetaRow>
@@ -293,6 +288,11 @@ function FriendsPage() {
                                         </DetailMetaTagList>
                                     </DetailMetaRow>
                                 </DetailMetaBox>
+
+                                <DetailHeader>
+                                    <DetailTitle>{openIdea.title}</DetailTitle>
+                                    <DetailDate>{openIdea.createdAt}</DetailDate>
+                                </DetailHeader>
                             </DetailHeaderRow>
 
                             <DetailContentBox>
@@ -409,7 +409,7 @@ const SearchForm = styled.form`
     height: 35px;
     display: flex;
     align-items: center;
-    border: 1px solid ${tokens.colors.border.search};
+    border: 1.5px solid ${tokens.colors.border.primary};
     border-radius: ${tokens.radius.xs};
     background: white;
 `;
@@ -476,9 +476,9 @@ const CloseButton = styled.button`
 `;
 
 const Divider = styled.div`
-    height: 1px;
+    height: 1.5px;
     background: ${tokens.colors.border.primary};
-    margin: 16px 0 20px;
+    margin: 28px 0 20px;
 `;
 
 const FriendRowMain = styled.button`
@@ -502,8 +502,8 @@ const FriendMenuWrapper = styled.div`
 const FriendMenuButton = styled.button`
     border: none;
     background: none;
-    padding: 4px;
-    font-size: ${tokens.fontSize.lg};
+    padding: 6px;
+    font-size: 22px;
     letter-spacing: -1px;
     color: ${tokens.colors.text.extraLight};
     cursor: pointer;
@@ -653,30 +653,32 @@ const DetailScroll = styled.div`
 `;
 
 const DetailHeaderRow = styled.div`
-    position: relative;
+    overflow: hidden; /* 아래 float 높이를 감싸도록 하는 clearfix */
 `;
 
 const DetailHeader = styled.div`
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-    padding-right: 150px;
+    /* flex 대신 일반 인라인 흐름으로 둬서 제목이 길어지면 메타박스(float)를 자연스럽게 피해 줄바꿈되고,
+       그 결과 남은 공간이 부족하면 날짜가 자동으로 다음 줄(제목 아래)로 내려가게 함 */
 `;
 
 const DetailTitle = styled.h2`
+    display: inline;
+    margin: 0;
     font-size: ${tokens.fontSize.title};
     font-weight: ${tokens.fontWeight.regular};
 `;
 
 const DetailDate = styled.span`
+    display: inline-block;
+    margin-left: 12px;
     font-size: ${tokens.fontSize.sm};
     color: ${tokens.colors.text.extraLight};
 `;
 
 const DetailMetaBox = styled.div`
-    position: absolute;
-    top: -4px;
-    right: 0;
+    position: relative;
+    float: right;
+    margin: -4px 0 14px 16px;
     width: 168px;
     padding: 16px 14px 14px;
     background: ${tokens.colors.background};
