@@ -12,12 +12,16 @@ import {
     fetchMockFriendIdeaDetail,
 } from '@/mocks/friends';
 import type { Friend, SearchedUser } from '@/mocks/friends';
-import type { IdeaCard, IdeaDetail } from '@/mocks/ideaCards';
+import type { IdeaCard as IdeaCardData, IdeaDetail } from '@/mocks/ideaCards';
+import type { Category } from '@/components/common/Tag';
 import Avatar from '@/components/common/Avatar';
 import Button from '@/components/common/Button';
 import Dropdown from '@/components/common/Dropdown';
 import Modal from '@/components/common/Modal';
 import Tag from '@/components/common/Tag';
+import IdeaCard from '@/features/idea/IdeaCard';
+import heartIcon from '@/assets/idea-heart.svg';
+import commentIcon from '@/assets/idea-comment.svg';
 import searchIcon from '@/assets/search.svg';
 import closeIcon from '@/assets/closeButton.svg';
 import recobotHappy from '@/assets/recobot-happy.svg';
@@ -34,7 +38,7 @@ function FriendsPage() {
     const [searchResults, setSearchResults] = useState<SearchedUser[] | null>(null);
 
     const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
-    const [friendIdeas, setFriendIdeas] = useState<IdeaCard[]>([]);
+    const [friendIdeas, setFriendIdeas] = useState<IdeaCardData[]>([]);
     const [ideaCategory, setIdeaCategory] = useState('');
     const [ideaSort, setIdeaSort] = useState('');
 
@@ -141,7 +145,7 @@ function FriendsPage() {
                             <Divider />
                             {searchResults.map((user) => (
                                 <ResultRow key={user.id}>
-                                    <Avatar size="xs" src={user.profileImageUrl} />
+                                    <Avatar size="sm" src={user.profileImageUrl} />
                                     <UserText>
                                         <UserNickname>{user.nickname}</UserNickname>
                                         <UserId>@{user.userId}</UserId>
@@ -168,7 +172,7 @@ function FriendsPage() {
                             {friends.map((friend) => (
                                 <FriendRow key={friend.id} $active={selectedFriend?.id === friend.id}>
                                     <FriendRowMain type="button" onClick={() => handleSelectFriend(friend)}>
-                                        <Avatar size="xs" src={friend.profileImageUrl} />
+                                        <Avatar size="sm" src={friend.profileImageUrl} />
                                         <UserNickname>{friend.nickname}</UserNickname>
                                     </FriendRowMain>
                                     <DeleteFriendButton type="button" onClick={() => setDeleteTarget(friend)}>
@@ -207,20 +211,7 @@ function FriendsPage() {
                         {friendIdeas.length > 0 ? (
                             <IdeaGrid>
                                 {friendIdeas.map((idea) => (
-                                    <IdeaCardEl key={idea.id} type="button" onClick={() => handleOpenIdea(idea.id)}>
-                                        <IdeaCardTitle>{idea.title}</IdeaCardTitle>
-                                        <IdeaCardTagRow>
-                                            {idea.tags?.map((tag) => (
-                                                <Tag key={tag} variant="hashtag" usage="idea">{tag}</Tag>
-                                            ))}
-                                            <Tag variant="hashtag" usage="idea">{idea.category}</Tag>
-                                        </IdeaCardTagRow>
-                                        <IdeaCardSummary>{idea.summary}</IdeaCardSummary>
-                                        <IdeaCardFooter>
-                                            <span>{idea.createdAt}</span>
-                                            <span>♡ {idea.likeCount}개 💬 {idea.commentCount}개</span>
-                                        </IdeaCardFooter>
-                                    </IdeaCardEl>
+                                    <IdeaCard key={idea.id} idea={idea} onClick={() => handleOpenIdea(idea.id)} />
                                 ))}
                             </IdeaGrid>
                         ) : (
@@ -243,10 +234,10 @@ function FriendsPage() {
                             <IdeaDetailDate>{openIdea.createdAt}</IdeaDetailDate>
                         </IdeaDetailHeader>
                         <TagRow>
-                            <Tag variant="hashtag" usage="idea">{openIdea.category}</Tag>
                             {openIdea.tags?.map((tag) => (
                                 <Tag key={tag} variant="hashtag" usage="idea">{tag}</Tag>
                             ))}
+                            <Tag variant="category" usage="idea" category={openIdea.category as Category}>{openIdea.category}</Tag>
                         </TagRow>
 
                         <DetailSection>
@@ -276,7 +267,8 @@ function FriendsPage() {
                         )}
 
                         <DetailFooter>
-                            ♡ {openIdea.likeCount}개 💬 {openIdea.commentCount}개
+                            <span><ReactionIcon src={heartIcon} alt="" />{openIdea.likeCount}개</span>
+                            <span><ReactionIcon src={commentIcon} alt="" />{openIdea.commentCount}개</span>
                         </DetailFooter>
                     </IdeaDetailContent>
                 )}
@@ -319,9 +311,9 @@ const SearchForm = styled.form`
     height: 35px;
     display: flex;
     align-items: center;
-    border: 1px solid ${tokens.colors.border.primary};
+    border: 1px solid ${tokens.colors.border.search};
     border-radius: ${tokens.radius.xs};
-    background: ${tokens.colors.background};
+    background: white;
 `;
 
 const SearchInput = styled.input`
@@ -526,55 +518,12 @@ const FilterRow = styled.div`
 
 const IdeaGrid = styled.div`
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-`;
+    grid-template-columns: repeat(3, minmax(220px, 270px));
+    justify-content: start;
+    gap: 40px 60px;
 
-const IdeaCardEl = styled.button`
-    text-align: left;
-    border: 1px solid ${tokens.colors.border.primary};
-    border-radius: ${tokens.radius.sm};
-    padding: 16px;
-    background: ${tokens.colors.background};
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-
-    &:active {
-        opacity: 0.7;
-    }
-`;
-
-const IdeaCardTitle = styled.div`
-    font-size: ${tokens.fontSize.lg};
-    font-weight: ${tokens.fontWeight.medium};
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-`;
-
-const IdeaCardTagRow = styled.div`
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-`;
-
-const IdeaCardSummary = styled.div`
-    font-size: ${tokens.fontSize.sm};
-    color: ${tokens.colors.text.light};
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-`;
-
-const IdeaCardFooter = styled.div`
-    display: flex;
-    justify-content: space-between;
-    font-size: ${tokens.fontSize.sm};
-    color: ${tokens.colors.text.extraLight};
-    margin-top: auto;
+    @media (max-width: 900px) { grid-template-columns: repeat(2, minmax(220px, 270px)); }
+    @media (max-width: 560px) { grid-template-columns: minmax(220px, 270px); }
 `;
 
 const IdeaDetailContent = styled.div`
@@ -646,6 +595,19 @@ const DetailRepoDescription = styled.div`
 `;
 
 const DetailFooter = styled.div`
-    font-size: ${tokens.fontSize.md};
+    display: flex;
+    gap: 13px;
+    font-size: 11px;
     color: ${tokens.colors.text.light};
+
+    span {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+`;
+
+const ReactionIcon = styled.img`
+    width: 13px;
+    height: 13px;
 `;
