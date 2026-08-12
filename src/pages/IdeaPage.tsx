@@ -21,7 +21,7 @@ function IdeaPage() {
   const navigate = useNavigate();
   const [visibility, setVisibility] = useState('전체');
   const [category, setCategory] = useState('');
-  const [sort, setSort] = useState('최신순');
+  const [sort, setSort] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredIdeas, setFilteredIdeas] = useState<IdeaCardData[]>([]);
@@ -44,35 +44,37 @@ function IdeaPage() {
 
   return (
     <Page>
-      <Toolbar>
-        <PageTitle>Idea</PageTitle>
-        <FilterGroup>
-          <Filters>
-            <Dropdown options={visibilityOptions} value={visibility} onChange={(value) => setVisibility(value || '전체')} size="sm" placeholder="전체" />
-            <Dropdown options={categoryOptions} value={category} onChange={(value) => setCategory(value)} size="sm" placeholder="카테고리" />
-            <Dropdown options={sortOptions} value={sort} onChange={(value) => setSort(value || '최신순')} size="sm" placeholder="정렬" />
-          </Filters>
-          <SearchForm onSubmit={handleSearch} role="search">
-            <SearchInput value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="제목 또는 해시태그 검색" aria-label="아이디어 검색" />
-            <SearchButton type="submit" aria-label="검색"><SearchIcon aria-hidden="true" /></SearchButton>
-          </SearchForm>
-        </FilterGroup>
-      </Toolbar>
+      <ContentArea>
+        <Toolbar>
+          <PageTitle>Idea</PageTitle>
+          <FilterGroup>
+            <Filters>
+              <Dropdown options={visibilityOptions} value={visibility} onChange={(value) => setVisibility(value || '전체')} size="sm" placeholder="전체" />
+              <Dropdown options={categoryOptions} value={category} onChange={(value) => setCategory(value)} size="sm" placeholder="카테고리" />
+              <Dropdown options={sortOptions} value={sort} onChange={setSort} size="sm" placeholder="정렬" />
+            </Filters>
+            <SearchForm onSubmit={handleSearch} role="search">
+              <SearchInput value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="제목 또는 해시태그 검색" aria-label="아이디어 검색" />
+              <SearchButton type="submit" aria-label="검색"><SearchIcon aria-hidden="true" /></SearchButton>
+            </SearchForm>
+          </FilterGroup>
+        </Toolbar>
 
-      {filteredIdeas.length > 0 ? (
-        <IdeaGrid>
-          {filteredIdeas.map((idea) => <IdeaCard key={idea.id} idea={idea} onClick={() => navigate(`/ideas/${idea.id}`)} />)}
-        </IdeaGrid>
-      ) : (
-        <EmptyArea>
-          <EmptyCard>
-            <EmptyClip src={clipIcon} alt="" aria-hidden="true" />
-            <EmptyTitle>{searchEmpty ? '검색 결과 없음' : '아이디어가 없어요!'}</EmptyTitle>
-            {!searchEmpty && <EmptyDescription><strong>Recobot</strong>과 함께 브레인스토밍 카드를<br />아이디어로 만들어 보세요</EmptyDescription>}
-          </EmptyCard>
-          {searchEmpty && <SearchEmptyDescription>해당 검색어와 일치하는 제목 또는 태그가 없습니다</SearchEmptyDescription>}
-        </EmptyArea>
-      )}
+        {filteredIdeas.length > 0 ? (
+          <IdeaGrid>
+            {filteredIdeas.map((idea) => <IdeaCard key={idea.id} idea={idea} onClick={() => navigate(`/ideas/${idea.id}`)} />)}
+          </IdeaGrid>
+        ) : (
+          <EmptyArea>
+            <EmptyCard>
+              <EmptyClip src={clipIcon} alt="" aria-hidden="true" />
+              <EmptyTitle>{searchEmpty ? '검색 결과 없음' : '아이디어가 없어요!'}</EmptyTitle>
+              {!searchEmpty && <EmptyDescription><strong>Recobot</strong>과 함께 브레인스토밍 카드를<br />아이디어로 만들어 보세요</EmptyDescription>}
+            </EmptyCard>
+            {searchEmpty && <SearchEmptyDescription>해당 검색어와 일치하는 제목 또는 태그가 없습니다</SearchEmptyDescription>}
+          </EmptyArea>
+        )}
+      </ContentArea>
     </Page>
   );
 }
@@ -80,6 +82,11 @@ function IdeaPage() {
 export default IdeaPage;
 
 const Page = styled.section`width:100%; padding:4px 28px 80px;`;
+const ContentArea = styled.div`
+  width:100%; max-width:1010px; margin:0 auto;
+  @media (max-width:1000px) { max-width:640px; }
+  @media (max-width:650px) { max-width:270px; }
+`;
 const PageTitle = styled.h1`margin:0; font-family:${tokens.fontFamily.logo}; font-size:${tokens.fontSize.page}; font-weight:400;`;
 const Toolbar = styled.div`display:flex; align-items:center; justify-content:space-between;`;
 const FilterGroup = styled.div`display:flex; align-items:flex-start; gap:37px;`;
