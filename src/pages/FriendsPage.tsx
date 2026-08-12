@@ -196,7 +196,7 @@ function FriendsPage() {
                         </>
                     ) : (
                         <>
-                            <PanelTitle>Friends({friends.length})</PanelTitle>
+                            <PanelTitle>Friends ({friends.length})</PanelTitle>
                             <Divider />
                             {friends.map((friend) => (
                                 <FriendRow key={friend.id} $active={selectedFriend?.id === friend.id}>
@@ -379,7 +379,22 @@ export default FriendsPage;
 
 const Wrapper = styled.div`
     display: flex;
-    gap: 24px;
+    gap: 72px;
+    margin-left: calc(50% - 50vw + 80px);
+    margin-right: calc(50% - 50vw + 80px);
+    max-width: calc(100vw - 160px);
+
+    @media (max-width: 1200px) {
+        margin-left: calc(50% - 50vw + 48px);
+        margin-right: calc(50% - 50vw + 48px);
+        max-width: calc(100vw - 96px);
+    }
+
+    @media (max-width: 900px) {
+        margin-left: calc(50% - 50vw + 24px);
+        margin-right: calc(50% - 50vw + 24px);
+        max-width: calc(100vw - 48px);
+    }
 `;
 
 const Sidebar = styled.div`
@@ -432,9 +447,9 @@ const SearchButton = styled.button`
 `;
 
 const ListPanel = styled.div`
-    border: 1px solid ${tokens.colors.border.primary};
     border-radius: ${tokens.radius.sm};
-    padding: 20px;
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.15);
+    padding: 24px 20px;
     min-height: 400px;
 `;
 
@@ -463,7 +478,7 @@ const CloseButton = styled.button`
 const Divider = styled.div`
     height: 1px;
     background: ${tokens.colors.border.primary};
-    margin: 8px 0 12px;
+    margin: 16px 0 20px;
 `;
 
 const FriendRowMain = styled.button`
@@ -518,7 +533,7 @@ const FriendRow = styled.div<{ $active: boolean }>`
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 8px 0;
+    padding: 14px 0;
 `;
 
 const ResultRow = styled.div`

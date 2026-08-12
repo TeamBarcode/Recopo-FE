@@ -103,6 +103,7 @@ const ConfirmMessage = styled.p`
   line-height: 1.5;
   color: ${tokens.colors.text.primary};
   text-align: center;
+  word-break: keep-all;
 `;
 
 const ConfirmButtonWrapper = styled.div`
