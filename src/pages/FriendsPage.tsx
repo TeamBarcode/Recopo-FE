@@ -254,28 +254,6 @@ function FriendsPage() {
                             <DetailSectionBody>{openIdea.summary}</DetailSectionBody>
                         </DetailSection>
 
-                        {openIdea.keywords.length > 0 && (
-                            <DetailSection>
-                                <DetailSectionTitle>핵심 키워드</DetailSectionTitle>
-                                <TagRow>
-                                    {openIdea.keywords.map((keyword) => (
-                                        <Tag key={keyword} variant="hashtag" usage="idea">{keyword}</Tag>
-                                    ))}
-                                </TagRow>
-                            </DetailSection>
-                        )}
-
-                        {openIdea.expectedFeatures.length > 0 && (
-                            <DetailSection>
-                                <DetailSectionTitle>예상 기능</DetailSectionTitle>
-                                <DetailTechList>
-                                    {openIdea.expectedFeatures.map((feature) => (
-                                        <li key={feature}>{feature}</li>
-                                    ))}
-                                </DetailTechList>
-                            </DetailSection>
-                        )}
-
                         {openIdea.techStack.length > 0 && (
                             <DetailSection>
                                 <DetailSectionTitle>추천 기술 스택</DetailSectionTitle>
