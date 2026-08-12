@@ -480,6 +480,7 @@ const FriendRowMain = styled.button`
 
 const FriendMenuWrapper = styled.div`
     position: relative;
+    z-index: 1;
     flex-shrink: 0;
 `;
 
@@ -495,9 +496,10 @@ const FriendMenuButton = styled.button`
 
 const FriendMenuPopup = styled.button`
     position: absolute;
-    top: 100%;
-    right: 0;
-    margin-top: 4px;
+    top: 50%;
+    left: 100%;
+    transform: translateY(-50%);
+    margin-left: 6px;
     padding: 6px 14px;
     border: none;
     border-radius: 9999px;
@@ -632,8 +634,7 @@ const DetailWrapper = styled.div`
 const DetailScroll = styled.div`
     height: 100%;
     overflow-y: auto;
-    padding-top: 22px;
-    padding-right: 4px;
+    padding: 28px 20px 4px;
 `;
 
 const DetailHeaderRow = styled.div`
@@ -644,7 +645,7 @@ const DetailHeader = styled.div`
     display: flex;
     align-items: baseline;
     gap: 12px;
-    padding-right: 140px;
+    padding-right: 150px;
 `;
 
 const DetailTitle = styled.h2`
@@ -659,20 +660,20 @@ const DetailDate = styled.span`
 
 const DetailMetaBox = styled.div`
     position: absolute;
-    top: -6px;
+    top: -4px;
     right: 0;
-    width: 160px;
-    padding: 20px 12px 12px;
+    width: 168px;
+    padding: 16px 14px 14px;
     background: ${tokens.colors.background};
     box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.25);
 `;
 
 const DetailMetaClip = styled.img`
     position: absolute;
-    top: -16px;
+    top: -20px;
     left: 50%;
-    width: 36px;
-    height: 32px;
+    width: 42px;
+    height: 38px;
     transform: translateX(-50%);
 `;
 
@@ -682,7 +683,7 @@ const DetailMetaRow = styled.div`
     gap: 6px;
 
     & + & {
-        margin-top: 10px;
+        margin-top: 14px;
     }
 `;
 
@@ -698,8 +699,8 @@ const DetailMetaTagList = styled.div`
 `;
 
 const DetailContentBox = styled.div`
-    margin-top: 24px;
-    padding: 20px;
+    margin-top: 22px;
+    padding: 26px;
     border: 1px solid ${tokens.colors.border.primary};
     border-radius: ${tokens.radius.sm};
 `;
@@ -751,7 +752,7 @@ const DetailRepoDescription = styled.div`
 const DetailFooter = styled.div`
     display: flex;
     gap: 20px;
-    margin-top: 16px;
+    margin-top: 14px;
     font-size: ${tokens.fontSize.md};
 `;
 

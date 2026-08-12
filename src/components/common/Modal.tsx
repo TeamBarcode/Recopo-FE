@@ -98,8 +98,8 @@ const ConfirmContent = styled.div`
 
 const ConfirmMessage = styled.p`
   margin: 0;
-  font-size: ${tokens.fontSize.lg};
-  font-weight: ${tokens.fontWeight.regular};
+  font-size: ${tokens.fontSize.xl};
+  font-weight: ${tokens.fontWeight.medium};
   line-height: 1.5;
   color: ${tokens.colors.text.primary};
   text-align: center;
@@ -115,7 +115,7 @@ const ConfirmButton = styled.button<{
 }>`
   flex: 1;
   border: none;
-  font-size: ${tokens.fontSize.xl};
+  font-size: ${tokens.fontSize.lg};
 
   ${({ variant }) =>
     variant === 'confirm' &&
