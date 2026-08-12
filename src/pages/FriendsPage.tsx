@@ -175,8 +175,8 @@ function FriendsPage() {
                                         <Avatar size="sm" src={friend.profileImageUrl} />
                                         <UserNickname>{friend.nickname}</UserNickname>
                                     </FriendRowMain>
-                                    <DeleteFriendButton type="button" onClick={() => setDeleteTarget(friend)}>
-                                        삭제
+                                    <DeleteFriendButton type="button" onClick={() => setDeleteTarget(friend)} aria-label={`${friend.nickname} 삭제`}>
+                                        ···
                                     </DeleteFriendButton>
                                 </FriendRow>
                             ))}
@@ -351,7 +351,7 @@ const SearchButton = styled.button`
 const ListPanel = styled.div`
     border: 1px solid ${tokens.colors.border.primary};
     border-radius: ${tokens.radius.sm};
-    padding: 16px;
+    padding: 20px;
     min-height: 400px;
 `;
 
@@ -387,7 +387,7 @@ const FriendRowMain = styled.button`
     flex: 1;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 18px;
     border: none;
     background: transparent;
     padding: 0;
@@ -397,14 +397,19 @@ const FriendRowMain = styled.button`
 
 const DeleteFriendButton = styled.button`
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 20px;
     border: none;
     background: transparent;
-    font-size: ${tokens.fontSize.sm};
+    font-size: ${tokens.fontSize.lg};
+    line-height: 1;
+    letter-spacing: 1px;
     color: ${tokens.colors.text.extraLight};
     cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.15s;
-    padding: 4px 6px;
+    padding: 0;
 
     &:hover {
         color: #ff3f3f;
@@ -416,12 +421,6 @@ const FriendRow = styled.div<{ $active: boolean }>`
     align-items: center;
     gap: 10px;
     padding: 8px 0;
-    border-radius: ${tokens.radius.xs};
-    background: ${({ $active }) => ($active ? tokens.colors.button.light : 'transparent')};
-
-    &:hover ${DeleteFriendButton} {
-        opacity: 1;
-    }
 `;
 
 const ResultRow = styled.div`
@@ -497,7 +496,9 @@ const RobotIcon = styled.img`
     height: 24px;
 `;
 
-const IdeaListArea = styled.div``;
+const IdeaListArea = styled.div`
+    max-width: 930px;
+`;
 
 const IdeaListHeader = styled.div`
     display: flex;
