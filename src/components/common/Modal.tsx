@@ -90,6 +90,7 @@ const ModalWrapper = styled.div<{
 
 const ConfirmContent = styled.div`
   height: 105px;
+  padding: 0 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -97,8 +98,9 @@ const ConfirmContent = styled.div`
 
 const ConfirmMessage = styled.p`
   margin: 0;
-  font-size: ${tokens.fontSize.page};
-  font-weight: ${tokens.fontWeight.semibold};
+  font-size: ${tokens.fontSize.lg};
+  font-weight: ${tokens.fontWeight.regular};
+  line-height: 1.5;
   color: ${tokens.colors.text.primary};
   text-align: center;
 `;

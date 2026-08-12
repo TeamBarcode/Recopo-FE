@@ -46,7 +46,7 @@ export const fetchMockFriends = async (): Promise<Friend[]> => {
 export const fetchMockFriendsIdeas = async (
   friendId: string, // Friend.id 값 (userId 아님) — ideaCards.ts의 authorId와 이 값으로 매칭됨
   category?: string,
-  sortBy?: 'latest' | 'oldest'
+  sortBy?: 'latest' | 'oldest' | 'popular'
 ): Promise<IdeaCard[]> => {
   await new Promise((r) => setTimeout(r, 300));
 
@@ -66,6 +66,8 @@ export const fetchMockFriendsIdeas = async (
     result = result.sort(
       (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
     );
+  } else if (sortBy === 'popular') {
+    result = result.sort((a, b) => b.likeCount - a.likeCount);
   }
 
   return result;
@@ -91,11 +93,23 @@ export const fetchMockFriendIdeaDetail = async (
 ): Promise<IdeaDetail> => {
   await new Promise((r) => setTimeout(r, 300));
 
-  if (mockIdeaDetail.id !== ideaId) {
+  // idea1(mockIdeaDetail)은 brainstormContent/techStack/comments가 채워진 상세 mock이라 그대로 반환
+  if (mockIdeaDetail.id === ideaId) {
+    return mockIdeaDetail;
+  }
+
+  const idea = mockIdeaCards.find((i) => i.id === ideaId);
+  if (!idea) {
     throw { message: '존재하지 않는 아이디어예요' };
   }
 
-  return mockIdeaDetail;
+  // 그 외 아이디어는 아직 상세 mock이 준비 안 되어 있어서 빈 값으로 반환
+  return {
+    ...idea,
+    brainstormContent: '',
+    techStack: [],
+    comments: [],
+  };
 };
 
 // ===== 유저 검색 (친구 아닌 사람도 포함, 검색어로만 동작) =====
