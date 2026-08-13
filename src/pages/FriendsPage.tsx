@@ -269,32 +269,32 @@ function FriendsPage() {
             <Modal type="default" size="lg" isOpen={!!openIdea} onClose={handleCloseIdeaModal}>
                 {openIdea && (
                     <DetailWrapper>
+                        <DetailHeaderRow>
+                            <DetailMetaBox>
+                                <DetailMetaClip src={clipIcon} alt="" aria-hidden="true" />
+                                <DetailMetaRow>
+                                    <DetailMetaLabel>카테고리</DetailMetaLabel>
+                                    <DetailMetaTagList>
+                                        <Tag variant="category" usage="idea" category={openIdea.category as Category}>{openIdea.category}</Tag>
+                                    </DetailMetaTagList>
+                                </DetailMetaRow>
+                                <DetailMetaRow>
+                                    <DetailMetaLabel>해시태그</DetailMetaLabel>
+                                    <DetailMetaTagList>
+                                        {openIdea.tags?.map((tag) => (
+                                            <Tag key={tag} variant="hashtag" usage="idea">{tag}</Tag>
+                                        ))}
+                                    </DetailMetaTagList>
+                                </DetailMetaRow>
+                            </DetailMetaBox>
+
+                            <DetailHeader>
+                                <DetailTitle>{openIdea.title}</DetailTitle>
+                                <DetailDate>{openIdea.createdAt}</DetailDate>
+                            </DetailHeader>
+                        </DetailHeaderRow>
+
                         <DetailScroll>
-                            <DetailHeaderRow>
-                                <DetailMetaBox>
-                                    <DetailMetaClip src={clipIcon} alt="" aria-hidden="true" />
-                                    <DetailMetaRow>
-                                        <DetailMetaLabel>카테고리</DetailMetaLabel>
-                                        <DetailMetaTagList>
-                                            <Tag variant="category" usage="idea" category={openIdea.category as Category}>{openIdea.category}</Tag>
-                                        </DetailMetaTagList>
-                                    </DetailMetaRow>
-                                    <DetailMetaRow>
-                                        <DetailMetaLabel>해시태그</DetailMetaLabel>
-                                        <DetailMetaTagList>
-                                            {openIdea.tags?.map((tag) => (
-                                                <Tag key={tag} variant="hashtag" usage="idea">{tag}</Tag>
-                                            ))}
-                                        </DetailMetaTagList>
-                                    </DetailMetaRow>
-                                </DetailMetaBox>
-
-                                <DetailHeader>
-                                    <DetailTitle>{openIdea.title}</DetailTitle>
-                                    <DetailDate>{openIdea.createdAt}</DetailDate>
-                                </DetailHeader>
-                            </DetailHeaderRow>
-
                             <DetailContentBox>
                                 <DetailSection>
                                     <DetailSectionTitle>아이디어 요약</DetailSectionTitle>
@@ -322,16 +322,16 @@ function FriendsPage() {
                                     </DetailSection>
                                 )}
                             </DetailContentBox>
-
-                            <DetailFooter>
-                                <DetailFooterButton type="button" onClick={handleToggleLike} $active={openIdea.likedByMe}>
-                                    <ReactionIcon src={heartIcon} alt="" />{openIdea.likeCount}개
-                                </DetailFooterButton>
-                                <DetailFooterButton type="button" onClick={() => setIsCommentDrawerOpen(true)}>
-                                    <ReactionIcon src={commentIcon} alt="" />{openIdea.commentCount}개
-                                </DetailFooterButton>
-                            </DetailFooter>
                         </DetailScroll>
+
+                        <DetailFooter>
+                            <DetailFooterButton type="button" onClick={handleToggleLike}>
+                                <HeartIcon $active={openIdea.likedByMe} />{openIdea.likeCount}개
+                            </DetailFooterButton>
+                            <DetailFooterButton type="button" onClick={() => setIsCommentDrawerOpen(true)}>
+                                <ReactionIcon src={commentIcon} alt="" />{openIdea.commentCount}개
+                            </DetailFooterButton>
+                        </DetailFooter>
 
                         <CommentDrawer $open={isCommentDrawerOpen} role="dialog" aria-label="댓글">
                             <CommentDrawerHeader>
@@ -409,7 +409,7 @@ const SearchForm = styled.form`
     height: 35px;
     display: flex;
     align-items: center;
-    border: 1.5px solid ${tokens.colors.border.primary};
+    border: 2px solid ${tokens.colors.border.primary};
     border-radius: ${tokens.radius.xs};
     background: white;
 `;
@@ -460,6 +460,7 @@ const PanelHeaderRow = styled.div`
 `;
 
 const PanelTitle = styled.div`
+    margin-left: 4px;
     font-size: ${tokens.fontSize.xl};
 `;
 
@@ -476,9 +477,9 @@ const CloseButton = styled.button`
 `;
 
 const Divider = styled.div`
-    height: 1.5px;
+    height: 2px;
     background: ${tokens.colors.border.primary};
-    margin: 28px 0 20px;
+    margin: 24px 0 16px;
 `;
 
 const FriendRowMain = styled.button`
@@ -643,17 +644,30 @@ const IdeaGrid = styled.div`
 const DetailWrapper = styled.div`
     position: relative;
     height: 432px;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
 `;
 
+/* 제목/메타박스(위)와 좋아요·댓글(아래)은 스크롤 영향을 안 받는 고정 영역, 이 사이만 스크롤됨 */
 const DetailScroll = styled.div`
-    height: 100%;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
-    padding: 28px 20px 4px;
+    padding: 0 20px;
 `;
 
 const DetailHeaderRow = styled.div`
-    overflow: hidden; /* 아래 float 높이를 감싸도록 하는 clearfix */
+    flex-shrink: 0;
+    padding: 28px 20px 0;
+
+    /* float(DetailMetaBox) 높이를 감싸도록 하는 clearfix. overflow:hidden 대신 써서
+       메타박스가 위쪽으로 살짝 걸쳐지는 음수 margin이 잘리지 않게 함 */
+    &::after {
+        content: '';
+        display: table;
+        clear: both;
+    }
 `;
 
 const DetailHeader = styled.div`
@@ -724,7 +738,7 @@ const DetailContentBox = styled.div`
 
 const DetailSection = styled.div`
     & + & {
-        margin-top: 24px;
+        margin-top: 34px;
     }
 `;
 
@@ -767,13 +781,14 @@ const DetailRepoDescription = styled.div`
 `;
 
 const DetailFooter = styled.div`
+    flex-shrink: 0;
     display: flex;
     gap: 20px;
-    margin-top: 14px;
+    padding: 14px 20px 4px;
     font-size: ${tokens.fontSize.md};
 `;
 
-const DetailFooterButton = styled.button<{ $active?: boolean }>`
+const DetailFooterButton = styled.button`
     display: flex;
     align-items: center;
     gap: 6px;
@@ -781,8 +796,24 @@ const DetailFooterButton = styled.button<{ $active?: boolean }>`
     background: none;
     padding: 0;
     font-size: ${tokens.fontSize.md};
-    color: ${({ $active }) => ($active ? '#ff5252' : tokens.colors.text.light)};
+    color: ${tokens.colors.text.light};
     cursor: pointer;
+`;
+
+const HeartIcon = styled.span<{ $active?: boolean }>`
+    display: inline-block;
+    flex-shrink: 0;
+    width: 13px;
+    height: 13px;
+    background-color: ${({ $active }) => ($active ? '#ff5252' : tokens.colors.text.light)};
+    -webkit-mask-image: url("${heartIcon}");
+    mask-image: url("${heartIcon}");
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
 `;
 
 const ReactionIcon = styled.img`
@@ -964,7 +995,7 @@ const CommentDrawer = styled.div<{ $open: boolean }>`
     background: ${tokens.colors.background};
     border-top-left-radius: ${tokens.radius.lg};
     border-top-right-radius: ${tokens.radius.lg};
-    box-shadow: 0px -4px 16px rgba(0, 0, 0, 0.12);
+    box-shadow: ${({ $open }) => ($open ? '0px -4px 16px rgba(0, 0, 0, 0.12)' : 'none')};
     transform: translateY(${({ $open }) => ($open ? '0%' : '100%')});
     transition: transform 0.3s ease;
 `;
