@@ -643,8 +643,12 @@ const IdeaGrid = styled.div`
 `;
 
 /* 메타박스가 모달 상단에 크게 걸쳐 보이도록 상단 패딩을 넉넉히 확보 (기본 lg 패딩 24px 대신) */
+/* Modal은 기본적으로 overflow:hidden이라 메타박스/클립이 모달 상단 테두리 밖으로
+   못 나감 — 이 모달 인스턴스에서만 overflow를 풀어서 Figma처럼 클립이 모달
+   위쪽 경계 바깥으로 실제로 걸쳐 나가 보이게 함. 닫힌 댓글 서랍은 DetailWrapper의
+   clip-path가 계속 감춰주므로 여기서 overflow를 풀어도 안전함 */
 const IdeaDetailModal = styled(Modal)`
-    padding-top: 40px !important;
+    overflow: visible !important;
 `;
 
 const DetailWrapper = styled.div`
@@ -670,7 +674,7 @@ const DetailScroll = styled.div`
 
 const DetailHeaderRow = styled.div`
     flex-shrink: 0;
-    padding: 2px 20px 0;
+    padding: 4px 20px 0;
 
     /* float(DetailMetaBox) 높이를 감싸도록 하는 clearfix. overflow:hidden 대신 써서
        메타박스가 위쪽으로 살짝 걸쳐지는 음수 margin이 잘리지 않게 함 */
@@ -703,7 +707,7 @@ const DetailDate = styled.span`
 const DetailMetaBox = styled.div`
     position: relative;
     float: right;
-    margin: -16px 0 14px 16px;
+    margin: -28px 0 14px 16px;
     width: 168px;
     padding: 16px 14px 14px;
     background: ${tokens.colors.background};
@@ -743,7 +747,7 @@ const DetailMetaTagList = styled.div`
 const DetailContentBox = styled.div`
     flex: 1;
     min-height: 0;
-    margin-top: 22px;
+    margin-top: 14px;
     padding: 26px;
     border: 1px solid ${tokens.colors.border.primary};
     border-radius: ${tokens.radius.sm};
