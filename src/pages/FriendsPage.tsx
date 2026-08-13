@@ -409,7 +409,7 @@ const SearchForm = styled.form`
     height: 35px;
     display: flex;
     align-items: center;
-    border: 2px solid ${tokens.colors.border.primary};
+    border: 1.5px solid ${tokens.colors.border.primary};
     border-radius: ${tokens.radius.xs};
     background: white;
 `;
@@ -480,7 +480,7 @@ const Divider = styled.div`
     height: 1px;
     background: ${tokens.colors.border.primary};
     margin: 24px 0 16px;
-    transform: scaleY(0.5); /* 1px보다 더 얇은 헤어라인처럼 보이게 */
+    transform: scaleY(0.75); /* 1px보다 살짝만 얇게 */
 `;
 
 const FriendRowMain = styled.button`
