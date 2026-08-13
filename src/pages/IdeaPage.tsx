@@ -98,11 +98,11 @@ const Filters = styled.div`
 const SearchForm = styled.form`width:268px; height:42px; display:flex; align-items:center; border:1px solid ${tokens.colors.border.search}; border-radius:10px; background:white;`;
 const SearchInput = styled.input`
   min-width:0; height:100%; flex:1; padding:0 14px; border:0; outline:0; background:transparent; font:inherit; font-size:${tokens.fontSize.md};
-  &::placeholder { color:${tokens.colors.text.placeholder}; }
+  &::placeholder { color:${tokens.colors.text.placeholder}; font-size:${tokens.fontSize.lg}; font-weight:${tokens.fontWeight.light}; }
 `;
 const SearchButton = styled.button`
   width:45px; height:100%; padding:0; display:flex; align-items:center; justify-content:center; border:0; background:transparent; cursor:pointer;
-  img { width:16px; height:16px; }
+  img { width:20px; height:20px; }
 `;
 const IdeaGrid = styled.div`
   margin-top:36px; display:grid; grid-template-columns:repeat(3,minmax(220px,270px)); justify-content:center; gap:40px 100px;

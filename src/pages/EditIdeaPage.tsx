@@ -95,7 +95,10 @@ function EditIdeaPage() {
 
             <FieldRow>
                 <Label>제목</Label>
-                <TitleInput size="lg" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="제목" />
+                <TitleInputWrapper>
+                    <TitleInput size="lg" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="제목" />
+                    <TitleUnderline />
+                </TitleInputWrapper>
             </FieldRow>
 
             <FieldRow>
@@ -170,9 +173,17 @@ function EditIdeaPage() {
 
 export default EditIdeaPage;
 
-const TitleInput = styled(Input)`
-    height: 36px;
-    border-bottom: 1px solid ${tokens.colors.border.secondary};
+const TitleInput = styled(Input)``;
+
+const TitleInputWrapper = styled.div`
+    display: flex;
+    flex-direction: column;
+`;
+
+const TitleUnderline = styled.div`
+    height: 1px;
+    margin-top: 10px;
+    background: ${tokens.colors.border.secondary};
 `;
 
 const Wrapper = styled.div`
