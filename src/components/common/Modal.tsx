@@ -91,6 +91,7 @@ const ModalWrapper = styled.div<{
 
 const ConfirmContent = styled.div`
   height: 105px;
+  padding: 0 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -98,11 +99,13 @@ const ConfirmContent = styled.div`
 
 const ConfirmMessage = styled.p<{ $fontSize?: string }>`
   margin: 0;
-  font-size: ${({ $fontSize }) => $fontSize ?? tokens.fontSize.page};
-  font-weight: ${tokens.fontWeight.semibold};
+  font-size: ${({ $fontSize }) => $fontSize ?? tokens.fontSize.xl};
+  font-weight: ${tokens.fontWeight.medium};
+  line-height: 1.5;
   color: ${tokens.colors.text.primary};
   text-align: center;
   white-space: pre-line;
+  word-break: keep-all;
 `;
 
 const ConfirmButtonWrapper = styled.div`
@@ -115,7 +118,7 @@ const ConfirmButton = styled.button<{
 }>`
   flex: 1;
   border: none;
-  font-size: ${tokens.fontSize.xl};
+  font-size: ${tokens.fontSize.lg};
 
   ${({ variant }) =>
     variant === 'confirm' &&
