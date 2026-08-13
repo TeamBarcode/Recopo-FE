@@ -101,7 +101,7 @@ function HomeIcon({ color }: IconProps) {
 
 function CloudIcon({ color }: IconProps) {
   return (
-    <svg width="65" height="43" viewBox="0 0 65 43" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="65" height="44" viewBox="0 0 65 44" fill="none" xmlns="http://www.w3.org/2000/svg">
       <ellipse cx="21.6644" cy="9.28465" rx="10.8321" ry="9.28465" fill={color} />
       <ellipse cx="37.1392" cy="24.7595" rx="10.8321" ry="9.28465" fill={color} />
       <ellipse cx="26.3069" cy="21.6648" rx="10.8321" ry="9.28465" fill={color} />
@@ -136,7 +136,7 @@ function StarIcon({ color }: IconProps) {
 
 const HeaderContainer = styled.header`
   width: 100%;
-  height: 150px;
+  height: 140px;
   padding: 0 80px;
   display: flex;
   align-items: center;

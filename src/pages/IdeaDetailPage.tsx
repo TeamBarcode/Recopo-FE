@@ -21,8 +21,14 @@ import heartIcon from '@/assets/idea-heart.svg';
 import commentIcon from '@/assets/idea-comment.svg';
 import sendArrowIcon from '@/assets/comment-send-arrow.svg';
 import clipIcon from '@/assets/idea-clip.svg';
+import visibilityPublicIcon from '@/assets/idea-visibility-public.svg';
+import visibilityPrivateIcon from '@/assets/idea-visibility-private.svg';
 
 const formatCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k` : String(n));
+
+// 댓글 개수엔 답글도 포함해서 세야 함
+const countCommentsAndReplies = (comments: Comment[]) =>
+    comments.reduce((sum, comment) => sum + 1 + comment.replies.length, 0);
 
 function IdeaDetailPage() {
     const { ideaId } = useParams();
@@ -33,7 +39,9 @@ function IdeaDetailPage() {
 
     useEffect(() => {
         if (!ideaId) return;
-        fetchMockIdeaDetail(ideaId).then(setIdea);
+        fetchMockIdeaDetail(ideaId).then((detail) =>
+            setIdea({ ...detail, commentCount: countCommentsAndReplies(detail.comments) }),
+        );
     }, [ideaId]);
 
     if (!idea) return <div>로딩중...</div>;
@@ -61,7 +69,13 @@ function IdeaDetailPage() {
             <HeaderRow>
                 <Header>
                     <Title>{idea.title}</Title>
-                    <DateText>{idea.createdAt}</DateText>
+                    <TitleMeta>
+                        <VisibilityIcon
+                            src={idea.isPublic ? visibilityPublicIcon : visibilityPrivateIcon}
+                            alt={idea.isPublic ? '공개' : '비공개'}
+                        />
+                        <DateText>{idea.createdAt}</DateText>
+                    </TitleMeta>
                 </Header>
 
                 <MetaBox>
@@ -85,7 +99,7 @@ function IdeaDetailPage() {
 
             <ContentBox>
                 <Section>
-                    <SectionTitle>아이디어 브레인스토밍</SectionTitle>
+                    <SectionTitle>아이디어</SectionTitle>
                     <BrainstormContent>{idea.brainstormContent || idea.summary}</BrainstormContent>
                 </Section>
 
@@ -116,9 +130,9 @@ function IdeaDetailPage() {
             </ContentBox>
 
             <Footer>
-                <FooterItem><FooterIcon src={heartIcon} alt="" />{idea.likeCount}개</FooterItem>
+                <FooterItem><HeartIcon src={heartIcon} alt="" />{idea.likeCount}개</FooterItem>
                 <FooterItemButton type="button" onClick={() => setIsCommentSectionOpen((prev) => !prev)}>
-                    <FooterIcon src={commentIcon} alt="" />{idea.commentCount}개
+                    <CommentIconImg src={commentIcon} alt="" />{idea.commentCount}개
                 </FooterItemButton>
             </Footer>
 
@@ -126,10 +140,10 @@ function IdeaDetailPage() {
                 <CommentSection
                     ideaId={ideaId!}
                     comments={idea.comments}
-                    onCommentsChange={(comments, countDelta) =>
+                    onCommentsChange={(comments) =>
                         setIdea((prev) =>
                             prev
-                                ? { ...prev, comments, commentCount: prev.commentCount + countDelta }
+                                ? { ...prev, comments, commentCount: countCommentsAndReplies(comments) }
                                 : prev,
                         )
                     }
@@ -142,6 +156,7 @@ function IdeaDetailPage() {
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={handleConfirmDelete}
                 message="카드를 삭제할까요?"
+                messageFontSize={tokens.fontSize.xl}
             />
         </Wrapper>
     );
@@ -154,7 +169,7 @@ export default IdeaDetailPage;
 interface CommentSectionProps {
     ideaId: string;
     comments: Comment[];
-    onCommentsChange: (comments: Comment[], countDelta: number) => void;
+    onCommentsChange: (comments: Comment[]) => void;
 }
 
 function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionProps) {
@@ -162,19 +177,20 @@ function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionPr
     const [openReplyCommentId, setOpenReplyCommentId] = useState<string | null>(null);
     const [replyInput, setReplyInput] = useState('');
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+    const [openReplyMenuId, setOpenReplyMenuId] = useState<string | null>(null);
 
     const handleSubmitComment = async () => {
         const content = newComment.trim();
         if (!content) return;
 
         const created = await createMockComment({ ideaId, content });
-        onCommentsChange([...comments, created], 1);
+        onCommentsChange([...comments, created]);
         setNewComment('');
     };
 
     const handleDeleteComment = async (commentId: string) => {
         await deleteMockComment(commentId);
-        onCommentsChange(comments.filter((comment) => comment.id !== commentId), -1);
+        onCommentsChange(comments.filter((comment) => comment.id !== commentId));
     };
 
     const handleSubmitReply = async (commentId: string) => {
@@ -188,7 +204,6 @@ function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionPr
                     ? { ...comment, replies: [...comment.replies, created] }
                     : comment,
             ),
-            1,
         );
         setReplyInput('');
         setOpenReplyCommentId(null);
@@ -202,7 +217,6 @@ function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionPr
                     ? { ...comment, replies: comment.replies.filter((reply) => reply.id !== replyId) }
                     : comment,
             ),
-            -1,
         );
     };
 
@@ -224,7 +238,7 @@ function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionPr
                                     setOpenReplyCommentId((prev) => (prev === comment.id ? null : comment.id))
                                 }
                             >
-                                답글달기
+                                답글
                             </Button>
                         </CommentActions>
 
@@ -237,17 +251,28 @@ function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionPr
                                         <CommentDate>{reply.createdAt}</CommentDate>
                                     </CommentHeader>
                                     <CommentContent>{reply.content}</CommentContent>
-                                    {reply.authorNickname === mockUser.nickname && (
-                                        <CommentActions>
-                                            <Button
-                                                variant="text"
+                                </CommentBody>
+                                {reply.authorNickname === mockUser.nickname && (
+                                    <MenuWrapper>
+                                        <MenuButton
+                                            type="button"
+                                            aria-label="답글 메뉴"
+                                            onClick={() =>
+                                                setOpenReplyMenuId((prev) => (prev === reply.id ? null : reply.id))
+                                            }
+                                        >
+                                            ···
+                                        </MenuButton>
+                                        {openReplyMenuId === reply.id && (
+                                            <MenuPopup
+                                                type="button"
                                                 onClick={() => handleDeleteReply(comment.id, reply.id)}
                                             >
                                                 삭제
-                                            </Button>
-                                        </CommentActions>
-                                    )}
-                                </CommentBody>
+                                            </MenuPopup>
+                                        )}
+                                    </MenuWrapper>
+                                )}
                             </ReplyItem>
                         ))}
 
@@ -312,9 +337,13 @@ function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionPr
 }
 
 const Wrapper = styled.div`
+    position: relative;
     max-width: 744px;
-    margin: 20px auto 0;
-    padding-bottom: 60px;
+    margin: 36px auto 80px;
+    padding: 32px 36px 40px;
+    border: 1px solid ${tokens.colors.border.primary};
+    box-shadow: 0 3px 3px rgba(0, 0, 0, 0.25);
+    background: white;
 `;
 
 const TopRow = styled.div`
@@ -333,19 +362,33 @@ const SmallButton = styled(Button)`
     ${({ variant }) => variant === 'edit' && `background-color: ${tokens.colors.button.light};`}
 `;
 
-const HeaderRow = styled.div`
-    position: relative;
-`;
+const HeaderRow = styled.div``;
 
 const Header = styled.div`
     display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
-    gap: 12px;
+    gap: 20px;
+    max-width: calc(100% - 260px);
 `;
 
 const Title = styled.h1`
+    flex: 0 1 auto;
     font-size: ${tokens.fontSize.title};
     font-weight: ${tokens.fontWeight.regular};
+`;
+
+const TitleMeta = styled.div`
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 8px;
+`;
+
+const VisibilityIcon = styled.img`
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
 `;
 
 const DateText = styled.span`
@@ -355,8 +398,8 @@ const DateText = styled.span`
 
 const MetaBox = styled.div`
     position: absolute;
-    top: -18px;
-    right: -20px;
+    top: -4px;
+    right: 70px;
     width: 180px;
     padding: 24px 12px 12px;
     background: ${tokens.colors.background};
@@ -365,7 +408,7 @@ const MetaBox = styled.div`
 
 const MetaClip = styled.img`
     position: absolute;
-    top: -18px;
+    top: -26px;
     left: 50%;
     width: 40px;
     height: 36px;
@@ -378,12 +421,12 @@ const MetaRow = styled.div`
     gap: 6px;
 
     & + & {
-        margin-top: 10px;
+        margin-top: 16px;
     }
 `;
 
 const MetaLabel = styled.span`
-    font-size: ${tokens.fontSize.sm};
+    font-size: ${tokens.fontSize.md};
     color: ${tokens.colors.text.extraLight};
 `;
 
@@ -391,6 +434,10 @@ const MetaTagList = styled.div`
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+
+    & > span {
+        font-size: 11px;
+    }
 `;
 
 const ContentBox = styled.div`
@@ -407,20 +454,20 @@ const Section = styled.div`
 `;
 
 const SectionTitle = styled.div`
-    font-size: ${tokens.fontSize.lg};
+    font-size: ${tokens.fontSize.xl};
     font-weight: ${tokens.fontWeight.semibold};
     margin-bottom: 12px;
 `;
 
 const BrainstormContent = styled.p`
-    font-size: ${tokens.fontSize.md};
+    font-size: ${tokens.fontSize.lg};
     color: ${tokens.colors.text.light};
     white-space: pre-wrap;
 `;
 
 const TechStackList = styled.ul`
     padding-left: 18px;
-    font-size: ${tokens.fontSize.md};
+    font-size: ${tokens.fontSize.lg};
     color: ${tokens.colors.text.light};
 
     li + li {
@@ -438,25 +485,25 @@ const RepoCard = styled.a`
 `;
 
 const RepoName = styled.div`
-    font-size: ${tokens.fontSize.lg};
+    font-size: ${tokens.fontSize.xl};
     font-weight: ${tokens.fontWeight.medium};
 `;
 
 const RepoDescription = styled.div`
     margin-top: 4px;
-    font-size: ${tokens.fontSize.md};
+    font-size: ${tokens.fontSize.lg};
     color: ${tokens.colors.text.light};
 `;
 
 const RepoReason = styled.div`
     margin-top: 8px;
-    font-size: ${tokens.fontSize.sm};
+    font-size: ${tokens.fontSize.md};
     color: ${tokens.colors.text.extraLight};
 `;
 
 const RepoMeta = styled.div`
     margin-top: 8px;
-    font-size: ${tokens.fontSize.sm};
+    font-size: ${tokens.fontSize.md};
     color: ${tokens.colors.text.extraLight};
 `;
 
@@ -474,9 +521,14 @@ const FooterItem = styled.span`
     color: ${tokens.colors.text.light};
 `;
 
-const FooterIcon = styled.img`
-    width: 15px;
+const HeartIcon = styled.img`
+    width: 17px;
     height: 15px;
+`;
+
+const CommentIconImg = styled.img`
+    width: 17px;
+    height: 17px;
 `;
 
 const FooterItemButton = styled.button`
@@ -522,13 +574,13 @@ const CommentAuthor = styled.span`
 `;
 
 const CommentDate = styled.span`
-    font-size: ${tokens.fontSize.sm};
-    color: ${tokens.colors.text.extraLight};
+    font-size: ${tokens.fontSize.xs};
+    color: #8c8c8c;
 `;
 
 const CommentContent = styled.p`
     margin-top: 4px;
-    font-size: ${tokens.fontSize.md};
+    font-size: ${tokens.fontSize.lg};
 `;
 
 const CommentActions = styled.div`
@@ -591,6 +643,7 @@ const SendButton = styled.button`
     img {
         width: 13px;
         height: 13px;
+        transform: rotate(-90deg);
     }
 
     &:active {
@@ -615,15 +668,16 @@ const MenuButton = styled.button`
 
 const MenuPopup = styled.button`
     position: absolute;
-    top: 100%;
-    right: 0;
-    margin-top: 4px;
+    top: 50%;
+    left: 100%;
+    margin-left: 6px;
+    transform: translateY(-50%);
     padding: 6px 14px;
     border: none;
     border-radius: 9999px;
     background: ${tokens.colors.button.light};
     box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.15);
-    font-size: ${tokens.fontSize.sm};
+    font-size: ${tokens.fontSize.md};
     white-space: nowrap;
     cursor: pointer;
 

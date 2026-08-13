@@ -11,9 +11,9 @@ import visibilityPublicIcon from '@/assets/idea-visibility-public.svg';
 import visibilityPrivateIcon from '@/assets/idea-visibility-private.svg';
 import clipIcon from '@/assets/idea-clip.svg';
 
-interface IdeaCardProps { idea: IdeaCardData; onClick: () => void; }
+interface IdeaCardProps { idea: IdeaCardData; onClick: () => void; hideVisibility?: boolean; }
 
-function IdeaCard({ idea, onClick }: IdeaCardProps) {
+function IdeaCard({ idea, onClick, hideVisibility }: IdeaCardProps) {
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onClick(); }
   };
@@ -24,10 +24,12 @@ function IdeaCard({ idea, onClick }: IdeaCardProps) {
       <CardBody>
         <TopRow>
           <Title>{idea.title}</Title>
-          <VisibilityIcon
-            src={idea.isPublic ? visibilityPublicIcon : visibilityPrivateIcon}
-            alt={idea.isPublic ? '공개' : '비공개'}
-          />
+          {!hideVisibility && (
+            <VisibilityIcon
+              src={idea.isPublic ? visibilityPublicIcon : visibilityPrivateIcon}
+              alt={idea.isPublic ? '공개' : '비공개'}
+            />
+          )}
         </TopRow>
         <TagRow>
           {idea.tags?.map((tag) => (
@@ -35,7 +37,6 @@ function IdeaCard({ idea, onClick }: IdeaCardProps) {
           ))}
           <Tag variant="category" usage="idea" category={idea.category as Category}>{idea.category}</Tag>
         </TagRow>
-        <RepositoryCount>레포 {idea.recoBotResult.length}개</RepositoryCount>
         <Summary>{idea.summary}</Summary>
         <Footer>
           <Date>{idea.createdAt}</Date>
@@ -64,9 +65,8 @@ const TopRow = styled.div`display:flex; align-items:center; justify-content:spac
 const Title = styled.h2`margin:0; overflow:hidden; font-size:${tokens.fontSize.xl}; font-weight:400; line-height:1.2; text-overflow:ellipsis; white-space:nowrap;`;
 const VisibilityIcon = styled.img`flex-shrink:0; width:21px; height:21px;`;
 const TagRow = styled.div`min-height:21px; margin-top:22px; display:flex; align-items:center; gap:8px; overflow:hidden;`;
-const RepositoryCount = styled.p`margin:17px 4px 0; color:${tokens.colors.text.semiLight}; font-size:${tokens.fontSize.md};`;
 const Summary = styled.p`
-  margin:13px 4px 0; display:-webkit-box; overflow:hidden; font-size:${tokens.fontSize.md}; line-height:1.4;
+  margin:17px 4px 0; display:-webkit-box; overflow:hidden; font-size:${tokens.fontSize.md}; line-height:1.4;
   -webkit-box-orient:vertical; -webkit-line-clamp:4;
 `;
 const Footer = styled.div`position:absolute; right:12px; bottom:11px; left:12px; display:flex; align-items:center; justify-content:space-between;`;

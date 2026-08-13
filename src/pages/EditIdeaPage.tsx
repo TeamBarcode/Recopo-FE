@@ -88,14 +88,22 @@ function EditIdeaPage() {
 
     return (
         <Wrapper>
+            <ButtonRow>
+                <Button variant="cancel" onClick={() => setIsCancelModalOpen(true)}>취소</Button>
+                <Button variant="primary" onClick={() => setIsSaveModalOpen(true)}>저장</Button>
+            </ButtonRow>
+
             <FieldRow>
                 <Label>제목</Label>
-                <Input size="lg" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="제목" />
+                <TitleInputWrapper>
+                    <TitleInput size="lg" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="제목" />
+                    <TitleUnderline />
+                </TitleInputWrapper>
             </FieldRow>
 
             <FieldRow>
                 <Label>카테고리</Label>
-                <Dropdown options={CATEGORY_OPTIONS} value={category} onChange={setCategory} size="md" placeholder="카테고리" />
+                <Dropdown options={CATEGORY_OPTIONS} value={category} onChange={setCategory} size="sm" placeholder="카테고리" />
             </FieldRow>
 
             <FieldRow>
@@ -110,12 +118,12 @@ function EditIdeaPage() {
                 </VisibilityRow>
             </FieldRow>
 
-            <FieldRow>
+            <FieldRow style={{ gap: '14px' }}>
                 <Label>해시태그 (최대 {MAX_TAGS}개)</Label>
                 <TagChipList>
                     {tags.map((tag, index) => (
                         <TagChipWrapper key={`${tag}-${index}`}>
-                            <TagChip>
+                            <TagChip $editing={editingTagIndex === index}>
                                 <RemoveTagButton type="button" onClick={() => handleRemoveTag(index)} aria-label="해시태그 삭제">
                                     ×
                                 </RemoveTagButton>
@@ -143,24 +151,21 @@ function EditIdeaPage() {
                 </HashtagInputRow>
             </FieldRow>
 
-            <ButtonRow>
-                <Button variant="cancel" onClick={() => setIsCancelModalOpen(true)}>취소</Button>
-                <Button variant="primary" onClick={() => setIsSaveModalOpen(true)}>저장</Button>
-            </ButtonRow>
-
             <Modal
                 type="confirm"
                 isOpen={isSaveModalOpen}
                 onClose={() => setIsSaveModalOpen(false)}
                 onConfirm={handleConfirmSave}
                 message="수정사항을 저장할까요?"
+                messageFontSize={tokens.fontSize.xl}
             />
             <Modal
                 type="confirm"
                 isOpen={isCancelModalOpen}
                 onClose={() => setIsCancelModalOpen(false)}
                 onConfirm={handleConfirmCancel}
-                message="수정을 취소할까요? 변경사항은 저장되지 않아요"
+                message={'수정을 취소할까요?\n변경사항은 저장되지 않아요'}
+                messageFontSize={tokens.fontSize.xl}
             />
         </Wrapper>
     );
@@ -168,12 +173,29 @@ function EditIdeaPage() {
 
 export default EditIdeaPage;
 
+const TitleInput = styled(Input)``;
+
+const TitleInputWrapper = styled.div`
+    display: flex;
+    flex-direction: column;
+`;
+
+const TitleUnderline = styled.div`
+    height: 1px;
+    margin-top: 10px;
+    background: ${tokens.colors.border.secondary};
+`;
+
 const Wrapper = styled.div`
     max-width: 560px;
     margin: 20px auto 0;
+    padding: 32px 36px 40px;
     display: flex;
     flex-direction: column;
     gap: 24px;
+    border: 1px solid ${tokens.colors.border.primary};
+    box-shadow: 0 3px 3px rgba(0, 0, 0, 0.25);
+    background: white;
 `;
 
 const FieldRow = styled.div`
@@ -183,7 +205,7 @@ const FieldRow = styled.div`
 `;
 
 const Label = styled.div`
-    font-size: ${tokens.fontSize.md};
+    font-size: ${tokens.fontSize.lg};
     color: ${tokens.colors.text.light};
 `;
 
@@ -209,7 +231,6 @@ const ButtonRow = styled.div`
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    margin-top: 12px;
 `;
 
 const TagChipList = styled.div`
@@ -225,13 +246,13 @@ const TagChipWrapper = styled.div`
     gap: 3px;
 `;
 
-const TagChip = styled.div`
+const TagChip = styled.div<{ $editing?: boolean }>`
     position: relative;
     display: flex;
     align-items: center;
-    padding: 4px 10px;
+    padding: 6px 14px;
     border-radius: 9999px;
-    background: ${tokens.colors.button.light};
+    background: ${({ $editing }) => ($editing ? tokens.colors.button.focus : tokens.colors.button.light)};
 `;
 
 const RemoveTagButton = styled.button`
@@ -255,7 +276,7 @@ const RemoveTagButton = styled.button`
 `;
 
 const TagChipText = styled.span`
-    font-size: 12px;
+    font-size: 14px;
     font-weight: ${tokens.fontWeight.regular};
 `;
 
@@ -286,14 +307,15 @@ const HashtagInputRow = styled.div`
 const HashtagTextInput = styled.input`
     flex: 1;
     border: none;
-    border-bottom: 1px solid #626262;
+    border-bottom: 1px solid ${tokens.colors.border.secondary};
     background: transparent;
     padding: 0 0 6px;
     font-size: 15px;
     font-family: inherit;
 
     &::placeholder {
-        color: #626262;
+        color: ${tokens.colors.text.placeholder};
+        font-size: ${tokens.fontSize.md};
     }
 
     &:focus {
