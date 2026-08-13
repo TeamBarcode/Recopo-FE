@@ -266,7 +266,7 @@ function FriendsPage() {
                 )}
             </MainArea>
 
-            <Modal type="default" size="lg" isOpen={!!openIdea} onClose={handleCloseIdeaModal}>
+            <IdeaDetailModal type="default" size="lg" isOpen={!!openIdea} onClose={handleCloseIdeaModal}>
                 {openIdea && (
                     <DetailWrapper>
                         <DetailHeaderRow>
@@ -355,7 +355,7 @@ function FriendsPage() {
                         </CommentDrawer>
                     </DetailWrapper>
                 )}
-            </Modal>
+            </IdeaDetailModal>
 
             <Modal
                 type="confirm"
@@ -409,7 +409,7 @@ const SearchForm = styled.form`
     height: 35px;
     display: flex;
     align-items: center;
-    border: 1px solid ${tokens.colors.border.primary};
+    border: 2px solid ${tokens.colors.border.primary};
     border-radius: ${tokens.radius.xs};
     background: white;
 `;
@@ -480,6 +480,7 @@ const Divider = styled.div`
     height: 1px;
     background: ${tokens.colors.border.primary};
     margin: 24px 0 16px;
+    transform: scaleY(0.5); /* 1px보다 더 얇은 헤어라인처럼 보이게 */
 `;
 
 const FriendRowMain = styled.button`
@@ -622,7 +623,7 @@ const IdeaListHeader = styled.div`
 `;
 
 const IdeaListTitle = styled.h2`
-    font-size: ${tokens.fontSize.page};
+    font-size: 18px;
     font-weight: ${tokens.fontWeight.regular};
 `;
 
@@ -641,27 +642,35 @@ const IdeaGrid = styled.div`
     @media (max-width: 560px) { grid-template-columns: minmax(220px, 270px); }
 `;
 
+/* 메타박스가 모달 상단에 크게 걸쳐 보이도록 상단 패딩을 넉넉히 확보 (기본 lg 패딩 24px 대신) */
+const IdeaDetailModal = styled(Modal)`
+    padding-top: 40px !important;
+`;
+
 const DetailWrapper = styled.div`
     position: relative;
     height: 432px;
     display: flex;
     flex-direction: column;
-    /* 위쪽만 클립하지 않음(메타박스 클립 아이콘이 Modal의 24px 패딩 영역까지 걸쳐 올라갈 수 있게) —
+    /* 위쪽만 클립하지 않음(메타박스 클립 아이콘이 Modal의 넉넉한 상단 패딩 영역까지 걸쳐 올라갈 수 있게) —
        아래/좌우는 그대로 잘라서 닫힌 댓글 서랍(핸들바 등)이 하단에 삐져나와 보이지 않게 함 */
-    clip-path: inset(-40px 0 0 0);
+    clip-path: inset(-60px 0 0 0);
 `;
 
-/* 제목/메타박스(위)와 좋아요·댓글(아래)은 스크롤 영향을 안 받는 고정 영역, 이 사이만 스크롤됨 */
+/* 제목/메타박스(위)와 좋아요·댓글(아래)은 스크롤 영향을 안 받는 고정 영역.
+   이 영역 자체는 스크롤되지 않고, 안쪽 DetailContentBox(회색 테두리 박스)의 위치/크기가
+   고정된 채로 그 박스 내부에서만 스크롤됨 */
 const DetailScroll = styled.div`
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
     padding: 0 20px;
+    display: flex;
+    flex-direction: column;
 `;
 
 const DetailHeaderRow = styled.div`
     flex-shrink: 0;
-    padding: 6px 20px 0;
+    padding: 2px 20px 0;
 
     /* float(DetailMetaBox) 높이를 감싸도록 하는 clearfix. overflow:hidden 대신 써서
        메타박스가 위쪽으로 살짝 걸쳐지는 음수 margin이 잘리지 않게 함 */
@@ -694,7 +703,7 @@ const DetailDate = styled.span`
 const DetailMetaBox = styled.div`
     position: relative;
     float: right;
-    margin: -6px 0 14px 16px;
+    margin: -16px 0 14px 16px;
     width: 168px;
     padding: 16px 14px 14px;
     background: ${tokens.colors.background};
@@ -732,10 +741,28 @@ const DetailMetaTagList = styled.div`
 `;
 
 const DetailContentBox = styled.div`
+    flex: 1;
+    min-height: 0;
     margin-top: 22px;
     padding: 26px;
     border: 1px solid ${tokens.colors.border.primary};
     border-radius: ${tokens.radius.sm};
+    overflow-y: auto;
+
+    /* 얇고 옅은 스크롤바 */
+    scrollbar-width: thin;
+    scrollbar-color: ${tokens.colors.border.secondary} transparent;
+
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+        background-color: ${tokens.colors.border.secondary};
+        border-radius: 9999px;
+    }
 `;
 
 const DetailSection = styled.div`
