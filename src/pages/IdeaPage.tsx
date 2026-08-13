@@ -10,6 +10,7 @@ import { fetchMockIdeas } from '@/mocks/ideaCards';
 import type { IdeaCard as IdeaCardData } from '@/mocks/ideaCards';
 import { tokens } from '@/styles/tokens';
 import clipIcon from '@/assets/idea-clip.svg';
+import searchIcon from '@/assets/search.svg';
 
 const SORT_VALUE_MAP = {
   최신순: 'latest',
@@ -55,7 +56,7 @@ function IdeaPage() {
             </Filters>
             <SearchForm onSubmit={handleSearch} role="search">
               <SearchInput value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="제목 또는 해시태그 검색" aria-label="아이디어 검색" />
-              <SearchButton type="submit" aria-label="검색"><SearchIcon aria-hidden="true" /></SearchButton>
+              <SearchButton type="submit" aria-label="검색"><img src={searchIcon} alt="" /></SearchButton>
             </SearchForm>
           </FilterGroup>
         </Toolbar>
@@ -99,10 +100,9 @@ const SearchInput = styled.input`
   min-width:0; height:100%; flex:1; padding:0 14px; border:0; outline:0; background:transparent; font:inherit; font-size:${tokens.fontSize.md};
   &::placeholder { color:${tokens.colors.text.placeholder}; }
 `;
-const SearchButton = styled.button`width:45px; height:100%; padding:0; display:flex; align-items:center; justify-content:center; border:0; background:transparent; cursor:pointer;`;
-const SearchIcon = styled.span`
-  position:relative; width:15px; height:15px; display:block; border:2px solid ${tokens.colors.text.semiLight}; border-radius:50%;
-  &::after { content:''; position:absolute; right:-5px; bottom:-3px; width:7px; height:2px; transform:rotate(48deg); transform-origin:left center; background:${tokens.colors.text.semiLight}; }
+const SearchButton = styled.button`
+  width:45px; height:100%; padding:0; display:flex; align-items:center; justify-content:center; border:0; background:transparent; cursor:pointer;
+  img { width:16px; height:16px; }
 `;
 const IdeaGrid = styled.div`
   margin-top:36px; display:grid; grid-template-columns:repeat(3,minmax(220px,270px)); justify-content:center; gap:40px 100px;

@@ -171,6 +171,7 @@ function EditIdeaPage() {
 export default EditIdeaPage;
 
 const TitleInput = styled(Input)`
+    height: 36px;
     border-bottom: 1px solid ${tokens.colors.border.secondary};
 `;
 
