@@ -90,8 +90,8 @@ const StyledButton = styled.button<{
       border: none;
       border-radius: 0;
       padding: 0;
-      font-size: ${tokens.fontSize.xs};
-      color: ${tokens.colors.text.extraLight};
+      font-size: ${tokens.fontSize.sm};
+      color: #8c8c8c;
     `}
 
   /* size가 전달된 경우에만 기존 variant 크기 스타일을 덮어씀 */

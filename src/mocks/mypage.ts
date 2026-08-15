@@ -49,10 +49,9 @@ export const updateMockNickname = async (
 ): Promise<User> => {
   await new Promise((r) => setTimeout(r, 500));
 
-  return {
-    ...mockUser,
-    nickname: request.nickname,
-  };
+  mockUser.nickname = request.nickname;
+
+  return mockUser;
 };
 
 // ===== 아이디 변경 =====
@@ -81,20 +80,42 @@ export const updateMockUserId = async (
     throw mockUserIdErrorExists;
   }
 
-  return {
-    ...mockUser,
-    userId: request.userId,
-  };
+  mockUser.userId = request.userId;
+
+  return mockUser;
+};
+
+// ===== 아이디 중복 확인 =====
+export interface CheckUserIdResponse {
+  isDuplicate: boolean;
+}
+
+export const checkMockUserIdDuplicate = async (
+  userId: string
+): Promise<CheckUserIdResponse> => {
+  await new Promise((r) => setTimeout(r, 300));
+
+  return { isDuplicate: userId === EXISTING_USER_ID };
 };
 
 // ===== 프로필 사진 삭제 =====
 export const deleteMockProfileImage = async (): Promise<User> => {
   await new Promise((r) => setTimeout(r, 300));
 
-  return {
-    ...mockUser,
-    profileImageUrl: undefined,
-  };
+  mockUser.profileImageUrl = undefined;
+
+  return mockUser;
+};
+
+// ===== 프로필 사진 변경 =====
+export const updateMockProfileImage = async (
+  profileImageUrl: string
+): Promise<User> => {
+  await new Promise((r) => setTimeout(r, 300));
+
+  mockUser.profileImageUrl = profileImageUrl;
+
+  return mockUser;
 };
 
 // ===== 개인정보 조회 =====

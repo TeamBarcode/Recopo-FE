@@ -7,10 +7,12 @@ import {
     fetchMockMyPageSummary,
     updateMockNickname,
     updateMockUserId,
+    checkMockUserIdDuplicate,
     deleteMockProfileImage,
-    mockUserIdErrorExists,
-    type UpdateUserIdErrorResponse,
+    updateMockProfileImage,
 } from '@/mocks/mypage';
+
+type UserIdCheckStatus = 'idle' | 'available' | 'duplicate';
 
 const USER_ID_REGEX = /^[a-zA-Z0-9_]{2,20}$/;
 const USER_ID_FORMAT_MESSAGE = '영문, 숫자, 언더바만 허용하며 2~20자 이내로 입력해주세요';
@@ -22,10 +24,12 @@ function EditProfileBoard() {
 
     const [nickname, setNickname] = useState('');
     const [nicknameInput, setNicknameInput] = useState('');
+    const [isEditingName, setIsEditingName] = useState(false);
 
     const [userId, setUserId] = useState('');
     const [userIdInput, setUserIdInput] = useState('');
-    const [userIdDuplicateError, setUserIdDuplicateError] = useState('');
+    const [isEditingUserId, setIsEditingUserId] = useState(false);
+    const [userIdCheckStatus, setUserIdCheckStatus] = useState<UserIdCheckStatus>('idle');
 
     useEffect(() => {
         fetchMockMyPageSummary().then((summary) => {
@@ -37,16 +41,22 @@ function EditProfileBoard() {
         });
     }, []);
 
-    const handleChangeImage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChangeImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
-        setProfileImageUrl(URL.createObjectURL(file));
+        const objectUrl = URL.createObjectURL(file);
+        await updateMockProfileImage(objectUrl);
+        setProfileImageUrl(objectUrl);
     };
 
     const handleDeleteImage = async () => {
         await deleteMockProfileImage();
         setProfileImageUrl(undefined);
+    };
+
+    const handleStartEditName = () => {
+        setIsEditingName(true);
     };
 
     const handleSaveNickname = async () => {
@@ -56,40 +66,55 @@ function EditProfileBoard() {
         const updated = await updateMockNickname({ nickname: trimmed });
         setNickname(updated.nickname);
         setNicknameInput(updated.nickname);
+        setIsEditingName(false);
     };
 
     const handleCancelNickname = () => {
         setNicknameInput(nickname);
+        setIsEditingName(false);
     };
 
     const userIdFormatValid = USER_ID_REGEX.test(userIdInput.trim());
+    const canSaveUserId = userIdFormatValid && userIdCheckStatus === 'available';
+
+    const handleStartEditUserId = () => {
+        setIsEditingUserId(true);
+    };
 
     const handleUserIdInputChange = (value: string) => {
         setUserIdInput(value);
-        setUserIdDuplicateError('');
+        setUserIdCheckStatus('idle');
     };
 
-    const handleSaveUserId = async () => {
+    const handleCheckUserIdDuplicate = async () => {
         const trimmed = userIdInput.trim();
         if (!USER_ID_REGEX.test(trimmed)) return;
 
-        try {
-            const updated = await updateMockUserId({ userId: trimmed });
-            setUserId(updated.userId);
-            setUserIdInput(updated.userId);
-            setUserIdDuplicateError('');
-        } catch (caughtError) {
-            const error = caughtError as UpdateUserIdErrorResponse;
-            setUserIdDuplicateError(error.message ?? mockUserIdErrorExists.message);
-        }
+        const { isDuplicate } = await checkMockUserIdDuplicate(trimmed);
+        setUserIdCheckStatus(isDuplicate ? 'duplicate' : 'available');
+    };
+
+    const handleSaveUserId = async () => {
+        if (!canSaveUserId) return;
+
+        const updated = await updateMockUserId({ userId: userIdInput.trim() });
+        setUserId(updated.userId);
+        setUserIdInput(updated.userId);
+        setUserIdCheckStatus('idle');
+        setIsEditingUserId(false);
     };
 
     const handleCancelUserId = () => {
         setUserIdInput(userId);
-        setUserIdDuplicateError('');
+        setUserIdCheckStatus('idle');
+        setIsEditingUserId(false);
     };
 
-    const userIdErrorMessage = userIdDuplicateError || (!userIdFormatValid ? USER_ID_FORMAT_MESSAGE : '');
+    const userIdErrorMessage = !userIdFormatValid
+        ? USER_ID_FORMAT_MESSAGE
+        : userIdCheckStatus === 'duplicate'
+        ? '아이디가 중복이에요'
+        : '';
 
     return (
         <Wrapper>
@@ -121,40 +146,68 @@ function EditProfileBoard() {
 
             <FieldGroup>
                 <FieldLabel>프로필 이름</FieldLabel>
-                <FieldValue
-                    value={nicknameInput}
-                    onChange={(e) => setNicknameInput(e.target.value)}
-                />
+                <FieldInputRow>
+                    <FieldValue
+                        value={nicknameInput}
+                        onChange={(e) => setNicknameInput(e.target.value)}
+                        readOnly={!isEditingName}
+                    />
+                    {!isEditingName && (
+                        <ChangeButton type="button" onClick={handleStartEditName}>
+                            변경
+                        </ChangeButton>
+                    )}
+                </FieldInputRow>
                 <FieldDivider />
-                <ButtonGroupRow>
-                    <CancelButton type="button" onClick={handleCancelNickname}>
-                        취소
-                    </CancelButton>
-                    <SaveButton type="button" disabled={!nicknameInput.trim()} onClick={handleSaveNickname}>
-                        저장
-                    </SaveButton>
-                </ButtonGroupRow>
+                {isEditingName && (
+                    <ButtonGroupRow>
+                        <CancelButton type="button" onClick={handleCancelNickname}>
+                            취소
+                        </CancelButton>
+                        <SaveButton type="button" disabled={!nicknameInput.trim()} onClick={handleSaveNickname}>
+                            저장
+                        </SaveButton>
+                    </ButtonGroupRow>
+                )}
             </FieldGroup>
 
             <FieldGroup>
                 <FieldLabel>아이디</FieldLabel>
-                <UserIdRow>
+                <FieldInputRow>
                     <AtPrefix>@</AtPrefix>
                     <FieldValue
                         value={userIdInput}
                         onChange={(e) => handleUserIdInputChange(e.target.value)}
+                        readOnly={!isEditingUserId}
                     />
-                </UserIdRow>
+                    {!isEditingUserId && (
+                        <ChangeButton type="button" onClick={handleStartEditUserId}>
+                            변경
+                        </ChangeButton>
+                    )}
+                    {isEditingUserId && (
+                        <DuplicateCheckButton
+                            type="button"
+                            $status={userIdCheckStatus}
+                            disabled={!userIdFormatValid}
+                            onClick={handleCheckUserIdDuplicate}
+                        >
+                            중복 확인
+                        </DuplicateCheckButton>
+                    )}
+                </FieldInputRow>
                 <FieldDivider />
                 {userIdErrorMessage && <ErrorMessage>{userIdErrorMessage}</ErrorMessage>}
-                <ButtonGroupRow>
-                    <CancelButton type="button" onClick={handleCancelUserId}>
-                        취소
-                    </CancelButton>
-                    <SaveButton type="button" disabled={!userIdFormatValid} onClick={handleSaveUserId}>
-                        저장
-                    </SaveButton>
-                </ButtonGroupRow>
+                {isEditingUserId && (
+                    <ButtonGroupRow>
+                        <CancelButton type="button" onClick={handleCancelUserId}>
+                            취소
+                        </CancelButton>
+                        <SaveButton type="button" disabled={!canSaveUserId} onClick={handleSaveUserId}>
+                            저장
+                        </SaveButton>
+                    </ButtonGroupRow>
+                )}
             </FieldGroup>
         </Wrapper>
     );
@@ -262,7 +315,8 @@ const FieldLabel = styled.div`
 `;
 
 const FieldValue = styled.input`
-    width : 100%;
+    flex : 1;
+    min-width : 0;
     border : none;
     outline : none;
     background : none;
@@ -273,22 +327,63 @@ const FieldValue = styled.input`
     color : ${tokens.colors.text.primary};
 `;
 
-const UserIdRow = styled.div`
+const FieldInputRow = styled.div`
     display : flex;
     align-items : center;
     gap : 2px;
-    border-bottom : none;
-
-    ${FieldValue} {
-        padding-bottom : 8px;
-    }
 `;
 
 const AtPrefix = styled.span`
+    flex-shrink : 0;
     padding-bottom : 8px;
     font-size : ${tokens.fontSize.lg};
     font-weight : ${tokens.fontWeight.regular};
     color : ${tokens.colors.text.primary};
+`;
+
+const ChangeButton = styled.button`
+    flex-shrink : 0;
+    width : 39px;
+    height : 28px;
+    margin-right : 9px;
+    margin-bottom : 8px;
+    box-sizing : border-box;
+    border : 1px solid #EBEBEB;
+    border-radius : 10px;
+    background : #FFFFFF;
+    font-size : ${tokens.fontSize.sm};
+    font-weight : ${tokens.fontWeight.regular};
+    cursor : pointer;
+
+    &:active {
+        opacity : 0.6;
+    }
+`;
+
+const DuplicateCheckButton = styled.button<{ $status : UserIdCheckStatus }>`
+    flex-shrink : 0;
+    width : 70px;
+    height : 28px;
+    margin-right : 9px;
+    margin-bottom : 8px;
+    box-sizing : border-box;
+    border : 1px solid ${({ $status }) =>
+        $status === 'duplicate' ? '#FF7D7D' : $status === 'available' ? '#8CD594' : '#E5E5E5'};
+    border-radius : 8px;
+    background : #FFFFFF;
+    color : ${tokens.colors.text.primary};
+    font-size : ${tokens.fontSize.sm};
+    font-weight : ${tokens.fontWeight.regular};
+    cursor : pointer;
+
+    &:disabled {
+        cursor : not-allowed;
+        opacity : 0.5;
+    }
+
+    &:not(:disabled):active {
+        opacity : 0.6;
+    }
 `;
 
 const FieldDivider = styled.div`
