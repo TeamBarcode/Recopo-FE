@@ -15,6 +15,15 @@ function Header() {
   const [hasUnread, setHasUnread] = useState(hasUnreadNotification());
   const notificationRef = useRef<HTMLDivElement>(null);
 
+  // 알림창을 열어보는 순간(안의 알림을 클릭하기 전이라도) 빨간 뱃지는 사라짐
+  const handleToggleNotification = () => {
+    setIsNotificationOpen((prev) => {
+      const next = !prev;
+      if (next) setHasUnread(false);
+      return next;
+    });
+  };
+
   useEffect(() => {
     if (!isNotificationOpen) return;
 
@@ -76,12 +85,12 @@ function Header() {
           <IconButton
             size="lg"
             ariaLabel="알림"
-            onClick={() => setIsNotificationOpen((prev) => !prev)}
+            onClick={handleToggleNotification}
             icon={<NotificationIcon src={notificationIcon} alt="" />}
           />
           {hasUnread && <NotificationDot />}
           {isNotificationOpen && (
-            <NotificationPanel onUnreadChange={setHasUnread} />
+            <NotificationPanel onNavigate={() => setIsNotificationOpen(false)} />
           )}
         </NotificationWrapper>
 

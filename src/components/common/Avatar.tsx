@@ -10,8 +10,8 @@ interface AvatarProps {
 
 /*위치별 사이즈*/
 const sizeMap = {
-  xs: '30px', // 댓글, 알림
-  sm: '42px', // 친구 목록
+  xs: '30px', // 댓글
+  sm: '42px', // 친구 목록, 알림창
   md: '65px', // 상단바
   lg: '88px', // 마이페이지
 };
