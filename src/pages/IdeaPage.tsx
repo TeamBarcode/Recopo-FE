@@ -13,9 +13,9 @@ import clipIcon from '@/assets/idea-clip.svg';
 import searchIcon from '@/assets/search.svg';
 
 const SORT_VALUE_MAP = {
-  최신순: 'latest',
-  오래된순: 'oldest',
-  좋아요순: 'popular',
+  '최신 순': 'latest',
+  '오래된 순': 'oldest',
+  '좋아요 순': 'popular',
 } as const;
 
 function IdeaPage() {

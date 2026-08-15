@@ -38,7 +38,7 @@ const CATEGORY_OPTIONS = [
     '콘텐츠/미디어', '생활', '건강', '업무/도구', '개발/디자인', '사람', '기타',
 ];
 
-const SORT_OPTIONS = ['최신순', '오래된순', '좋아요순'];
+const SORT_OPTIONS = ['최신 순', '오래된 순', '좋아요 순'];
 
 function FriendsPage() {
     const [friends, setFriends] = useState<Friend[]>([]);
@@ -63,7 +63,7 @@ function FriendsPage() {
 
     useEffect(() => {
         if (!selectedFriend) return;
-        const sortBy = ideaSort === '최신순' ? 'latest' : ideaSort === '오래된순' ? 'oldest' : ideaSort === '좋아요순' ? 'popular' : undefined;
+        const sortBy = ideaSort === '최신 순' ? 'latest' : ideaSort === '오래된 순' ? 'oldest' : ideaSort === '좋아요 순' ? 'popular' : undefined;
         fetchMockFriendsIdeas(selectedFriend.id, ideaCategory || undefined, sortBy).then(setFriendIdeas);
     }, [selectedFriend, ideaCategory, ideaSort]);
 
