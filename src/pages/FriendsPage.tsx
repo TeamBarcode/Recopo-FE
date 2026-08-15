@@ -735,7 +735,7 @@ const DetailMetaRow = styled.div`
 `;
 
 const DetailMetaLabel = styled.span`
-    font-size: ${tokens.fontSize.sm};
+    font-size: ${tokens.fontSize.md};
     color: ${tokens.colors.text.extraLight};
 `;
 
@@ -743,6 +743,10 @@ const DetailMetaTagList = styled.div`
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+
+    & > span {
+        font-size: 11px;
+    }
 `;
 
 const DetailContentBox = styled.div`
@@ -777,20 +781,20 @@ const DetailSection = styled.div`
 `;
 
 const DetailSectionTitle = styled.div`
-    font-size: ${tokens.fontSize.xl};
+    font-size: 15px;
     font-weight: ${tokens.fontWeight.semibold};
     margin-bottom: 8px;
 `;
 
 const DetailSectionBody = styled.p`
-    font-size: ${tokens.fontSize.lg};
+    font-size: 13px;
     color: ${tokens.colors.text.light};
     white-space: pre-wrap;
 `;
 
 const DetailTechList = styled.ul`
     padding-left: 18px;
-    font-size: ${tokens.fontSize.lg};
+    font-size: 13px;
     color: ${tokens.colors.text.light};
 `;
 
@@ -804,13 +808,13 @@ const DetailRepoCard = styled.a`
 `;
 
 const DetailRepoName = styled.div`
-    font-size: ${tokens.fontSize.lg};
+    font-size: 13px;
     font-weight: ${tokens.fontWeight.medium};
 `;
 
 const DetailRepoDescription = styled.div`
     margin-top: 4px;
-    font-size: ${tokens.fontSize.md};
+    font-size: ${tokens.fontSize.sm};
     color: ${tokens.colors.text.light};
 `;
 
@@ -1036,14 +1040,14 @@ const CommentDrawer = styled.div<{ $open: boolean }>`
 
 const CommentDrawerHeader = styled.div`
     flex-shrink: 0;
-    padding: 10px 20px 12px;
+    padding: 14px 24px 14px;
     border-bottom: 1px solid ${tokens.colors.border.primary};
 `;
 
 const CommentDrawerHandle = styled.div`
-    width: 36px;
+    width: 40px;
     height: 4px;
-    margin: 0 auto 10px;
+    margin: 0 auto 12px;
     border-radius: 9999px;
     background: ${tokens.colors.border.secondary};
 `;
@@ -1055,7 +1059,7 @@ const CommentDrawerTitleRow = styled.div`
 `;
 
 const CommentDrawerTitle = styled.span`
-    font-size: ${tokens.fontSize.lg};
+    font-size: ${tokens.fontSize.xl};
     font-weight: ${tokens.fontWeight.medium};
 `;
 
@@ -1066,8 +1070,8 @@ const CommentDrawerCloseButton = styled.button`
     cursor: pointer;
 
     img {
-        width: 16px;
-        height: 16px;
+        width: 18px;
+        height: 18px;
     }
 `;
 
@@ -1075,15 +1079,15 @@ const CommentDrawerBody = styled.div`
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 16px 20px;
+    padding: 20px 24px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 22px;
 `;
 
 const CommentDrawerInputRow = styled.div`
     flex-shrink: 0;
-    padding: 12px 20px;
+    padding: 14px 24px;
     border-top: 1px solid ${tokens.colors.border.primary};
     display: flex;
     gap: 10px;
@@ -1107,18 +1111,18 @@ const CommentHeader = styled.div`
 `;
 
 const CommentAuthor = styled.span`
-    font-size: ${tokens.fontSize.md};
+    font-size: 13px;
     font-weight: ${tokens.fontWeight.medium};
 `;
 
 const CommentDate = styled.span`
-    font-size: ${tokens.fontSize.sm};
+    font-size: 11px;
     color: ${tokens.colors.text.extraLight};
 `;
 
 const CommentContent = styled.p`
     margin-top: 4px;
-    font-size: ${tokens.fontSize.md};
+    font-size: 13px;
 `;
 
 const CommentActions = styled.div`
@@ -1144,12 +1148,12 @@ const ReplyInputRow = styled.div`
 
 const PillInput = styled.input`
     flex: 1;
-    height: 38px;
-    padding: 0 14px;
+    height: 42px;
+    padding: 0 16px;
     border: 1px solid ${tokens.colors.border.secondary};
     border-radius: 9999px;
     background: transparent;
-    font-size: ${tokens.fontSize.md};
+    font-size: 13px;
 
     &::placeholder {
         color: ${tokens.colors.text.placeholder};
@@ -1162,8 +1166,8 @@ const PillInput = styled.input`
 
 const SendButton = styled.button`
     flex-shrink: 0;
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     border: none;
     background: ${tokens.colors.button.light};
@@ -1173,8 +1177,8 @@ const SendButton = styled.button`
     cursor: pointer;
 
     img {
-        width: 12px;
-        height: 12px;
+        width: 13px;
+        height: 13px;
     }
 
     &:active {
