@@ -270,7 +270,7 @@ function FriendsPage() {
                 {openIdea && (
                     <DetailWrapper>
                         <DetailHeaderRow>
-                            <DetailMetaBox>
+                            <DetailMetaBox $hidden={isCommentDrawerOpen}>
                                 <DetailMetaClip src={clipIcon} alt="" aria-hidden="true" />
                                 <DetailMetaRow>
                                     <DetailMetaLabel>카테고리</DetailMetaLabel>
@@ -650,6 +650,12 @@ const IdeaGrid = styled.div`
 const IdeaDetailModal = styled(Modal)`
     overflow: visible !important;
     width: 620px !important;
+    /* 좌우 패딩을 0으로 만들고, 그 대신 헤더/콘텐츠/푸터가 각자 패딩으로 여백을 챙기게 함 —
+       그래야 댓글 서랍(DetailWrapper 기준 inset:0)이 모달 가로 폭 전체를 그대로 차지해서
+       진짜로 모달 카드 끝까지 꽉 차 보임(음수 마진으로 패딩 밖까지 미는 방식은 실제로 위치가
+       깨지는 버그가 있어서 이 방식으로 대체) */
+    padding-left: 0 !important;
+    padding-right: 0 !important;
 `;
 
 const DetailWrapper = styled.div`
@@ -668,14 +674,14 @@ const DetailWrapper = styled.div`
 const DetailScroll = styled.div`
     flex: 1;
     min-height: 0;
-    padding: 0 20px;
+    padding: 0 44px;
     display: flex;
     flex-direction: column;
 `;
 
 const DetailHeaderRow = styled.div`
     flex-shrink: 0;
-    padding: 4px 20px 0;
+    padding: 4px 44px 0;
 
     /* float(DetailMetaBox) 높이를 감싸도록 하는 clearfix. overflow:hidden 대신 써서
        메타박스가 위쪽으로 살짝 걸쳐지는 음수 margin이 잘리지 않게 함 */
@@ -705,7 +711,7 @@ const DetailDate = styled.span`
     color: ${tokens.colors.text.extraLight};
 `;
 
-const DetailMetaBox = styled.div`
+const DetailMetaBox = styled.div<{ $hidden?: boolean }>`
     position: relative;
     float: right;
     margin: -30px 0 14px 16px;
@@ -713,11 +719,14 @@ const DetailMetaBox = styled.div`
     padding: 18px 15px 15px;
     background: ${tokens.colors.background};
     box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.25);
+    /* 댓글 서랍이 열리면 서랍이 못 덮는 위쪽 overhang 부분(클립 등)이 서랍 위로
+       삐져나와 보이는 걸 막기 위해 숨김 */
+    visibility: ${({ $hidden }) => ($hidden ? 'hidden' : 'visible')};
 `;
 
 const DetailMetaClip = styled.img`
     position: absolute;
-    top: -24px;
+    top: -28px;
     left: 50%;
     width: 44px;
     height: 40px;
@@ -822,7 +831,7 @@ const DetailFooter = styled.div`
     flex-shrink: 0;
     display: flex;
     gap: 20px;
-    padding: 16px 20px 6px;
+    padding: 16px 44px 6px;
     font-size: ${tokens.fontSize.lg};
 `;
 
