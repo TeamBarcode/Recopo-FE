@@ -726,6 +726,9 @@ const DetailHeaderRow = styled.div`
 const DetailHeader = styled.div`
     /* flex 대신 일반 인라인 흐름으로 둬서 제목이 길어지면 메타박스(float)를 자연스럽게 피해 줄바꿈되고,
        그 결과 남은 공간이 부족하면 날짜가 자동으로 다음 줄(제목 아래)로 내려가게 함 */
+    /* DetailHeaderRow의 padding-top이 아니라 여기서 제목만 내려서, 이미 이 padding-top 기준으로
+       위치가 맞춰진 float(메타박스/클립)는 그대로 두고 제목 위치만 조정함 */
+    margin-top: 42px;
 `;
 
 const DetailTitle = styled.h2`
@@ -792,7 +795,7 @@ const DetailMetaTagList = styled.div`
 const DetailContentBox = styled.div`
     flex: 1;
     min-height: 0;
-    margin-top: 14px;
+    margin-top: 4px;
     padding: 26px;
     border: 1px solid ${tokens.colors.border.primary};
     border-radius: ${tokens.radius.sm};
