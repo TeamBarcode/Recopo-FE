@@ -26,6 +26,7 @@ interface DefaultModalProps extends CommonModalProps {
 interface ConfirmModalProps extends CommonModalProps {
   type: 'confirm';
   message?: string;
+  messageFontSize?: string;
   confirmText?: string;
   cancelText?: string;
   onConfirm: () => void;
@@ -54,7 +55,7 @@ const ModalOverlay = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -90,17 +91,21 @@ const ModalWrapper = styled.div<{
 
 const ConfirmContent = styled.div`
   height: 105px;
+  padding: 0 28px;
   display: flex;
   align-items: center;
   justify-content: center;
 `;
 
-const ConfirmMessage = styled.p`
+const ConfirmMessage = styled.p<{ $fontSize?: string }>`
   margin: 0;
-  font-size: ${tokens.fontSize.page};
-  font-weight: ${tokens.fontWeight.semibold};
+  font-size: ${({ $fontSize }) => $fontSize ?? tokens.fontSize.xl};
+  font-weight: ${tokens.fontWeight.medium};
+  line-height: 1.5;
   color: ${tokens.colors.text.primary};
   text-align: center;
+  white-space: pre-line;
+  word-break: keep-all;
 `;
 
 const ConfirmButtonWrapper = styled.div`
@@ -113,7 +118,7 @@ const ConfirmButton = styled.button<{
 }>`
   flex: 1;
   border: none;
-  font-size: ${tokens.fontSize.xl};
+  font-size: ${tokens.fontSize.lg};
 
   ${({ variant }) =>
     variant === 'confirm' &&
@@ -176,7 +181,7 @@ function Modal(props: ModalProps) {
         {props.type === 'confirm' ? (
           <>
             <ConfirmContent>
-              <ConfirmMessage>{props.message ?? '팝업창 확인 문구'}</ConfirmMessage>
+              <ConfirmMessage $fontSize={props.messageFontSize}>{props.message ?? '팝업창 확인 문구'}</ConfirmMessage>
             </ConfirmContent>
 
             <ConfirmButtonWrapper>
