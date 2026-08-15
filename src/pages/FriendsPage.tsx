@@ -172,54 +172,58 @@ function FriendsPage() {
                                 </CloseButton>
                             </PanelHeaderRow>
                             <Divider />
-                            {searchResults.map((user) => (
-                                <ResultRow key={user.id}>
-                                    <Avatar size="sm" src={user.profileImageUrl} />
-                                    <UserText>
-                                        <UserNickname>{user.nickname}</UserNickname>
-                                        <UserId>@{user.userId}</UserId>
-                                    </UserText>
-                                    {user.requestStatus === 'none' && (
-                                        <Button variant="primary" size="sm" onClick={() => handleSendRequest(user)}>
-                                            친구 추가
-                                        </Button>
-                                    )}
-                                    {user.requestStatus === 'requested' && (
-                                        <StatusButton type="button" onClick={() => setCancelTarget(user)}>
-                                            요청됨
-                                        </StatusButton>
-                                    )}
-                                    {user.requestStatus === 'friend' && <StatusLabel>친구</StatusLabel>}
-                                </ResultRow>
-                            ))}
-                            {searchResults.length === 0 && <EmptyResultText>검색 결과가 없어요</EmptyResultText>}
+                            <FriendListScroll>
+                                {searchResults.map((user) => (
+                                    <ResultRow key={user.id}>
+                                        <Avatar size="sm" src={user.profileImageUrl} />
+                                        <UserText>
+                                            <UserNickname>{user.nickname}</UserNickname>
+                                            <UserId>@{user.userId}</UserId>
+                                        </UserText>
+                                        {user.requestStatus === 'none' && (
+                                            <Button variant="primary" size="sm" onClick={() => handleSendRequest(user)}>
+                                                친구 추가
+                                            </Button>
+                                        )}
+                                        {user.requestStatus === 'requested' && (
+                                            <StatusButton type="button" onClick={() => setCancelTarget(user)}>
+                                                요청됨
+                                            </StatusButton>
+                                        )}
+                                        {user.requestStatus === 'friend' && <StatusLabel>친구</StatusLabel>}
+                                    </ResultRow>
+                                ))}
+                                {searchResults.length === 0 && <EmptyResultText>검색 결과가 없어요</EmptyResultText>}
+                            </FriendListScroll>
                         </>
                     ) : (
                         <>
                             <PanelTitle>Friends ({friends.length})</PanelTitle>
                             <Divider />
-                            {friends.map((friend) => (
-                                <FriendRow key={friend.id} $active={selectedFriend?.id === friend.id}>
-                                    <FriendRowMain type="button" onClick={() => handleSelectFriend(friend)}>
-                                        <Avatar size="sm" src={friend.profileImageUrl} />
-                                        <UserNickname>{friend.nickname}</UserNickname>
-                                    </FriendRowMain>
-                                    <FriendMenuWrapper>
-                                        <FriendMenuButton
-                                            type="button"
-                                            aria-label={`${friend.nickname} 메뉴`}
-                                            onClick={() => setOpenFriendMenuId((prev) => (prev === friend.id ? null : friend.id))}
-                                        >
-                                            ···
-                                        </FriendMenuButton>
-                                        {openFriendMenuId === friend.id && (
-                                            <FriendMenuPopup type="button" onClick={() => handleRequestDeleteFriend(friend)}>
-                                                삭제
-                                            </FriendMenuPopup>
-                                        )}
-                                    </FriendMenuWrapper>
-                                </FriendRow>
-                            ))}
+                            <FriendListScroll>
+                                {friends.map((friend) => (
+                                    <FriendRow key={friend.id} $active={selectedFriend?.id === friend.id}>
+                                        <FriendRowMain type="button" onClick={() => handleSelectFriend(friend)}>
+                                            <Avatar size="sm" src={friend.profileImageUrl} />
+                                            <UserNickname>{friend.nickname}</UserNickname>
+                                        </FriendRowMain>
+                                        <FriendMenuWrapper>
+                                            <FriendMenuButton
+                                                type="button"
+                                                aria-label={`${friend.nickname} 메뉴`}
+                                                onClick={() => setOpenFriendMenuId((prev) => (prev === friend.id ? null : friend.id))}
+                                            >
+                                                ···
+                                            </FriendMenuButton>
+                                            {openFriendMenuId === friend.id && (
+                                                <FriendMenuPopup type="button" onClick={() => handleRequestDeleteFriend(friend)}>
+                                                    삭제
+                                                </FriendMenuPopup>
+                                            )}
+                                        </FriendMenuWrapper>
+                                    </FriendRow>
+                                ))}
+                            </FriendListScroll>
                         </>
                     )}
                 </ListPanel>
@@ -453,6 +457,28 @@ const ListPanel = styled.div`
     min-height: 400px;
 `;
 
+/* 리스트 자체는 콘텐츠 높이만큼만 차지하고(짧을 때 하단에 빈 공간이 남지 않음),
+   길어지면 뷰포트 기준으로 높이를 제한해서(px 고정이 아니라 vh 기반이라 반응형으로도 대응)
+   내부에서만 스크롤되게 함 */
+const FriendListScroll = styled.div`
+    max-height: calc(100vh - 320px);
+    overflow-y: auto;
+
+    scrollbar-width: thin;
+    scrollbar-color: ${tokens.colors.border.secondary} transparent;
+
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+        background-color: ${tokens.colors.border.secondary};
+        border-radius: 9999px;
+    }
+`;
+
 const PanelHeaderRow = styled.div`
     display: flex;
     align-items: center;
@@ -514,9 +540,9 @@ const FriendMenuButton = styled.button`
 const FriendMenuPopup = styled.button`
     position: absolute;
     top: 50%;
-    left: 100%;
+    right: 100%;
     transform: translateY(-50%);
-    margin-left: 6px;
+    margin-right: 6px;
     padding: 6px 14px;
     border: none;
     border-radius: 9999px;
