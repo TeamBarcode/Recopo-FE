@@ -166,7 +166,7 @@ function StarIcon({ color }: IconProps) {
 
 const HeaderContainer = styled.header`
   width: 100%;
-  height: 140px;
+  height: 120px;
   padding: 0 80px;
   display: flex;
   align-items: center;
@@ -337,6 +337,10 @@ const ProfileLink = styled(NavLink)`
   align-items: center;
   justify-content: center;
   text-decoration: none;
+
+  @media (max-width: 900px) {
+    transform: scale(0.82);
+  }
 `;
 
 const MyPageActiveIcon = styled.div`
