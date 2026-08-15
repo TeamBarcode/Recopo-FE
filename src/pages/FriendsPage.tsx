@@ -504,8 +504,8 @@ const FriendMenuWrapper = styled.div`
 const FriendMenuButton = styled.button`
     border: none;
     background: none;
-    padding: 6px;
-    font-size: 22px;
+    padding: 5px;
+    font-size: 19px;
     letter-spacing: -1px;
     color: ${tokens.colors.text.extraLight};
     cursor: pointer;
@@ -649,11 +649,12 @@ const IdeaGrid = styled.div`
    clip-path가 계속 감춰주므로 여기서 overflow를 풀어도 안전함 */
 const IdeaDetailModal = styled(Modal)`
     overflow: visible !important;
+    width: 620px !important;
 `;
 
 const DetailWrapper = styled.div`
     position: relative;
-    height: 432px;
+    height: 480px;
     display: flex;
     flex-direction: column;
     /* 위쪽만 클립하지 않음(메타박스 클립 아이콘이 Modal의 넉넉한 상단 패딩 영역까지 걸쳐 올라갈 수 있게) —
@@ -708,18 +709,18 @@ const DetailMetaBox = styled.div`
     position: relative;
     float: right;
     margin: -28px 0 14px 16px;
-    width: 168px;
-    padding: 16px 14px 14px;
+    width: 180px;
+    padding: 18px 15px 15px;
     background: ${tokens.colors.background};
     box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.25);
 `;
 
 const DetailMetaClip = styled.img`
     position: absolute;
-    top: -20px;
+    top: -22px;
     left: 50%;
-    width: 42px;
-    height: 38px;
+    width: 44px;
+    height: 40px;
     transform: translateX(-50%);
 `;
 
@@ -776,20 +777,20 @@ const DetailSection = styled.div`
 `;
 
 const DetailSectionTitle = styled.div`
-    font-size: ${tokens.fontSize.lg};
+    font-size: ${tokens.fontSize.xl};
     font-weight: ${tokens.fontWeight.semibold};
     margin-bottom: 8px;
 `;
 
 const DetailSectionBody = styled.p`
-    font-size: ${tokens.fontSize.md};
+    font-size: ${tokens.fontSize.lg};
     color: ${tokens.colors.text.light};
     white-space: pre-wrap;
 `;
 
 const DetailTechList = styled.ul`
     padding-left: 18px;
-    font-size: ${tokens.fontSize.md};
+    font-size: ${tokens.fontSize.lg};
     color: ${tokens.colors.text.light};
 `;
 
@@ -803,13 +804,13 @@ const DetailRepoCard = styled.a`
 `;
 
 const DetailRepoName = styled.div`
-    font-size: ${tokens.fontSize.md};
+    font-size: ${tokens.fontSize.lg};
     font-weight: ${tokens.fontWeight.medium};
 `;
 
 const DetailRepoDescription = styled.div`
     margin-top: 4px;
-    font-size: ${tokens.fontSize.sm};
+    font-size: ${tokens.fontSize.md};
     color: ${tokens.colors.text.light};
 `;
 
@@ -817,8 +818,8 @@ const DetailFooter = styled.div`
     flex-shrink: 0;
     display: flex;
     gap: 20px;
-    padding: 14px 20px 4px;
-    font-size: ${tokens.fontSize.md};
+    padding: 16px 20px 6px;
+    font-size: ${tokens.fontSize.lg};
 `;
 
 const DetailFooterButton = styled.button`
@@ -828,7 +829,7 @@ const DetailFooterButton = styled.button`
     border: none;
     background: none;
     padding: 0;
-    font-size: ${tokens.fontSize.md};
+    font-size: ${tokens.fontSize.lg};
     color: ${tokens.colors.text.light};
     cursor: pointer;
 `;
@@ -836,8 +837,8 @@ const DetailFooterButton = styled.button`
 const HeartIcon = styled.span<{ $active?: boolean }>`
     display: inline-block;
     flex-shrink: 0;
-    width: 13px;
-    height: 13px;
+    width: 15px;
+    height: 15px;
     background-color: ${({ $active }) => ($active ? '#ff5252' : tokens.colors.text.light)};
     -webkit-mask-image: url("${heartIcon}");
     mask-image: url("${heartIcon}");
@@ -850,8 +851,8 @@ const HeartIcon = styled.span<{ $active?: boolean }>`
 `;
 
 const ReactionIcon = styled.img`
-    width: 13px;
-    height: 13px;
+    width: 15px;
+    height: 15px;
 `;
 
 // ===== 댓글 슬라이드업 영역 =====
