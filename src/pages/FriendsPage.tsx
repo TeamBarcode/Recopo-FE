@@ -708,7 +708,7 @@ const DetailDate = styled.span`
 const DetailMetaBox = styled.div`
     position: relative;
     float: right;
-    margin: -34px 0 14px 16px;
+    margin: -30px 0 14px 16px;
     width: 180px;
     padding: 18px 15px 15px;
     background: ${tokens.colors.background};
@@ -717,7 +717,7 @@ const DetailMetaBox = styled.div`
 
 const DetailMetaClip = styled.img`
     position: absolute;
-    top: -32px;
+    top: -24px;
     left: 50%;
     width: 44px;
     height: 40px;
@@ -1027,12 +1027,7 @@ function FriendCommentSection({ ideaId, comments, onCommentsChange }: FriendComm
 
 const CommentDrawer = styled.div<{ $open: boolean }>`
     position: absolute;
-    top: 0;
-    bottom: 0;
-    /* DetailWrapper는 Modal 자체 패딩(24px)만큼 안쪽에 있어서 inset:0만 쓰면 서랍이 모달 실제 폭보다
-       좁아 보임 — 그 패딩 바깥까지 밀어서 모달 카드 가로 끝에 딱 맞닿게(풀블리드) 함 */
-    left: -24px;
-    right: -24px;
+    inset: 0;
     display: flex;
     flex-direction: column;
     background: ${tokens.colors.background};
