@@ -659,7 +659,7 @@ const DetailWrapper = styled.div`
     flex-direction: column;
     /* 위쪽만 클립하지 않음(메타박스 클립 아이콘이 Modal의 넉넉한 상단 패딩 영역까지 걸쳐 올라갈 수 있게) —
        아래/좌우는 그대로 잘라서 닫힌 댓글 서랍(핸들바 등)이 하단에 삐져나와 보이지 않게 함 */
-    clip-path: inset(-60px 0 0 0);
+    clip-path: inset(-90px 0 0 0);
 `;
 
 /* 제목/메타박스(위)와 좋아요·댓글(아래)은 스크롤 영향을 안 받는 고정 영역.
@@ -708,7 +708,7 @@ const DetailDate = styled.span`
 const DetailMetaBox = styled.div`
     position: relative;
     float: right;
-    margin: -28px 0 14px 16px;
+    margin: -34px 0 14px 16px;
     width: 180px;
     padding: 18px 15px 15px;
     background: ${tokens.colors.background};
@@ -717,7 +717,7 @@ const DetailMetaBox = styled.div`
 
 const DetailMetaClip = styled.img`
     position: absolute;
-    top: -22px;
+    top: -32px;
     left: 50%;
     width: 44px;
     height: 40px;
@@ -735,7 +735,7 @@ const DetailMetaRow = styled.div`
 `;
 
 const DetailMetaLabel = styled.span`
-    font-size: ${tokens.fontSize.md};
+    font-size: 11px;
     color: ${tokens.colors.text.extraLight};
 `;
 
@@ -1027,7 +1027,12 @@ function FriendCommentSection({ ideaId, comments, onCommentsChange }: FriendComm
 
 const CommentDrawer = styled.div<{ $open: boolean }>`
     position: absolute;
-    inset: 0;
+    top: 0;
+    bottom: 0;
+    /* DetailWrapper는 Modal 자체 패딩(24px)만큼 안쪽에 있어서 inset:0만 쓰면 서랍이 모달 실제 폭보다
+       좁아 보임 — 그 패딩 바깥까지 밀어서 모달 카드 가로 끝에 딱 맞닿게(풀블리드) 함 */
+    left: -24px;
+    right: -24px;
     display: flex;
     flex-direction: column;
     background: ${tokens.colors.background};
@@ -1040,14 +1045,14 @@ const CommentDrawer = styled.div<{ $open: boolean }>`
 
 const CommentDrawerHeader = styled.div`
     flex-shrink: 0;
-    padding: 14px 24px 14px;
+    padding: 10px 20px 12px;
     border-bottom: 1px solid ${tokens.colors.border.primary};
 `;
 
 const CommentDrawerHandle = styled.div`
-    width: 40px;
+    width: 36px;
     height: 4px;
-    margin: 0 auto 12px;
+    margin: 0 auto 10px;
     border-radius: 9999px;
     background: ${tokens.colors.border.secondary};
 `;
@@ -1059,7 +1064,7 @@ const CommentDrawerTitleRow = styled.div`
 `;
 
 const CommentDrawerTitle = styled.span`
-    font-size: ${tokens.fontSize.xl};
+    font-size: ${tokens.fontSize.lg};
     font-weight: ${tokens.fontWeight.medium};
 `;
 
@@ -1070,8 +1075,8 @@ const CommentDrawerCloseButton = styled.button`
     cursor: pointer;
 
     img {
-        width: 18px;
-        height: 18px;
+        width: 16px;
+        height: 16px;
     }
 `;
 
@@ -1079,15 +1084,15 @@ const CommentDrawerBody = styled.div`
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 20px 24px;
+    padding: 16px 20px;
     display: flex;
     flex-direction: column;
-    gap: 22px;
+    gap: 20px;
 `;
 
 const CommentDrawerInputRow = styled.div`
     flex-shrink: 0;
-    padding: 14px 24px;
+    padding: 12px 20px;
     border-top: 1px solid ${tokens.colors.border.primary};
     display: flex;
     gap: 10px;
@@ -1111,18 +1116,18 @@ const CommentHeader = styled.div`
 `;
 
 const CommentAuthor = styled.span`
-    font-size: 13px;
+    font-size: ${tokens.fontSize.md};
     font-weight: ${tokens.fontWeight.medium};
 `;
 
 const CommentDate = styled.span`
-    font-size: 11px;
+    font-size: ${tokens.fontSize.sm};
     color: ${tokens.colors.text.extraLight};
 `;
 
 const CommentContent = styled.p`
     margin-top: 4px;
-    font-size: 13px;
+    font-size: ${tokens.fontSize.md};
 `;
 
 const CommentActions = styled.div`
@@ -1148,12 +1153,12 @@ const ReplyInputRow = styled.div`
 
 const PillInput = styled.input`
     flex: 1;
-    height: 42px;
-    padding: 0 16px;
+    height: 38px;
+    padding: 0 14px;
     border: 1px solid ${tokens.colors.border.secondary};
     border-radius: 9999px;
     background: transparent;
-    font-size: 13px;
+    font-size: ${tokens.fontSize.md};
 
     &::placeholder {
         color: ${tokens.colors.text.placeholder};
@@ -1166,8 +1171,8 @@ const PillInput = styled.input`
 
 const SendButton = styled.button`
     flex-shrink: 0;
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     border: none;
     background: ${tokens.colors.button.light};
@@ -1177,8 +1182,8 @@ const SendButton = styled.button`
     cursor: pointer;
 
     img {
-        width: 13px;
-        height: 13px;
+        width: 12px;
+        height: 12px;
     }
 
     &:active {
