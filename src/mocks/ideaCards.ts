@@ -82,7 +82,7 @@ export const mockComments: Comment[] = [
 export const mockIdeaCards: IdeaCard[] = [
   {
     id: 'idea1',
-    authorId: 'friend1', // friends.ts의 Friend.id와 매칭시키기 위한 값 (친구 아이디어 필터링용)
+    authorId: mockUser.id, // 내가 쓴 아이디어(마이페이지 통계/아이디어 페이지 테스트용)
     title: 'React Todo 앱',
     summary: '아이디어 내용 미리보기 브레인스토밍 카드 Recobot이 분석, 정리해준 핵심요약',
     tags: ['#React', '#몰라'],
@@ -96,7 +96,7 @@ export const mockIdeaCards: IdeaCard[] = [
   },
   {
     id: 'idea2',
-    authorId: 'friend2',
+    authorId: mockUser.id,
     title: '스터디 매칭 서비스',
     summary: '근처에서 같은 과목 공부하는 사람 찾기 프로젝트를 위한 AI 분석 요약',
     tags: ['#학습'],
@@ -110,7 +110,7 @@ export const mockIdeaCards: IdeaCard[] = [
   },
   {
     id: 'idea_3',
-    authorId: 'friend3',
+    authorId: mockUser.id,
     title:
       '엣지케이스 테스트용 아주 길고 긴 아이디어 제목을 넣어서 레이아웃이 안 깨지는지 확인하는 예시',
     summary: '내용도 길게 써서 잘림 처리가 잘 되는지 확인하는 용도로 만든 테스트 데이터입니다.',
@@ -125,7 +125,7 @@ export const mockIdeaCards: IdeaCard[] = [
   },
   {
     id: 'idea4',
-    authorId: 'friend1',
+    authorId: mockUser.id,
     title: '반려식물 물주기 알림 앱',
     summary: '반려식물마다 물 주기 주기를 설정하고 알림을 받는 앱에 대한 아이디어 요약',
     tags: ['#반려식물', '#알림'],
@@ -139,7 +139,7 @@ export const mockIdeaCards: IdeaCard[] = [
   },
   {
     id: 'idea5',
-    authorId: 'friend2',
+    authorId: mockUser.id,
     title: '동네 맛집 랜덤 추천 서비스로 매번 뭐 먹을지 고민하는 시간을 줄여주는 아이디어',
     summary: '오늘 뭐 먹을지 고민하는 시간을 줄여주는 랜덤 맛집 추천 서비스 요약',
     tags: ['#맛집', '#추천'],
@@ -153,7 +153,7 @@ export const mockIdeaCards: IdeaCard[] = [
   },
   {
     id: 'idea6',
-    authorId: 'friend3',
+    authorId: mockUser.id,
     title: '운동 루틴 공유 커뮤니티',
     summary: '나만의 운동 루틴을 기록하고 다른 사람들과 공유하는 커뮤니티 서비스 요약',
     tags: ['#운동', '#커뮤니티'],
@@ -164,6 +164,92 @@ export const mockIdeaCards: IdeaCard[] = [
     likeCount: 21,
     likedByMe: true,
     commentCount: 3,
+  },
+
+  // ===== 친구들이 작성한 아이디어 (Friends 페이지의 fetchMockFriendsIdeas용) =====
+  {
+    id: 'idea7',
+    authorId: 'friend1',
+    title: '중고 거래 안전결제 챗봇',
+    summary: '중고 거래 채팅방에 안전결제를 자동으로 안내해주는 챗봇 아이디어 요약',
+    tags: ['#중고거래', '#챗봇'],
+    category: '업무/도구',
+    recoBotResult: mockRecoSuccess,
+    createdAt: '2026.05.28',
+    isPublic: true,
+    likeCount: 15,
+    likedByMe: false,
+    commentCount: 1,
+  },
+  {
+    id: 'idea8',
+    authorId: 'friend1',
+    title: '기숙사 세탁기 예약 앱',
+    summary: '기숙사 공용 세탁기 사용 현황을 실시간으로 보여주고 예약할 수 있는 앱 요약',
+    tags: ['#기숙사', '#예약'],
+    category: '생활',
+    recoBotResult: mockRecoEmpty,
+    createdAt: '2026.05.20',
+    isPublic: true,
+    likeCount: 8,
+    likedByMe: false,
+    commentCount: 0,
+  },
+  {
+    id: 'idea9',
+    authorId: 'friend2',
+    title: '팀플 역할 분담 자동 배정기',
+    summary: '팀플 인원 성향을 입력하면 역할을 자동으로 배정해주는 서비스 요약',
+    tags: ['#팀플', '#자동화'],
+    category: '업무/도구',
+    recoBotResult: mockRecoSuccess,
+    createdAt: '2026.05.15',
+    isPublic: true,
+    likeCount: 42,
+    likedByMe: true,
+    commentCount: 6,
+  },
+  {
+    id: 'idea10',
+    authorId: 'friend2',
+    title: '식물 성장 기록 다이어리',
+    summary: '반려식물 사진을 매일 기록해서 성장 타임랩스를 만들어주는 앱 요약',
+    tags: ['#식물', '#기록'],
+    category: '생활',
+    recoBotResult: mockRecoEmpty,
+    createdAt: '2026.05.10',
+    isPublic: false,
+    likeCount: 3,
+    likedByMe: false,
+    commentCount: 0,
+  },
+  {
+    id: 'idea11',
+    authorId: 'friend3',
+    title: '캠퍼스 분실물 매칭 서비스',
+    summary: '캠퍼스 내 분실물을 사진으로 등록하면 주인을 찾아주는 서비스 요약',
+    tags: ['#분실물', '#캠퍼스'],
+    category: '생활',
+    recoBotResult: mockRecoSuccess,
+    createdAt: '2026.05.08',
+    isPublic: true,
+    likeCount: 27,
+    likedByMe: false,
+    commentCount: 4,
+  },
+  {
+    id: 'idea12',
+    authorId: 'friend3',
+    title: '스터디 카페 자리 실시간 안내',
+    summary: '스터디 카페 좌석 현황을 실시간으로 보여주는 서비스에 대한 아이디어 요약',
+    tags: ['#스터디카페', '#실시간'],
+    category: '업무/도구',
+    recoBotResult: mockRecoEmpty,
+    createdAt: '2026.05.02',
+    isPublic: true,
+    likeCount: 11,
+    likedByMe: true,
+    commentCount: 2,
   },
 ];
 
@@ -210,7 +296,8 @@ export const fetchMockIdeas = async (
 ): Promise<IdeaCard[]> => {
   await new Promise((r) => setTimeout(r, 300));
 
-  let result = [...mockIdeaCards];
+  // /ideas 페이지는 "내 아이디어" 목록임 — 친구들 아이디어는 Friends 페이지(fetchMockFriendsIdeas)에서 따로 봄
+  let result = mockIdeaCards.filter((idea) => idea.authorId === mockUser.id);
 
   if (visibility === '공개') {
     result = result.filter((idea) => idea.isPublic);

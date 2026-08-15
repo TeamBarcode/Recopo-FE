@@ -77,8 +77,8 @@ const CardWrapper = styled.div<{ $color : string }>`
     position : relative;
     display : flex;
     flex-direction : column;
-    width : 196px;
-    height : 211px;
+    width : 216px;
+    height : 234px;
     background : ${({ $color }) => $color};
     padding : 35px 10px 10px 12px;
     cursor : grab;
@@ -88,7 +88,7 @@ const CardWrapper = styled.div<{ $color : string }>`
 
 const Tape = styled.img`
     position : absolute;
-    left : 78px;
+    left : 88px;
     top : -24px;
 `;
 
