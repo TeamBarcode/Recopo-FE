@@ -23,6 +23,7 @@ import type { Category } from '@/components/common/Tag';
 import Avatar from '@/components/common/Avatar';
 import Button from '@/components/common/Button';
 import Dropdown from '@/components/common/Dropdown';
+import IconButton from '@/components/common/IconButton';
 import Modal from '@/components/common/Modal';
 import Tag from '@/components/common/Tag';
 import IdeaCard from '@/features/idea/IdeaCard';
@@ -33,6 +34,7 @@ import closeIcon from '@/assets/closeButton.svg';
 import clipIcon from '@/assets/idea-clip.svg';
 import sendArrowIcon from '@/assets/comment-send-arrow.svg';
 import recobotHappy from '@/assets/recobot-happy.svg';
+import friendAddIcon from '@/assets/friend-add.svg';
 
 const CATEGORY_OPTIONS = [
     '콘텐츠/미디어', '생활', '건강', '업무/도구', '개발/디자인', '사람', '기타',
@@ -181,9 +183,12 @@ function FriendsPage() {
                                             <UserId>@{user.userId}</UserId>
                                         </UserText>
                                         {user.requestStatus === 'none' && (
-                                            <Button variant="primary" size="sm" onClick={() => handleSendRequest(user)}>
-                                                친구 추가
-                                            </Button>
+                                            <IconButton
+                                                size="sm"
+                                                ariaLabel="친구 추가"
+                                                onClick={() => handleSendRequest(user)}
+                                                icon={<img src={friendAddIcon} alt="" />}
+                                            />
                                         )}
                                         {user.requestStatus === 'requested' && (
                                             <StatusButton type="button" onClick={() => setCancelTarget(user)}>
@@ -595,12 +600,12 @@ const StatusLabel = styled.span`
 
 const StatusButton = styled.button`
     flex-shrink: 0;
-    font-size: ${tokens.fontSize.sm};
-    color: ${tokens.colors.text.extraLight};
-    background: ${tokens.colors.button.light};
-    padding: 4px 10px;
+    font-size: ${tokens.fontSize.xs};
+    color: ${tokens.colors.text.primary};
+    background: ${tokens.colors.background};
+    padding: 4px 8px;
     border-radius: 9999px;
-    border: none;
+    border: 1px solid ${tokens.colors.border.primary};
     cursor: pointer;
 
     &:active {
