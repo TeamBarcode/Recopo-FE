@@ -15,7 +15,7 @@ export interface Idea {
 
 export const visibilityOptions = ['전체', '공개', '비공개'];
 export const categoryOptions = ['전체', '콘텐츠/미디어', '생활', '건강', '업무/도구', '개발/디자인', '사람', '기타'];
-export const sortOptions = ['최신순', '오래된순', '좋아요순'];
+export const sortOptions = ['최신 순', '오래된 순', '좋아요 순'];
 
 export const mockIdeas: Idea[] = [
   { id: 1, title: 'React Todo 앱', tags: ['React', '할일'], category: '업무/도구', summary: '브레인스토밍 카드를 바탕으로 할 일을 간편하게 정리하고 관리하는 서비스', repositoryCount: 2, likeCount: 12, commentCount: 2, createdAt: '2026.06.24', visibility: '공개' },
