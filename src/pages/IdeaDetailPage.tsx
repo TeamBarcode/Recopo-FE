@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { tokens } from '@/styles/tokens';
@@ -30,12 +30,25 @@ const formatCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace
 const countCommentsAndReplies = (comments: Comment[]) =>
     comments.reduce((sum, comment) => sum + 1 + comment.replies.length, 0);
 
+// 알림 클릭으로 같은 아이디어에 openComments/commentId 쿼리만 바뀐 채 다시 navigate되는
+// 경우에도(예: 다른 댓글 알림을 연달아 클릭) 댓글 자동 펼침·스크롤이 다시 반영되도록,
+// location.key가 바뀔 때마다 내부 컴포넌트를 강제로 새로 마운트시킴
 function IdeaDetailPage() {
+    const location = useLocation();
+    return <IdeaDetailPageContent key={location.key} />;
+}
+
+function IdeaDetailPageContent() {
     const { ideaId } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [idea, setIdea] = useState<IdeaDetail | null>(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [isCommentSectionOpen, setIsCommentSectionOpen] = useState(false);
+    // 알림에서 "댓글창으로 이동" 클릭 시 ?openComments=1&commentId=xxx로 들어오면
+    // 댓글 영역을 처음부터 펼쳐서 보여줌
+    const [isCommentSectionOpen, setIsCommentSectionOpen] = useState(() => !!searchParams.get('openComments'));
+
+    const highlightCommentId = searchParams.get('commentId') ?? undefined;
 
     useEffect(() => {
         if (!ideaId) return;
@@ -140,6 +153,7 @@ function IdeaDetailPage() {
                 <CommentSection
                     ideaId={ideaId!}
                     comments={idea.comments}
+                    highlightCommentId={highlightCommentId}
                     onCommentsChange={(comments) =>
                         setIdea((prev) =>
                             prev
@@ -169,15 +183,27 @@ export default IdeaDetailPage;
 interface CommentSectionProps {
     ideaId: string;
     comments: Comment[];
+    highlightCommentId?: string;
     onCommentsChange: (comments: Comment[]) => void;
 }
 
-function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionProps) {
+function CommentSection({ ideaId, comments, highlightCommentId, onCommentsChange }: CommentSectionProps) {
     const [newComment, setNewComment] = useState('');
     const [openReplyCommentId, setOpenReplyCommentId] = useState<string | null>(null);
     const [replyInput, setReplyInput] = useState('');
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const [openReplyMenuId, setOpenReplyMenuId] = useState<string | null>(null);
+    const [activeHighlightId, setActiveHighlightId] = useState(highlightCommentId);
+    const commentRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+    // 알림 클릭으로 들어온 경우 해당 댓글로 스크롤하고, 잠시 후 하이라이트를 지움
+    useEffect(() => {
+        if (!highlightCommentId) return;
+        commentRefs.current[highlightCommentId]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        const timer = setTimeout(() => setActiveHighlightId(undefined), 2000);
+        return () => clearTimeout(timer);
+    }, [highlightCommentId]);
 
     const handleSubmitComment = async () => {
         const content = newComment.trim();
@@ -223,7 +249,13 @@ function CommentSection({ ideaId, comments, onCommentsChange }: CommentSectionPr
     return (
         <CommentWrapper>
             {comments.map((comment) => (
-                <CommentItem key={comment.id}>
+                <CommentItem
+                    key={comment.id}
+                    ref={(el) => {
+                        commentRefs.current[comment.id] = el;
+                    }}
+                    $highlight={comment.id === activeHighlightId}
+                >
                     <Avatar size="xs" src={comment.authorProfileImageUrl} />
                     <CommentBody>
                         <CommentHeader>
@@ -552,10 +584,15 @@ const CommentWrapper = styled.div`
     gap: 20px;
 `;
 
-const CommentItem = styled.div`
+const CommentItem = styled.div<{ $highlight?: boolean }>`
     position: relative;
     display: flex;
     gap: 10px;
+    padding: 4px;
+    margin: -4px;
+    border-radius: ${tokens.radius.xs};
+    background-color: ${({ $highlight }) => ($highlight ? '#FFF6D9' : 'transparent')};
+    transition: background-color 1s ease;
 `;
 
 const CommentBody = styled.div`

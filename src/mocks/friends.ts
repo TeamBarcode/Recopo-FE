@@ -176,10 +176,24 @@ export const cancelMockFriendRequest = async (
 };
 
 // ===== 친구 요청 수락 (남이 나에게 보낸 요청을 내가 수락, 알림에서) =====
+// 수락한 상대를 실제로 친구 목록에 추가해야 알림 클릭 → 친구 페이지 이동 흐름을
+// 눈으로 확인할 수 있어서, 알림에 있는 요청자 정보를 받아 mockFriendsSuccess에 반영함
 export const acceptMockFriendRequest = async (
-  _requestId: string
+  _requestId: string,
+  requester: { userId: string; nickname: string; profileImageUrl?: string }
 ): Promise<{ success: boolean }> => {
   await new Promise((r) => setTimeout(r, 300));
+
+  const alreadyFriend = mockFriendsSuccess.some((friend) => friend.userId === requester.userId);
+  if (!alreadyFriend) {
+    mockFriendsSuccess.push({
+      id: `friend_${requester.userId}`,
+      userId: requester.userId,
+      nickname: requester.nickname,
+      profileImageUrl: requester.profileImageUrl,
+    });
+  }
+
   return { success: true };
 };
 

@@ -6,8 +6,44 @@ import Avatar from '@/components/common/Avatar';
 import IconButton from '@/components/common/IconButton';
 import { tokens } from '@/styles/tokens';
 import { mockUser } from '@/mocks/user';
+import NotificationPanel from './NotificationPanel';
+import { useEffect, useRef, useState } from 'react';
+import { hasUnreadNotification } from '@/mocks/notifications';
 
 function Header() {
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [hasUnread, setHasUnread] = useState(hasUnreadNotification());
+  const notificationRef = useRef<HTMLDivElement>(null);
+
+  // 알림창을 열어보는 순간(안의 알림을 클릭하기 전이라도) 빨간 뱃지는 사라짐
+  const handleToggleNotification = () => {
+    setIsNotificationOpen((prev) => {
+      const next = !prev;
+      if (next) setHasUnread(false);
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (!isNotificationOpen) return;
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setIsNotificationOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsNotificationOpen(false);
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isNotificationOpen]);
+
   return (
     <HeaderContainer>
       <LogoLink to="/">
@@ -45,14 +81,17 @@ function Header() {
       </NavArea>
 
       <RightArea>
-        <NotificationWrapper>
+        <NotificationWrapper ref={notificationRef}>
           <IconButton
             size="lg"
             ariaLabel="알림"
-            onClick={() => {}}
+            onClick={handleToggleNotification}
             icon={<NotificationIcon src={notificationIcon} alt="" />}
           />
-          <NotificationDot />
+          {hasUnread && <NotificationDot />}
+          {isNotificationOpen && (
+            <NotificationPanel onNavigate={() => setIsNotificationOpen(false)} />
+          )}
         </NotificationWrapper>
 
         <ProfileLink to="/mypage" aria-label="마이페이지">
@@ -136,7 +175,7 @@ function StarIcon({ color }: IconProps) {
 
 const HeaderContainer = styled.header`
   width: 100%;
-  height: 140px;
+  height: 120px;
   padding: 0 80px;
   display: flex;
   align-items: center;
@@ -307,6 +346,10 @@ const ProfileLink = styled(NavLink)`
   align-items: center;
   justify-content: center;
   text-decoration: none;
+
+  @media (max-width: 900px) {
+    transform: scale(0.82);
+  }
 `;
 
 const MyPageActiveIcon = styled.div`
