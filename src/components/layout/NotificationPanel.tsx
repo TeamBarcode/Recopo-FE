@@ -147,7 +147,11 @@ function NotificationPanel({ onNavigate }: NotificationPanelProps) {
         if (!notification.relatedRequestId) return;
 
         if (action === 'accept') {
-            await acceptMockFriendRequest(notification.relatedRequestId);
+            await acceptMockFriendRequest(notification.relatedRequestId, {
+                userId: notification.actorUserId ?? notification.actorNickname,
+                nickname: notification.actorNickname,
+                profileImageUrl: notification.actorProfileImageUrl,
+            });
         } else {
             await rejectMockFriendRequest(notification.relatedRequestId);
         }
