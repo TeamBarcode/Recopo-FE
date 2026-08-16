@@ -109,8 +109,6 @@ function NotificationPanel({ onNavigate }: NotificationPanelProps) {
         switch (notification.type) {
             case 'FRIEND_REQUEST_ACCEPTED':
                 if (notification.friendId) {
-                    // TODO(2차): feat/friends-page가 dev에 merge되어 FriendsPage가 friendId 쿼리
-                    // 파라미터로 해당 친구를 자동 선택하도록 지원하면 그 흐름과 맞춰서 확인
                     navigate(`/friends?friendId=${notification.friendId}`);
                     onNavigate();
                 }

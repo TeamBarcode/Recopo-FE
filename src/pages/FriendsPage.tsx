@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { tokens } from '@/styles/tokens';
@@ -59,9 +60,37 @@ function FriendsPage() {
     const [deleteTarget, setDeleteTarget] = useState<Friend | null>(null);
     const [openFriendMenuId, setOpenFriendMenuId] = useState<string | null>(null);
 
+    const [searchParams, setSearchParams] = useSearchParams();
+
     useEffect(() => {
         fetchMockFriends().then(setFriends);
     }, []);
+
+    // 알림에서 "친구 아이디어 페이지로 이동" 클릭 시 ?friendId=xxx로 들어오면
+    // 목록이 로드된 뒤 해당 친구를 자동으로 선택함(friends가 비동기로 로드되는 외부 데이터라
+    // 렌더 중 파생 계산으로는 대체할 수 없어 effect에서 동기화함)
+    useEffect(() => {
+        const friendId = searchParams.get('friendId');
+        if (!friendId || friends.length === 0) return;
+
+        const target = friends.find((friend) => friend.id === friendId);
+        if (target) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setSelectedFriend(target);
+            setIdeaCategory('');
+            setIdeaSort('');
+        }
+
+        setSearchParams(
+            (prev) => {
+                const next = new URLSearchParams(prev);
+                next.delete('friendId');
+                return next;
+            },
+            { replace: true },
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [friends]);
 
     useEffect(() => {
         if (!selectedFriend) return;
