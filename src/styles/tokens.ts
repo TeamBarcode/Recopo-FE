@@ -1,12 +1,26 @@
 export const colors = {
   background: '#FFFFFF',
-  card: '#FFFD92',
+
+  category: {
+    contentMedia: '#FFFD92',
+    lifestyle: '#FDD6E8',
+    health: '#CAFF91',
+    workTool: '#A3E9FD',
+    developmentDesign: '#D4CAFD',
+    people: '#DDCAB0',
+    other: '#E1E1E1',
+  },
+
+  tag: {
+    brainstorm: 'rgba(0, 0, 0, 0.1)',
+  },
 
   text: {
     primary: '#000000',
     semiLight: '#373737',
     light: '#434343',
     extraLight: '#696969',
+    placeholder: '#D7D6D6',
     error: '#FF7D7D',
   },
 
@@ -31,7 +45,7 @@ export const colors = {
 
 export const fontFamily = {
   logo: 'Archivo Black',
-  primary: '42dot Sans',
+  primary: 'Asta Sans',
 } as const;
 
 export const fontSize = {
