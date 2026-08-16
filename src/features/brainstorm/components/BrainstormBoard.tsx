@@ -14,7 +14,9 @@ import {fetchMockCards} from '@/mocks/brainstormCards';
 
 function BrainstormBoard(){
     const [category, setCategory] = useState('');
-    const [sort, setSort] = useState('');
+    // 정렬 드롭다운은 처음엔 '정렬' 플레이스홀더로 보여주되, 실제 정렬은 최신순을 기본 적용함
+    const [sort, setSort] = useState('최신 순');
+    const [sortTouched, setSortTouched] = useState(false);
     const [search, setSearch] = useState('');
 
     const [cards, setCards] = useState<BrainstormCard[]>([]);
@@ -38,7 +40,16 @@ function BrainstormBoard(){
                 <FilterGroup>
                     <DropdownGroup>
                         <Dropdown options={CATEGORY_OPTIONS} value={category} onChange={setCategory} size="sm" placeholder="카테고리"/>
-                        <Dropdown options={SORT_OPTIONS} value={sort} onChange={setSort} size="sm" placeholder="정렬" />
+                        <Dropdown
+                            options={SORT_OPTIONS}
+                            value={sortTouched ? sort : ''}
+                            onChange={(value) => {
+                                setSort(value);
+                                setSortTouched(true);
+                            }}
+                            size="sm"
+                            placeholder="정렬"
+                        />
                     </DropdownGroup>
                     <SearchBarWrapper>
                         <SearchInput value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="검색" />

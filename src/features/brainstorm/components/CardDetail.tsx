@@ -99,8 +99,7 @@ function CardDetail({ onRecommend }: CardDetailProps, ref: React.ForwardedRef<Ca
         const selected: RecoItem | undefined = card.recoBotResult?.find((item) => item.id === selectedRecoId);
         setIsSaveIdeaModalOpen(false);
 
-        // 아이디어 상세 화면은 다른 팀원 담당이라 여기서는 저장만 하고 이동은 하지 않음
-        await createMockIdeaFromRecommendation({
+        const newIdea = await createMockIdeaFromRecommendation({
             cardTitle: card.title,
             cardContent: card.content,
             category: card.category,
@@ -108,6 +107,8 @@ function CardDetail({ onRecommend }: CardDetailProps, ref: React.ForwardedRef<Ca
             recoItem: selected,
             isPublic,
         });
+
+        navigate(`/ideas/${newIdea.id}`);
     };
 
     return(
@@ -459,7 +460,7 @@ const CompactModal = styled(Modal)`
 `;
 
 const SaveIdeaModalTitle = styled.p`
-    font-size: ${tokens.fontSize.lg};
+    font-size: ${tokens.fontSize.xl};
     font-weight: ${tokens.fontWeight.bold};
     text-align: center;
 `;

@@ -882,7 +882,7 @@ const CompactModal = styled(Modal)`
 `;
 
 const SaveModalTitle = styled.p`
-  font-size: ${tokens.fontSize.lg};
+  font-size: ${tokens.fontSize.xl};
   font-weight: ${tokens.fontWeight.bold};
   text-align: center;
 `;
