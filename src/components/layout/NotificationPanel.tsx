@@ -79,6 +79,8 @@ function NotificationPanel({ onNavigate }: NotificationPanelProps) {
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [hasMore, setHasMore] = useState(false);
+    // "더 보기"를 누르기 전까지는 스크롤 자체가 생기면 안 되므로, 누른 뒤에만 패널 높이를 제한함
+    const [isExpanded, setIsExpanded] = useState(false);
     const [actionTarget, setActionTarget] = useState<{ notification: Notification; action: 'accept' | 'reject' } | null>(null);
 
     useEffect(() => {
@@ -93,6 +95,7 @@ function NotificationPanel({ onNavigate }: NotificationPanelProps) {
         const { notifications: list, hasMore: more } = await fetchMockNotifications(1, mockNotifications.length);
         setNotifications(list);
         setHasMore(more);
+        setIsExpanded(true);
     };
 
     const handleMarkAllRead = async () => {
@@ -179,53 +182,55 @@ function NotificationPanel({ onNavigate }: NotificationPanelProps) {
 
             <Divider />
 
-            {groups.length === 0 && <EmptyText>알림이 없어요</EmptyText>}
+            <ListScroll $expanded={isExpanded}>
+                {groups.length === 0 && <EmptyText>알림이 없어요</EmptyText>}
 
-            {groups.map((group) => (
-                <Group key={group.label}>
-                    <GroupLabelText>{group.label}</GroupLabelText>
-                    {group.items.map((notification) => {
-                        const showActions =
-                            notification.type === 'FRIEND_REQUEST_RECEIVED' && notification.relatedRequestId;
+                {groups.map((group) => (
+                    <Group key={group.label}>
+                        <GroupLabelText>{group.label}</GroupLabelText>
+                        {group.items.map((notification) => {
+                            const showActions =
+                                notification.type === 'FRIEND_REQUEST_RECEIVED' && notification.relatedRequestId;
 
-                        return (
-                            <NotificationRow
-                                key={notification.id}
-                                onClick={() => handleClickNotification(notification)}
-                            >
-                                <Avatar size="sm" src={notification.actorProfileImageUrl} />
-                                <NotificationMessage>
-                                    <NotificationMessageContent notification={notification} />
-                                </NotificationMessage>
-                                {showActions && (
-                                    <ActionRow>
-                                        <ActionButton
-                                            type="button"
-                                            aria-label="수락"
-                                            onClick={(e) => handleRequestAction(e, notification, 'accept')}
-                                        >
-                                            <img src={acceptIcon} alt="" />
-                                        </ActionButton>
-                                        <ActionButton
-                                            type="button"
-                                            aria-label="거절"
-                                            onClick={(e) => handleRequestAction(e, notification, 'reject')}
-                                        >
-                                            <img src={rejectIcon} alt="" />
-                                        </ActionButton>
-                                    </ActionRow>
-                                )}
-                            </NotificationRow>
-                        );
-                    })}
-                </Group>
-            ))}
+                            return (
+                                <NotificationRow
+                                    key={notification.id}
+                                    onClick={() => handleClickNotification(notification)}
+                                >
+                                    <Avatar size="sm" src={notification.actorProfileImageUrl} />
+                                    <NotificationMessage>
+                                        <NotificationMessageContent notification={notification} />
+                                    </NotificationMessage>
+                                    {showActions && (
+                                        <ActionRow>
+                                            <ActionButton
+                                                type="button"
+                                                aria-label="수락"
+                                                onClick={(e) => handleRequestAction(e, notification, 'accept')}
+                                            >
+                                                <img src={acceptIcon} alt="" />
+                                            </ActionButton>
+                                            <ActionButton
+                                                type="button"
+                                                aria-label="거절"
+                                                onClick={(e) => handleRequestAction(e, notification, 'reject')}
+                                            >
+                                                <img src={rejectIcon} alt="" />
+                                            </ActionButton>
+                                        </ActionRow>
+                                    )}
+                                </NotificationRow>
+                            );
+                        })}
+                    </Group>
+                ))}
 
-            {hasMore && (
-                <LoadMoreButton type="button" onClick={handleLoadMore}>
-                    더 많이 보기 <img src={chevronIcon} alt="" />
-                </LoadMoreButton>
-            )}
+                {hasMore && (
+                    <LoadMoreButton type="button" onClick={handleLoadMore}>
+                        더 많이 보기 <img src={chevronIcon} alt="" />
+                    </LoadMoreButton>
+                )}
+            </ListScroll>
 
             <Modal
                 type="confirm"
@@ -240,24 +245,52 @@ function NotificationPanel({ onNavigate }: NotificationPanelProps) {
 
 export default NotificationPanel;
 
+/* 스크롤은 이 Panel이 아니라 안쪽 ListScroll에서만 일어남 — Panel에 overflow와
+   border-radius를 같이 주면 스크롤바 위아래가 둥근 모서리에 잘려 보이는 문제가 있어서
+   (표준 scrollbar-color 렌더링에서는 트랙에 margin을 줘도 무시됨), 아예 모서리가
+   둥글지 않은 별도 박스에서 스크롤하도록 분리함 */
 const Panel = styled.div`
     position: absolute;
     top: calc(100% + 12px);
     right: -12px;
     width: 352px;
-    max-height: 480px;
-    overflow-y: auto;
     background: ${tokens.colors.background};
     border-radius: ${tokens.radius.md};
     box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.15);
-    padding: 16px 20px;
+    padding: 16px 0;
     z-index: 1000;
+`;
+
+const ListScroll = styled.div<{ $expanded: boolean }>`
+    /* "더 보기"를 눌러서 전체 알림을 불러오기 전까지는 스크롤(overflow) 자체가 생기지 않게 함 */
+    max-height: 500px;
+    overflow-y: ${({ $expanded }) => ($expanded ? 'auto' : 'hidden')};
+    /* 스크롤바는 패널 오른쪽 끝에 여백 없이 딱 붙게 두고(padding은 스크롤바 바깥이 아니라
+       안쪽 콘텐츠에만 적용됨), 콘텐츠만 좌우 패딩으로 다른 요소들과 맞춤 */
+    padding-left: 20px;
+    padding-right: 14px;
+
+    /* 얇고 옅은 스크롤바 */
+    scrollbar-width: thin;
+    scrollbar-color: ${tokens.colors.border.secondary} transparent;
+
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+        background-color: ${tokens.colors.border.secondary};
+        border-radius: 9999px;
+    }
 `;
 
 const TopBar = styled.div`
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: 0 20px;
 `;
 
 const PanelTitle = styled.div`
@@ -280,7 +313,7 @@ const MarkAllReadButton = styled.button`
 const Divider = styled.div`
     height: 1px;
     background: #dddddd;
-    margin: 12px 0 8px;
+    margin: 12px 20px 8px;
 `;
 
 const EmptyText = styled.div`
