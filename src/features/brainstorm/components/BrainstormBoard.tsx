@@ -85,12 +85,6 @@ const BoardWrapper = styled.div`
     display : flex;
     flex-direction : column;
     overflow : hidden;
-
-    @media (max-width : 900px) {
-        height : auto;
-        min-height : 400px;
-        overflow : visible;
-    }
 `;
 /* 
 position relative fabwrapper의 기준점이 되게 함.
@@ -101,13 +95,10 @@ const Toolbar = styled.div`
     display : flex;
     align-items : center;
     justify-content : space-between;
+    flex-wrap : wrap;
     flex-shrink : 0;
     gap : 20px;
-    margin-bottom : 12px;
-
-    @media (max-width : 900px) {
-        flex-wrap : wrap;
-    }
+    margin-bottom : 30px;
 `;
 /*
 display : flex 가로로 부제목, 필터 배치
@@ -240,7 +231,7 @@ const EmptyState = styled.div`
 
 const CardGrid = styled.div`
     display : grid;
-    grid-template-columns : repeat(3, 1fr);
+    grid-template-columns : repeat(auto-fill, 216px);
     column-gap : 62px;
     row-gap : 40px;
 `;
