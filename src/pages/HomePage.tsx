@@ -44,7 +44,7 @@ column-gap: 25px; 두 컬럼 사이의 간격
 //여기서 150은 Layout.tsx의 HEADER_HEIGHT(헤더 높이)랑 똑같은 숫자
 //overflow : hidden; 은 그냥 안전장치로..
 /*
-margin-right: -68px; Main의 오른쪽 패딩 80px → 12px로 좁히기 
-margin-right: -36px;  이 구간 Main 패딩이 48px이라 48-12 
-margin-right: -12px;  이 구간 Main 패딩이 24px이라 24-12 
+margin-right: -68px; Main의 오른쪽 패딩 80px → 12px로 좁히기
+margin-right: -36px;  이 구간 Main 패딩이 48px이라 48-12
+margin-right: -12px;  이 구간 Main 패딩이 24px이라 24-12
 */
