@@ -108,6 +108,7 @@ flex-shrink : 0 카드 영역이 커지려고 해도 툴바 크기 유지
 */
 
 const Subtitle = styled.h2`
+    margin : 0;
     font-family : ${tokens.fontFamily.logo};
     font-size : 21px;
     font-weight : ${tokens.fontWeight.regular};
@@ -190,7 +191,7 @@ overflow-y : auto; 카드가 이 박스보다 많아지면 이 안에서만 스�
 
 const FabWrapper = styled.div`
     position : absolute;
-    right : 0px;
+    right : 16px;
     bottom : 24px;
     width : 48px;
     height : 48px;
@@ -232,6 +233,6 @@ const EmptyState = styled.div`
 const CardGrid = styled.div`
     display : grid;
     grid-template-columns : repeat(auto-fill, 216px);
-    column-gap : 62px;
+    column-gap : clamp(20px, calc(10vw - 40px), 62px);
     row-gap : 40px;
 `;
