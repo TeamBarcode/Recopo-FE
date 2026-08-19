@@ -103,7 +103,7 @@ const Toolbar = styled.div`
     justify-content : space-between;
     flex-shrink : 0;
     gap : 20px;
-    margin-bottom : 50px;
+    margin-bottom : 12px;
 
     @media (max-width : 900px) {
         flex-wrap : wrap;
