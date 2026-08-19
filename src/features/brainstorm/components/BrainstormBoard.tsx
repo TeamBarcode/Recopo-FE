@@ -11,6 +11,10 @@ import HomeEmpty from '@/assets/Home_empty.svg';
 import type {BrainstormCard} from '@/mocks/brainstormCards';
 import {fetchMockCards} from '@/mocks/brainstormCards';
 
+// 카드 3열(216px) + 최대 gap(62px) 2개를 합친 폭. 툴바와 카드 영역이 같은 폭으로
+// 정렬되도록 두 영역 모두 이 값을 max-width로 공유함
+const CARD_AREA_MAX_WIDTH = 216 * 3 + 62 * 2;
+
 function BrainstormBoard(){
     const [category, setCategory] = useState('');
     // 정렬 드롭다운은 처음엔 '정렬' 플레이스홀더로 보여주되, 실제 정렬은 최신순을 기본 적용함
@@ -98,7 +102,9 @@ const Toolbar = styled.div`
     flex-wrap : wrap;
     flex-shrink : 0;
     gap : 20px;
-    margin-bottom : 30px;
+    width : 100%;
+    max-width : ${CARD_AREA_MAX_WIDTH}px;
+    margin : 0 auto 30px;
 `;
 /*
 display : flex 가로로 부제목, 필터 배치
@@ -182,7 +188,8 @@ const SearchButton = styled.button`
 const CardScrollArea = styled.div`
     flex : 1;
     overflow-y : auto;
-    padding-top : 24px; 
+    scrollbar-gutter : stable;
+    padding-top : 24px;
 `;
 /* 
 flex : 1; Toolbar 뺀 나머지 공간 전부 차지 (카드 개수와 무관하게 박스 크기 고정)
@@ -191,7 +198,7 @@ overflow-y : auto; 카드가 이 박스보다 많아지면 이 안에서만 스�
 
 const FabWrapper = styled.div`
     position : absolute;
-    right : 16px;
+    right : 32px;
     bottom : 24px;
     width : 48px;
     height : 48px;
@@ -233,6 +240,10 @@ const EmptyState = styled.div`
 const CardGrid = styled.div`
     display : grid;
     grid-template-columns : repeat(auto-fill, 216px);
+    justify-content : center;
     column-gap : clamp(20px, calc(10vw - 40px), 62px);
     row-gap : 40px;
+    width : 100%;
+    max-width : ${CARD_AREA_MAX_WIDTH}px;
+    margin : 0 auto;
 `;
