@@ -266,6 +266,16 @@ const Panel = styled.div`
     box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.15);
     padding: 16px 0;
     z-index: 1000;
+
+    /* 좁은 화면에서는 알림 아이콘 기준 절대배치라 패널이 화면 왼쪽으로 잘려 나가서,
+       뷰포트 기준 고정폭으로 전환함(헤더 높이 120px + 12px 간격) */
+    @media (max-width: 480px) {
+        position: fixed;
+        top: 132px;
+        left: 12px;
+        right: 12px;
+        width: auto;
+    }
 `;
 
 const ListScroll = styled.div<{ $expanded: boolean; $fixedHeight?: number }>`
