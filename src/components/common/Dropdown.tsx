@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { tokens } from '@/styles/tokens';
 
@@ -23,11 +23,10 @@ interface DropdownProps {
 const StyledTrigger = styled.button<{
   size: string;
   $isOpen: boolean;
-  $width?: number;
 }>`
-  ${({ $width }) => $width && `width: ${$width}px;`}
   box-sizing: border-box;
   text-align: center;
+  white-space: nowrap;
   background-color: ${tokens.colors.button.primary};
   color: ${tokens.colors.text.primary};
   outline: none;
@@ -78,20 +77,13 @@ const StyledTrigger = styled.button<{
   }
 `;
 
-const StyledContent = styled.div<{ size: string; $open: boolean }>`
+const StyledContent = styled.div<{ size: string }>`
   position: absolute;
   z-index: 10;
   min-width: 100%;
   width: max-content;
   background-color: ${tokens.colors.border.secondary};
   border-radius: 0 0 ${tokens.radius.xs} ${tokens.radius.xs};
-
-  ${({ $open }) =>
-    !$open &&
-    `
-      visibility: hidden;
-      pointer-events: none;
-    `}
 
   ${({ size }) =>
     size === 'sm' &&
@@ -114,6 +106,7 @@ width: max-content — "콘텐츠/미디어"처럼 긴 옵션이 있으면, 그 
 const StyledItem = styled.div<{ size: string }>`
   color: ${tokens.colors.text.primary};
   border-top: 1px solid #b7b7b7;
+  white-space: nowrap;
 
   ${({ size }) =>
     size === 'sm' &&
@@ -138,6 +131,7 @@ const StyledItem = styled.div<{ size: string }>`
 const Wrapper = styled.div`
   position: relative;
   display: inline-block;
+  flex-shrink: 0;
 `;
 
 
@@ -154,18 +148,6 @@ function Dropdown({
   const [isOpen, setIsOpen] = useState(false);
   const open = isOpen && !disabled;
   const wrapperRef = useRef<HTMLDivElement>(null);
-
-  /*useState는 잰 숫자(너비값)를 기억해뒀다가 나중에 StyledTrigger한테 넘겨줌*/
-  const [contentWidth, setContentWidth] = useState<number>();
-  const contentRef = useRef<HTMLDivElement>(null);
-  
-  //useLayoutEffect는 "이 컴포넌트가 화면에 그려진 직후, 근데 사용자 눈에 실제로 보이기 전에 실행해라"는 훅
-  //닫혀 있을 때도 폭을 측정해둬야 트리거 버튼이 처음부터 가장 긴 옵션 폭으로 고정됨(값이 바뀌어도 폭이 변하지 않게)
-  useLayoutEffect(() => {
-    if (contentRef.current) {
-      setContentWidth(contentRef.current.offsetWidth);
-    }
-  }, [options, size]);
 
   /*드롭다운 바깥 영역을 클릭하면 닫기*/
   useEffect(() => {
@@ -193,7 +175,6 @@ function Dropdown({
         size={size}
         $isOpen={open}
         disabled={disabled}
-        $width={contentWidth}
         onClick={() => {
           if (!disabled) {
             setIsOpen((previous) => !previous);
@@ -203,21 +184,23 @@ function Dropdown({
         {value || placeholder} ▼
       </StyledTrigger>
 
-      <StyledContent ref={contentRef} size={size} $open={open}>
-        {options.map((option) => (
-          <StyledItem
-            key={option}
-            size={size}
-            onClick={() => {
-              console.log('클릭됨:', option, '현재 value:', value);
-              onChange(option === value ? '' : option);
-              setIsOpen(false);
-            }}
-          >
-            {option}
-          </StyledItem>
-        ))}
-      </StyledContent>
+      {open && (
+        <StyledContent size={size}>
+          {options.map((option) => (
+            <StyledItem
+              key={option}
+              size={size}
+              onClick={() => {
+                console.log('클릭됨:', option, '현재 value:', value);
+                onChange(option === value ? '' : option);
+                setIsOpen(false);
+              }}
+            >
+              {option}
+            </StyledItem>
+          ))}
+        </StyledContent>
+      )}
     </Wrapper>
   );
 }
