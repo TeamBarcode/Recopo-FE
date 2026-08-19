@@ -137,9 +137,8 @@ const DropdownGroup = styled.div`
 `;
 
 const SearchBarWrapper = styled.div`
-    width : 100%;
-    max-width : 268px;
-    height : 35px;
+    width : 268px;
+    height : 38px;
     box-sizing : border-box;
     display : flex;
     align-items : center;

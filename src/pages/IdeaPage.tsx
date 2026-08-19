@@ -107,7 +107,7 @@ const Filters = styled.div`
   button { white-space:nowrap; } > div > div { z-index:20; }
 `;
 const SearchForm = styled.form`
-  width:268px; height:35px; display:flex; align-items:center; border:1px solid ${tokens.colors.border.search}; border-radius:10px; background:white;
+  width:268px; height:38px; display:flex; align-items:center; border:1px solid ${tokens.colors.border.search}; border-radius:10px; background:white;
   &:focus-within { border-color:#979797; }
 `;
 const SearchInput = styled.input`
