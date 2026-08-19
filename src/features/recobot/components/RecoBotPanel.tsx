@@ -474,7 +474,7 @@ function RecoBotPanel({ onSaved }: RecoBotPanelProps, ref: React.ForwardedRef<Re
 export default forwardRef(RecoBotPanel);
 
 const Wrapper = styled.div<{ $isDragOver: boolean; $isFilterOpen: boolean }>`
-  height: calc(100% - 20px);
+  height: 100%;
   min-height: 600px;
   display: flex;
   flex-direction: column;
@@ -620,9 +620,9 @@ const CenteredMessage = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 12px;
-  padding: 100px ${tokens.spacing[8]} 0;
+  padding: 0 ${tokens.spacing[8]};
   text-align: center;
 `;
 
