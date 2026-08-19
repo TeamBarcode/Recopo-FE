@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -81,6 +81,10 @@ function NotificationPanel({ onNavigate }: NotificationPanelProps) {
     const [hasMore, setHasMore] = useState(false);
     // "더 보기"를 누르기 전까지는 스크롤 자체가 생기면 안 되므로, 누른 뒤에만 패널 높이를 제한함
     const [isExpanded, setIsExpanded] = useState(false);
+    // "더 보기"를 누르기 직전(=5개만 보이던 상태)의 실제 렌더링 높이를 그대로 고정값으로 씀 —
+    // 그래야 클릭 전후로 패널 자체 높이는 안 변하고 늘어난 항목은 그 안에서만 스크롤됨
+    const [fixedHeight, setFixedHeight] = useState<number | null>(null);
+    const listScrollRef = useRef<HTMLDivElement>(null);
     const [actionTarget, setActionTarget] = useState<{ notification: Notification; action: 'accept' | 'reject' } | null>(null);
 
     useEffect(() => {
@@ -92,6 +96,9 @@ function NotificationPanel({ onNavigate }: NotificationPanelProps) {
 
     // 남은 알림을 한 번에 전부 불러옴 — 이후엔 패널 안에서 스크롤로 전부 확인 가능
     const handleLoadMore = async () => {
+        if (listScrollRef.current) {
+            setFixedHeight(listScrollRef.current.offsetHeight);
+        }
         const { notifications: list, hasMore: more } = await fetchMockNotifications(1, mockNotifications.length);
         setNotifications(list);
         setHasMore(more);
@@ -182,7 +189,7 @@ function NotificationPanel({ onNavigate }: NotificationPanelProps) {
 
             <Divider />
 
-            <ListScroll $expanded={isExpanded}>
+            <ListScroll ref={listScrollRef} $expanded={isExpanded} $fixedHeight={fixedHeight ?? undefined}>
                 {groups.length === 0 && <EmptyText>알림이 없어요</EmptyText>}
 
                 {groups.map((group) => (
@@ -261,9 +268,12 @@ const Panel = styled.div`
     z-index: 1000;
 `;
 
-const ListScroll = styled.div<{ $expanded: boolean }>`
-    /* "더 보기"를 눌러서 전체 알림을 불러오기 전까지는 스크롤(overflow) 자체가 생기지 않게 함 */
-    max-height: 500px;
+const ListScroll = styled.div<{ $expanded: boolean; $fixedHeight?: number }>`
+    /* "더 보기"를 누르기 전까지는 내용만큼 자연스럽게 늘어나다가(스크롤 없음),
+       누른 순간의 높이를 그대로 고정값으로 박아서 그 이후엔 패널 높이가 안 변하고
+       늘어난 항목만 이 안에서 스크롤되게 함 */
+    ${({ $expanded, $fixedHeight }) =>
+        $expanded && $fixedHeight ? `height: ${$fixedHeight}px;` : ''}
     overflow-y: ${({ $expanded }) => ($expanded ? 'auto' : 'hidden')};
     /* 스크롤바는 패널 오른쪽 끝에 여백 없이 딱 붙게 두고(padding은 스크롤바 바깥이 아니라
        안쪽 콘텐츠에만 적용됨), 콘텐츠만 좌우 패딩으로 다른 요소들과 맞춤 */
