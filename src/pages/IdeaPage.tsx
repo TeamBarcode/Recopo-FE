@@ -101,7 +101,7 @@ const ContentArea = styled.div`
 `;
 const PageTitle = styled.h1`margin:0; font-family:${tokens.fontFamily.logo}; font-size:${tokens.fontSize.page}; font-weight:400;`;
 const Toolbar = styled.div`display:flex; align-items:center; justify-content:space-between; gap:20px;`;
-const FilterGroup = styled.div`display:flex; align-items:center; gap:clamp(16px, 4vw, 37px);`;
+const FilterGroup = styled.div`display:flex; align-items:center; gap:clamp(16px, calc(8vw - 40px), 37px);`;
 const Filters = styled.div`
   position:relative; z-index:10; display:flex; align-items:center; gap:12px;
   button { white-space:nowrap; } > div > div { z-index:20; }
