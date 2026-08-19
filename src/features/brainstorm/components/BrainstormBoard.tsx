@@ -4,7 +4,6 @@ import {useNavigate} from 'react-router-dom';
 
 import {tokens} from '@/styles/tokens';
 import Dropdown from '@/components/common/Dropdown';
-import IconButton from '@/components/common/IconButton';
 import BrainstormCardPreview from './BrainstormCardPreview';
 import searchIcon from '@/assets/search.svg';
 import HomeEmpty from '@/assets/Home_empty.svg';
@@ -53,9 +52,9 @@ function BrainstormBoard(){
                     </DropdownGroup>
                     <SearchBarWrapper>
                         <SearchInput value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="검색" />
-                        <IconButtonPosition>
-                            <IconButton size="md" icon={<img src={searchIcon} alt="" />} ariaLabel="검색" onClick={() => {}}/>
-                        </IconButtonPosition>
+                        <SearchButton type="button" aria-label="검색">
+                            <img src={searchIcon} alt="" />
+                        </SearchButton>
                     </SearchBarWrapper>
                 </FilterGroup>
             </Toolbar>
@@ -86,6 +85,12 @@ const BoardWrapper = styled.div`
     display : flex;
     flex-direction : column;
     overflow : hidden;
+
+    @media (max-width : 900px) {
+        height : auto;
+        min-height : 400px;
+        overflow : visible;
+    }
 `;
 /* 
 position relative fabwrapper의 기준점이 되게 함.
@@ -97,7 +102,12 @@ const Toolbar = styled.div`
     align-items : center;
     justify-content : space-between;
     flex-shrink : 0;
+    gap : 20px;
     margin-bottom : 50px;
+
+    @media (max-width : 900px) {
+        flex-wrap : wrap;
+    }
 `;
 /*
 display : flex 가로로 부제목, 필터 배치
@@ -115,7 +125,8 @@ const Subtitle = styled.h2`
 const FilterGroup = styled.div`
     display : flex;
     align-items : center;
-    gap : 38px;
+    flex-wrap : wrap;
+    gap : 38px 20px;
 `;
 // 드롭다운 묶음 전체와 검색창 사이의 간격 의미
 
@@ -126,31 +137,55 @@ const DropdownGroup = styled.div`
 `;
 
 const SearchBarWrapper = styled.div`
-    position : relative;
-    width : 268px;
-    height : 42px;
-`;
-
-const SearchInput = styled.input`
     width : 100%;
-    height : 100%;
+    max-width : 268px;
+    height : 42px;
     box-sizing : border-box;
-    padding : 0 42px 0 16px;
-    font-size : ${tokens.fontSize.lg};
+    display : flex;
+    align-items : center;
     border : 1px solid #E4E4E4;
     border-radius : 10px;
+    background : white;
 
-    &:focus {
-    outline: none;
-    border-color: #979797;
+    &:focus-within {
+        border-color: #979797;
     }
 `;
 //outline: none으로 브라우저 기본 파란 링을 없애고, 원래 있던 border의 색만 focus 시 #979797로 바뀌게 하는 방식
 
-const IconButtonPosition = styled.div`
-    position : absolute;
-    top : 13px;
-    right : 12px;
+const SearchInput = styled.input`
+    flex : 1;
+    min-width : 0;
+    height : 100%;
+    box-sizing : border-box;
+    padding : 0 12px;
+    border : 0;
+    outline : 0;
+    background : transparent;
+    font-size : ${tokens.fontSize.lg};
+
+    &::placeholder {
+        color : ${tokens.colors.text.placeholder};
+        font-weight : ${tokens.fontWeight.light};
+    }
+`;
+
+const SearchButton = styled.button`
+    flex-shrink : 0;
+    width : 45px;
+    height : 100%;
+    padding : 0;
+    display : flex;
+    align-items : center;
+    justify-content : center;
+    border : 0;
+    background : transparent;
+    cursor : pointer;
+
+    img {
+        width : 20px;
+        height : 20px;
+    }
 `;
 
 const CardScrollArea = styled.div`
@@ -167,8 +202,8 @@ const FabWrapper = styled.div`
     position : absolute;
     right : 0px;
     bottom : 24px;
-    width : 56px;
-    height : 56px;
+    width : 48px;
+    height : 48px;
     border-radius : 50%;
     background : #f5f5f5;
     border : 1px solid #e2e2e2;
@@ -176,7 +211,7 @@ const FabWrapper = styled.div`
     display : flex;
     align-items : center;
     justify-content : center;
-    font-size : 40px;
+    font-size : 34px;
     font-weight : ${tokens.fontWeight.light};
     font-family : ${tokens.fontFamily.primary};
     color : #434343;

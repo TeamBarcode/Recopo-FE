@@ -15,7 +15,7 @@ function HomePage() {
 export default HomePage;
 
 const HomeGrid = styled.div`
-  display : grid; 
+  display : grid;
   grid-template-columns : 1fr 350px;
   column-gap : 33px;
   margin-right : -68px;
@@ -25,9 +25,13 @@ const HomeGrid = styled.div`
   @media (max-width : 1200px){
     margin-right : -36px;
   }
-  
+
   @media (max-width : 900px){
     margin-right : -12px;
+    grid-template-columns : 1fr;
+    height : auto;
+    overflow : visible;
+    row-gap : 24px;
   }
 `;
 /*2-column grid 뼈대

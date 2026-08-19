@@ -483,6 +483,10 @@ const Wrapper = styled.div<{ $isDragOver: boolean; $isFilterOpen: boolean }>`
   border-radius: 16px;
   box-sizing: border-box;
   overflow: hidden;
+
+  @media (max-height: 760px) {
+    min-height: 480px;
+  }
 `;
 
 const HeaderArea = styled.div`
