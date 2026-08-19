@@ -7,7 +7,6 @@ import Modal from '@/components/common/Modal';
 import { tokens } from '@/styles/tokens';
 import { fetchMockLikedIdeas, unlikeMockIdea } from '@/mocks/mypage';
 import { fetchMockFriends } from '@/mocks/friends';
-import { mockUser } from '@/mocks/user';
 import type { IdeaCard } from '@/mocks/ideaCards';
 import type { Friend } from '@/mocks/friends';
 
@@ -43,14 +42,9 @@ function LikedIdeasBoard() {
             <ListBox>
                 {likedIdeas.map((idea) => {
                     const author = friendsById[idea.authorId];
-                    const isMine = idea.authorId === mockUser.id;
 
                     const handleOpenIdea = () => {
-                        if (isMine) {
-                            navigate(`/ideas/${idea.id}`);
-                        } else {
-                            navigate(`/friends?friendId=${idea.authorId}&ideaId=${idea.id}`);
-                        }
+                        navigate(`/friends?friendId=${idea.authorId}&ideaId=${idea.id}`);
                     };
 
                     return (
@@ -67,15 +61,15 @@ function LikedIdeasBoard() {
                             }}
                         >
                             <AuthorGroup
-                                $clickable={!isMine && Boolean(author)}
+                                $clickable={Boolean(author)}
                                 onClick={(e) => {
-                                    if (isMine || !author) return;
+                                    if (!author) return;
                                     e.stopPropagation();
                                     navigate(`/friends?friendId=${idea.authorId}`);
                                 }}
                             >
                                 <Avatar src={author?.profileImageUrl} size="sm" />
-                                <Nickname>{isMine ? '나' : (author?.nickname ?? '닉네임')}</Nickname>
+                                <Nickname>{author?.nickname ?? '닉네임'}</Nickname>
                             </AuthorGroup>
 
                             <IdeaInfo>
