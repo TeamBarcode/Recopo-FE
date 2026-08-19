@@ -78,13 +78,20 @@ const StyledTrigger = styled.button<{
   }
 `;
 
-const StyledContent = styled.div<{ size: string }>`
+const StyledContent = styled.div<{ size: string; $open: boolean }>`
   position: absolute;
   z-index: 10;
   min-width: 100%;
   width: max-content;
   background-color: ${tokens.colors.border.secondary};
   border-radius: 0 0 ${tokens.radius.xs} ${tokens.radius.xs};
+
+  ${({ $open }) =>
+    !$open &&
+    `
+      visibility: hidden;
+      pointer-events: none;
+    `}
 
   ${({ size }) =>
     size === 'sm' &&
@@ -153,11 +160,12 @@ function Dropdown({
   const contentRef = useRef<HTMLDivElement>(null);
   
   //useLayoutEffect는 "이 컴포넌트가 화면에 그려진 직후, 근데 사용자 눈에 실제로 보이기 전에 실행해라"는 훅
+  //닫혀 있을 때도 폭을 측정해둬야 트리거 버튼이 처음부터 가장 긴 옵션 폭으로 고정됨(값이 바뀌어도 폭이 변하지 않게)
   useLayoutEffect(() => {
-    if (isOpen && contentRef.current) {
+    if (contentRef.current) {
       setContentWidth(contentRef.current.offsetWidth);
     }
-  }, [isOpen]);
+  }, [options, size]);
 
   /*드롭다운 바깥 영역을 클릭하면 닫기*/
   useEffect(() => {
@@ -185,7 +193,7 @@ function Dropdown({
         size={size}
         $isOpen={open}
         disabled={disabled}
-        $width={open ? contentWidth : undefined}
+        $width={contentWidth}
         onClick={() => {
           if (!disabled) {
             setIsOpen((previous) => !previous);
@@ -195,23 +203,21 @@ function Dropdown({
         {value || placeholder} ▼
       </StyledTrigger>
 
-      {open && (
-        <StyledContent ref={contentRef} size={size}>
-          {options.map((option) => (
-            <StyledItem
-              key={option}
-              size={size}
-              onClick={() => {
-                console.log('클릭됨:', option, '현재 value:', value);
-                onChange(option === value ? '' : option);
-                setIsOpen(false);
-              }}
-            >
-              {option}
-            </StyledItem>
-          ))}
-        </StyledContent>
-      )}
+      <StyledContent ref={contentRef} size={size} $open={open}>
+        {options.map((option) => (
+          <StyledItem
+            key={option}
+            size={size}
+            onClick={() => {
+              console.log('클릭됨:', option, '현재 value:', value);
+              onChange(option === value ? '' : option);
+              setIsOpen(false);
+            }}
+          >
+            {option}
+          </StyledItem>
+        ))}
+      </StyledContent>
     </Wrapper>
   );
 }
