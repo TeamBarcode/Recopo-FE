@@ -100,10 +100,10 @@ const ContentArea = styled.div`
   @media (max-width:650px) { max-width:270px; }
 `;
 const PageTitle = styled.h1`margin:0; font-family:${tokens.fontFamily.logo}; font-size:${tokens.fontSize.page}; font-weight:400;`;
-const Toolbar = styled.div`display:flex; align-items:center; justify-content:space-between;`;
-const FilterGroup = styled.div`display:flex; align-items:flex-start; gap:37px;`;
+const Toolbar = styled.div`display:flex; align-items:center; justify-content:space-between; gap:20px;`;
+const FilterGroup = styled.div`display:flex; align-items:center; gap:clamp(16px, 4vw, 37px);`;
 const Filters = styled.div`
-  position:relative; z-index:10; display:flex; align-items:flex-start; gap:12px;
+  position:relative; z-index:10; display:flex; align-items:center; gap:12px;
   button { white-space:nowrap; } > div > div { z-index:20; }
 `;
 const SearchForm = styled.form`
@@ -119,9 +119,9 @@ const SearchButton = styled.button`
   img { width:20px; height:20px; }
 `;
 const IdeaGrid = styled.div`
-  margin-top:36px; display:grid; grid-template-columns:repeat(3,minmax(220px,270px)); justify-content:center; gap:40px 100px;
-  @media (max-width:1000px) { grid-template-columns:repeat(2,minmax(220px,270px)); justify-content:center; gap:40px 60px; }
-  @media (max-width:650px) { grid-template-columns:minmax(220px,270px); justify-content:center; gap:40px; }
+  margin-top:36px; display:grid; grid-template-columns:repeat(3,minmax(220px,270px)); justify-content:center; gap:40px clamp(24px, 9vw, 100px);
+  @media (max-width:1000px) { grid-template-columns:repeat(2,minmax(220px,270px)); justify-content:center; }
+  @media (max-width:650px) { grid-template-columns:minmax(220px,270px); justify-content:center; }
 `;
 const EmptyArea = styled.div`margin-top:42px; display:flex; align-items:center; gap:95px;`;
 const EmptyCard = styled.div`position:relative; width:270px; height:301px; padding:112px 18px 20px; border:1px dashed #8c8c8c; border-radius:10px; color:${tokens.colors.text.extraLight}; text-align:center;`;
