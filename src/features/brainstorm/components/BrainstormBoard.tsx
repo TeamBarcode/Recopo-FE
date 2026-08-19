@@ -139,7 +139,7 @@ const DropdownGroup = styled.div`
 const SearchBarWrapper = styled.div`
     width : 100%;
     max-width : 268px;
-    height : 42px;
+    height : 35px;
     box-sizing : border-box;
     display : flex;
     align-items : center;
@@ -172,7 +172,7 @@ const SearchInput = styled.input`
 
 const SearchButton = styled.button`
     flex-shrink : 0;
-    width : 32px;
+    width : 45px;
     height : 100%;
     padding : 0;
     display : flex;
@@ -183,8 +183,8 @@ const SearchButton = styled.button`
     cursor : pointer;
 
     img {
-        width : 16px;
-        height : 16px;
+        width : 20px;
+        height : 20px;
     }
 `;
 

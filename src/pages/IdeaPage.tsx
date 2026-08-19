@@ -107,7 +107,7 @@ const Filters = styled.div`
   button { white-space:nowrap; } > div > div { z-index:20; }
 `;
 const SearchForm = styled.form`
-  width:268px; height:42px; display:flex; align-items:center; border:1px solid ${tokens.colors.border.search}; border-radius:10px; background:white;
+  width:268px; height:35px; display:flex; align-items:center; border:1px solid ${tokens.colors.border.search}; border-radius:10px; background:white;
   &:focus-within { border-color:#979797; }
 `;
 const SearchInput = styled.input`
@@ -115,8 +115,8 @@ const SearchInput = styled.input`
   &::placeholder { color:${tokens.colors.text.placeholder}; font-size:${tokens.fontSize.lg}; font-weight:${tokens.fontWeight.light}; }
 `;
 const SearchButton = styled.button`
-  flex-shrink:0; width:32px; height:100%; padding:0; display:flex; align-items:center; justify-content:center; border:0; background:transparent; cursor:pointer;
-  img { width:16px; height:16px; }
+  flex-shrink:0; width:45px; height:100%; padding:0; display:flex; align-items:center; justify-content:center; border:0; background:transparent; cursor:pointer;
+  img { width:20px; height:20px; }
 `;
 const IdeaGrid = styled.div`
   margin-top:36px; display:grid; grid-template-columns:repeat(3,minmax(220px,270px)); justify-content:center; gap:40px 100px;
