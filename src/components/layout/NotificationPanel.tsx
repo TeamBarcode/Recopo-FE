@@ -284,7 +284,10 @@ const ListScroll = styled.div<{ $expanded: boolean; $fixedHeight?: number }>`
        늘어난 항목만 이 안에서 스크롤되게 함 */
     ${({ $expanded, $fixedHeight }) =>
         $expanded && $fixedHeight ? `height: ${$fixedHeight}px;` : ''}
-    overflow-y: ${({ $expanded }) => ($expanded ? 'auto' : 'hidden')};
+    /* 뷰포트가 낮을 때 패널이 화면 아래로 잘려서 "더 보기"조차 못 누르는 문제 방지 —
+       헤더/상단바/구분선/패딩이 차지하는 공간(대략 200px)을 뺀 나머지를 넘지 않게 함 */
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
     /* 스크롤바는 패널 오른쪽 끝에 여백 없이 딱 붙게 두고(padding은 스크롤바 바깥이 아니라
        안쪽 콘텐츠에만 적용됨), 콘텐츠만 좌우 패딩으로 다른 요소들과 맞춤 */
     padding-left: 20px;
