@@ -620,9 +620,9 @@ const CenteredMessage = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 12px;
-  padding: 0 ${tokens.spacing[8]};
+  padding: 100px ${tokens.spacing[8]} 0;
   text-align: center;
 `;
 
