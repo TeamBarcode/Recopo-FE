@@ -313,7 +313,7 @@ const MarkAllReadButton = styled.button`
 const Divider = styled.div`
     height: 1px;
     background: #dddddd;
-    margin: 12px 20px 8px;
+    margin: 12px 20px 20px;
 `;
 
 const EmptyText = styled.div`
