@@ -172,7 +172,7 @@ const SearchInput = styled.input`
 
 const SearchButton = styled.button`
     flex-shrink : 0;
-    width : 45px;
+    width : 32px;
     height : 100%;
     padding : 0;
     display : flex;
@@ -183,8 +183,8 @@ const SearchButton = styled.button`
     cursor : pointer;
 
     img {
-        width : 20px;
-        height : 20px;
+        width : 16px;
+        height : 16px;
     }
 `;
 
