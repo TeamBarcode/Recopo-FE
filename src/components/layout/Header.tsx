@@ -253,6 +253,10 @@ const NavButton = styled(NavLink)`
   color: #111111;
   text-decoration: none;
 
+  @media (max-width: 1200px) {
+    width: 98px;
+  }
+
   @media (max-width: 900px) {
     width: 84px;
   }
@@ -265,6 +269,14 @@ const IconWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+
+  @media (max-width: 1200px) {
+    width: 98px;
+
+    svg {
+      transform: scale(0.91);
+    }
+  }
 
   @media (max-width: 900px) {
     width: 84px;
@@ -284,6 +296,10 @@ const NavLabel = styled.span<{ $top?: number }>`
   color: #111111;
   font-size: 15px;
   font-weight: 400;
+
+  @media (max-width: 1200px) {
+    font-size: 14px;
+  }
 
   @media (max-width: 900px) {
     font-size: 13px;

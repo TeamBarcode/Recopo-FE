@@ -474,7 +474,7 @@ function RecoBotPanel({ onSaved }: RecoBotPanelProps, ref: React.ForwardedRef<Re
 export default forwardRef(RecoBotPanel);
 
 const Wrapper = styled.div<{ $isDragOver: boolean; $isFilterOpen: boolean }>`
-  height: calc(100% - 20px);
+  height: 100%;
   min-height: 600px;
   display: flex;
   flex-direction: column;
@@ -483,6 +483,10 @@ const Wrapper = styled.div<{ $isDragOver: boolean; $isFilterOpen: boolean }>`
   border-radius: 16px;
   box-sizing: border-box;
   overflow: hidden;
+
+  @media (max-height: 760px) {
+    min-height: 480px;
+  }
 `;
 
 const HeaderArea = styled.div`

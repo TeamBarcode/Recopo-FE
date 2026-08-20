@@ -23,8 +23,11 @@ export default Layout;
 
 const HEADER_HEIGHT = '120px';
 
+const HEADER_GAP = '10px';
+
 const PageWrapper = styled.div`
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background-color: #ffffff;
 `;
 
@@ -40,8 +43,10 @@ const FixedHeaderArea = styled.div`
 
 const Main = styled.main`
   width: 100%;
-  min-height: 100vh;
-  padding-top: ${HEADER_HEIGHT};
+  height: calc(100vh - ${HEADER_HEIGHT} - ${HEADER_GAP});
+  margin-top: calc(${HEADER_HEIGHT} + ${HEADER_GAP});
+  overflow-y: auto;
+  scrollbar-gutter: stable;
   padding-right: 80px;
   padding-left: 80px;
   box-sizing: border-box;
