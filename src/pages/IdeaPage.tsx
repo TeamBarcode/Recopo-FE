@@ -22,7 +22,9 @@ function IdeaPage() {
   const navigate = useNavigate();
   const [visibility, setVisibility] = useState('전체');
   const [category, setCategory] = useState('');
-  const [sort, setSort] = useState('');
+  // 정렬 드롭다운은 처음엔 '정렬' 플레이스홀더로 보여주되, 실제 정렬은 최신순을 기본 적용함
+  const [sort, setSort] = useState('최신 순');
+  const [sortTouched, setSortTouched] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredIdeas, setFilteredIdeas] = useState<IdeaCardData[]>([]);
@@ -52,7 +54,16 @@ function IdeaPage() {
             <Filters>
               <Dropdown options={visibilityOptions} value={visibility} onChange={(value) => setVisibility(value || '전체')} size="sm" placeholder="전체" />
               <Dropdown options={categoryOptions} value={category} onChange={(value) => setCategory(value)} size="sm" placeholder="카테고리" />
-              <Dropdown options={sortOptions} value={sort} onChange={setSort} size="sm" placeholder="정렬" />
+              <Dropdown
+                options={sortOptions}
+                value={sortTouched ? sort : ''}
+                onChange={(value) => {
+                  setSort(value);
+                  setSortTouched(true);
+                }}
+                size="sm"
+                placeholder="정렬"
+              />
             </Filters>
             <SearchForm onSubmit={handleSearch} role="search">
               <SearchInput value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="제목 또는 해시태그 검색" aria-label="아이디어 검색" />
@@ -89,23 +100,26 @@ const ContentArea = styled.div`
   @media (max-width:650px) { max-width:270px; }
 `;
 const PageTitle = styled.h1`margin:0; font-family:${tokens.fontFamily.logo}; font-size:${tokens.fontSize.page}; font-weight:400;`;
-const Toolbar = styled.div`display:flex; align-items:center; justify-content:space-between;`;
-const FilterGroup = styled.div`display:flex; align-items:flex-start; gap:37px;`;
+const Toolbar = styled.div`display:flex; align-items:center; justify-content:space-between; gap:20px;`;
+const FilterGroup = styled.div`display:flex; align-items:center; gap:clamp(16px, calc(8vw - 40px), 37px);`;
 const Filters = styled.div`
-  position:relative; z-index:10; display:flex; align-items:flex-start; gap:12px;
+  position:relative; z-index:10; display:flex; align-items:center; gap:12px;
   button { white-space:nowrap; } > div > div { z-index:20; }
 `;
-const SearchForm = styled.form`width:268px; height:42px; display:flex; align-items:center; border:1px solid ${tokens.colors.border.search}; border-radius:10px; background:white;`;
+const SearchForm = styled.form`
+  width:268px; height:38px; display:flex; align-items:center; border:1px solid ${tokens.colors.border.search}; border-radius:10px; background:white;
+  &:focus-within { border-color:#979797; }
+`;
 const SearchInput = styled.input`
-  min-width:0; height:100%; flex:1; padding:0 14px; border:0; outline:0; background:transparent; font:inherit; font-size:${tokens.fontSize.md};
+  min-width:0; height:100%; flex:1; padding:0 12px; border:0; outline:0; background:transparent; font:inherit; font-size:${tokens.fontSize.md};
   &::placeholder { color:${tokens.colors.text.placeholder}; font-size:${tokens.fontSize.lg}; font-weight:${tokens.fontWeight.light}; }
 `;
 const SearchButton = styled.button`
-  width:45px; height:100%; padding:0; display:flex; align-items:center; justify-content:center; border:0; background:transparent; cursor:pointer;
+  flex-shrink:0; width:45px; height:100%; padding:0; display:flex; align-items:center; justify-content:center; border:0; background:transparent; cursor:pointer;
   img { width:20px; height:20px; }
 `;
 const IdeaGrid = styled.div`
-  margin-top:36px; display:grid; grid-template-columns:repeat(3,minmax(220px,270px)); justify-content:center; gap:40px 100px;
+  margin-top:36px; display:grid; grid-template-columns:repeat(3,minmax(220px,270px)); justify-content:center; gap:40px clamp(24px, 9vw, 100px);
   @media (max-width:1000px) { grid-template-columns:repeat(2,minmax(220px,270px)); justify-content:center; }
   @media (max-width:650px) { grid-template-columns:minmax(220px,270px); justify-content:center; }
 `;

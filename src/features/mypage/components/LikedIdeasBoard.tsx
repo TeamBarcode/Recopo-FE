@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 import Avatar from '@/components/common/Avatar';
@@ -10,6 +11,7 @@ import type { IdeaCard } from '@/mocks/ideaCards';
 import type { Friend } from '@/mocks/friends';
 
 function LikedIdeasBoard() {
+    const navigate = useNavigate();
     const [likedIdeas, setLikedIdeas] = useState<IdeaCard[]>([]);
     const [friendsById, setFriendsById] = useState<Record<string, Friend>>({});
     const [unlikeTargetId, setUnlikeTargetId] = useState<string | null>(null);
@@ -41,9 +43,31 @@ function LikedIdeasBoard() {
                 {likedIdeas.map((idea) => {
                     const author = friendsById[idea.authorId];
 
+                    const handleOpenIdea = () => {
+                        navigate(`/friends?friendId=${idea.authorId}&ideaId=${idea.id}`);
+                    };
+
                     return (
-                        <Row key={idea.id} type="button" onClick={() => {}}>
-                            <AuthorGroup>
+                        <Row
+                            key={idea.id}
+                            role="button"
+                            tabIndex={0}
+                            onClick={handleOpenIdea}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    handleOpenIdea();
+                                }
+                            }}
+                        >
+                            <AuthorGroup
+                                $clickable={Boolean(author)}
+                                onClick={(e) => {
+                                    if (!author) return;
+                                    e.stopPropagation();
+                                    navigate(`/friends?friendId=${idea.authorId}`);
+                                }}
+                            >
                                 <Avatar src={author?.profileImageUrl} size="sm" />
                                 <Nickname>{author?.nickname ?? '닉네임'}</Nickname>
                             </AuthorGroup>
@@ -111,7 +135,7 @@ const ListBox = styled.div`
     overflow : hidden;
 `;
 
-const Row = styled.button`
+const Row = styled.div`
     width : 100%;
     height : 72px;
     box-sizing : border-box;
@@ -130,11 +154,12 @@ const Row = styled.button`
     }
 `;
 
-const AuthorGroup = styled.div`
+const AuthorGroup = styled.div<{ $clickable: boolean }>`
     flex-shrink : 0;
     display : flex;
     align-items : center;
     gap : 12px;
+    cursor : ${({ $clickable }) => ($clickable ? 'pointer' : 'default')};
 `;
 
 const Nickname = styled.div`

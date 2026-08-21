@@ -15,8 +15,8 @@ function HomePage() {
 export default HomePage;
 
 const HomeGrid = styled.div`
-  display : grid; 
-  grid-template-columns : 1fr 350px;
+  display : grid;
+  grid-template-columns : minmax(260px, 1fr) 350px;
   column-gap : 33px;
   margin-right : -68px;
   height : calc(100vh - 150px);
@@ -25,7 +25,7 @@ const HomeGrid = styled.div`
   @media (max-width : 1200px){
     margin-right : -36px;
   }
-  
+
   @media (max-width : 900px){
     margin-right : -12px;
   }
@@ -44,7 +44,7 @@ column-gap: 25px; 두 컬럼 사이의 간격
 //여기서 150은 Layout.tsx의 HEADER_HEIGHT(헤더 높이)랑 똑같은 숫자
 //overflow : hidden; 은 그냥 안전장치로..
 /*
-margin-right: -68px; Main의 오른쪽 패딩 80px → 12px로 좁히기 
-margin-right: -36px;  이 구간 Main 패딩이 48px이라 48-12 
-margin-right: -12px;  이 구간 Main 패딩이 24px이라 24-12 
+margin-right: -68px; Main의 오른쪽 패딩 80px → 12px로 좁히기
+margin-right: -36px;  이 구간 Main 패딩이 48px이라 48-12
+margin-right: -12px;  이 구간 Main 패딩이 24px이라 24-12
 */

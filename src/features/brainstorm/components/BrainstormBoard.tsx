@@ -4,13 +4,19 @@ import {useNavigate} from 'react-router-dom';
 
 import {tokens} from '@/styles/tokens';
 import Dropdown from '@/components/common/Dropdown';
-import IconButton from '@/components/common/IconButton';
 import BrainstormCardPreview from './BrainstormCardPreview';
 import searchIcon from '@/assets/search.svg';
 import HomeEmpty from '@/assets/Home_empty.svg';
 
 import type {BrainstormCard} from '@/mocks/brainstormCards';
 import {fetchMockCards} from '@/mocks/brainstormCards';
+
+// 카드 3열(216px) + 최대 gap(62px) 2개를 합친 폭. 툴바와 카드 영역이 같은 폭으로
+// 정렬되도록 두 영역 모두 이 값을 max-width로 공유함
+const CARD_AREA_MAX_WIDTH = 216 * 3 + 62 * 2;
+// FAB의 right 오프셋과 동일한 값. 툴바/카드 영역 오른쪽 끝을 FAB와 나란히
+// 맞추기 위해(=AI 패널 쪽으로 붙이기 위해) 공유함
+const RIGHT_EDGE_OFFSET = 32;
 
 function BrainstormBoard(){
     const [category, setCategory] = useState('');
@@ -53,9 +59,9 @@ function BrainstormBoard(){
                     </DropdownGroup>
                     <SearchBarWrapper>
                         <SearchInput value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="검색" />
-                        <IconButtonPosition>
-                            <IconButton size="md" icon={<img src={searchIcon} alt="" />} ariaLabel="검색" onClick={() => {}}/>
-                        </IconButtonPosition>
+                        <SearchButton type="button" aria-label="검색">
+                            <img src={searchIcon} alt="" />
+                        </SearchButton>
                     </SearchBarWrapper>
                 </FilterGroup>
             </Toolbar>
@@ -95,18 +101,25 @@ flex-direction column은 툴바랑 카드 영역이 세로로 배치되게 함.
 const Toolbar = styled.div`
     display : flex;
     align-items : center;
-    justify-content : space-between;
+    flex-wrap : wrap;
     flex-shrink : 0;
-    margin-bottom : 50px;
+    gap : 20px;
+    min-height : 38px;
+    width : 100%;
+    max-width : ${CARD_AREA_MAX_WIDTH}px;
+    margin : 0 auto 30px;
 `;
 /*
 display : flex 가로로 부제목, 필터 배치
 align-items : center 부제목이랑 필터 등등ㅇ의 높이가 다를 수 있으므로 툴바 높이 내에서 세로 중앙에 맞춰 정렬됨<div className=""></div>
-justify-content : space-between 부제목은 맨 왼쪽 끝, 마지막 자식인 필터그룹은 맨 오른쪽 끝으로
 flex-shrink : 0 카드 영역이 커지려고 해도 툴바 크기 유지
+Toolbar 자체(라벨)와 카드 영역은 카드와 동일하게 가운데 정렬로 고정해두고, FilterGroup만
+넓은 화면에서 BoardWrapper(=Toolbar의 position:relative가 아니라 그 바깥의 진짜 보드
+컨테이너) 기준 절대배치로 오른쪽 끝까지 밀어서 FAB와 나란히 맞춤(아래 FilterGroup 참고)
 */
 
 const Subtitle = styled.h2`
+    margin : 0;
     font-family : ${tokens.fontFamily.logo};
     font-size : 21px;
     font-weight : ${tokens.fontWeight.regular};
@@ -115,7 +128,21 @@ const Subtitle = styled.h2`
 const FilterGroup = styled.div`
     display : flex;
     align-items : center;
-    gap : 38px;
+    flex-wrap : wrap;
+    justify-content : flex-end;
+    gap : 38px 20px;
+    margin-left : auto;
+
+    /* 넓은 화면에서는 Toolbar(가운데 정렬 박스)를 벗어나 BoardWrapper 기준
+       오른쪽 끝(FAB와 동일한 32px)까지 밀착시킴 — 라벨/카드 영역 위치는 그대로 둔 채
+       드롭다운·검색창만 AI 패널 쪽으로 붙이기 위함. 겹칠 만큼 좁아지면 다시
+       Toolbar 안 레이아웃(라벨 아래 줄바꿈)으로 돌아감 */
+    @media (min-width : 1150px) {
+        position : absolute;
+        top : 0;
+        right : ${RIGHT_EDGE_OFFSET}px;
+        margin-left : 0;
+    }
 `;
 // 드롭다운 묶음 전체와 검색창 사이의 간격 의미
 
@@ -126,37 +153,61 @@ const DropdownGroup = styled.div`
 `;
 
 const SearchBarWrapper = styled.div`
-    position : relative;
     width : 268px;
-    height : 42px;
-`;
-
-const SearchInput = styled.input`
-    width : 100%;
-    height : 100%;
+    height : 38px;
     box-sizing : border-box;
-    padding : 0 42px 0 16px;
-    font-size : ${tokens.fontSize.lg};
+    display : flex;
+    align-items : center;
     border : 1px solid #E4E4E4;
     border-radius : 10px;
+    background : white;
 
-    &:focus {
-    outline: none;
-    border-color: #979797;
+    &:focus-within {
+        border-color: #979797;
     }
 `;
 //outline: none으로 브라우저 기본 파란 링을 없애고, 원래 있던 border의 색만 focus 시 #979797로 바뀌게 하는 방식
 
-const IconButtonPosition = styled.div`
-    position : absolute;
-    top : 13px;
-    right : 12px;
+const SearchInput = styled.input`
+    flex : 1;
+    min-width : 0;
+    height : 100%;
+    box-sizing : border-box;
+    padding : 0 12px;
+    border : 0;
+    outline : 0;
+    background : transparent;
+    font-size : ${tokens.fontSize.lg};
+
+    &::placeholder {
+        color : ${tokens.colors.text.placeholder};
+        font-weight : ${tokens.fontWeight.light};
+    }
+`;
+
+const SearchButton = styled.button`
+    flex-shrink : 0;
+    width : 45px;
+    height : 100%;
+    padding : 0;
+    display : flex;
+    align-items : center;
+    justify-content : center;
+    border : 0;
+    background : transparent;
+    cursor : pointer;
+
+    img {
+        width : 20px;
+        height : 20px;
+    }
 `;
 
 const CardScrollArea = styled.div`
     flex : 1;
     overflow-y : auto;
-    padding-top : 24px; 
+    scrollbar-gutter : stable;
+    padding-top : 24px;
 `;
 /* 
 flex : 1; Toolbar 뺀 나머지 공간 전부 차지 (카드 개수와 무관하게 박스 크기 고정)
@@ -165,10 +216,10 @@ overflow-y : auto; 카드가 이 박스보다 많아지면 이 안에서만 스�
 
 const FabWrapper = styled.div`
     position : absolute;
-    right : 0px;
+    right : 32px;
     bottom : 24px;
-    width : 56px;
-    height : 56px;
+    width : 48px;
+    height : 48px;
     border-radius : 50%;
     background : #f5f5f5;
     border : 1px solid #e2e2e2;
@@ -176,7 +227,7 @@ const FabWrapper = styled.div`
     display : flex;
     align-items : center;
     justify-content : center;
-    font-size : 40px;
+    font-size : 34px;
     font-weight : ${tokens.fontWeight.light};
     font-family : ${tokens.fontFamily.primary};
     color : #434343;
@@ -206,7 +257,11 @@ const EmptyState = styled.div`
 
 const CardGrid = styled.div`
     display : grid;
-    grid-template-columns : repeat(3, 1fr);
-    column-gap : 62px;
+    grid-template-columns : repeat(auto-fill, 216px);
+    justify-content : center;
+    column-gap : clamp(20px, calc(10vw - 40px), 62px);
     row-gap : 40px;
+    width : 100%;
+    max-width : ${CARD_AREA_MAX_WIDTH}px;
+    margin : 0 auto;
 `;

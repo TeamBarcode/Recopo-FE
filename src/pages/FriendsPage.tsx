@@ -51,7 +51,9 @@ function FriendsPage() {
     const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
     const [friendIdeas, setFriendIdeas] = useState<IdeaCardData[]>([]);
     const [ideaCategory, setIdeaCategory] = useState('');
-    const [ideaSort, setIdeaSort] = useState('');
+    // 정렬 드롭다운은 처음엔 '정렬' 플레이스홀더로 보여주되, 실제 정렬은 최신순을 기본 적용함
+    const [ideaSort, setIdeaSort] = useState('최신 순');
+    const [ideaSortTouched, setIdeaSortTouched] = useState(false);
 
     const [openIdea, setOpenIdea] = useState<IdeaDetail | null>(null);
     const [isCommentDrawerOpen, setIsCommentDrawerOpen] = useState(false);
@@ -66,9 +68,9 @@ function FriendsPage() {
         fetchMockFriends().then(setFriends);
     }, []);
 
-    // 알림에서 "친구 아이디어 페이지로 이동" 클릭 시 ?friendId=xxx로 들어오면
-    // 목록이 로드된 뒤 해당 친구를 자동으로 선택함(friends가 비동기로 로드되는 외부 데이터라
-    // 렌더 중 파생 계산으로는 대체할 수 없어 effect에서 동기화함)
+    // 알림/마이페이지에서 "친구 아이디어 페이지로 이동" 클릭 시 ?friendId=xxx(&ideaId=yyy)로 들어오면
+    // 목록이 로드된 뒤 해당 친구를 자동으로 선택하고, ideaId가 함께 있으면 해당 아이디어 상세 모달까지 자동으로 염
+    // (friends가 비동기로 로드되는 외부 데이터라 렌더 중 파생 계산으로는 대체할 수 없어 effect에서 동기화함)
     useEffect(() => {
         const friendId = searchParams.get('friendId');
         if (!friendId || friends.length === 0) return;
@@ -78,13 +80,20 @@ function FriendsPage() {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setSelectedFriend(target);
             setIdeaCategory('');
-            setIdeaSort('');
+            setIdeaSort('최신 순');
+            setIdeaSortTouched(false);
+
+            const ideaId = searchParams.get('ideaId');
+            if (ideaId) {
+                handleOpenIdea(ideaId);
+            }
         }
 
         setSearchParams(
             (prev) => {
                 const next = new URLSearchParams(prev);
                 next.delete('friendId');
+                next.delete('ideaId');
                 return next;
             },
             { replace: true },
@@ -278,8 +287,11 @@ function FriendsPage() {
                                 />
                                 <Dropdown
                                     options={SORT_OPTIONS}
-                                    value={ideaSort}
-                                    onChange={setIdeaSort}
+                                    value={ideaSortTouched ? ideaSort : ''}
+                                    onChange={(value) => {
+                                        setIdeaSort(value);
+                                        setIdeaSortTouched(true);
+                                    }}
                                     size="sm"
                                     placeholder="정렬"
                                 />
@@ -450,6 +462,10 @@ const SearchForm = styled.form`
     border: 1.5px solid ${tokens.colors.border.primary};
     border-radius: ${tokens.radius.xs};
     background: white;
+
+    &:focus-within {
+        border-color: #979797;
+    }
 `;
 
 const SearchInput = styled.input`
@@ -464,6 +480,7 @@ const SearchInput = styled.input`
 
     &::placeholder {
         color: ${tokens.colors.text.placeholder};
+        font-weight: ${tokens.fontWeight.light};
     }
 `;
 
@@ -485,8 +502,8 @@ const SearchButton = styled.button`
 `;
 
 const ListPanel = styled.div`
-    border-radius: ${tokens.radius.sm};
-    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.15);
+    border-radius: ${tokens.radius.xs};
+    border: 1.5px solid ${tokens.colors.border.primary};
     padding: 24px 20px;
     min-height: 400px;
 `;
@@ -664,7 +681,9 @@ const PlaceholderWrapper = styled.div`
     font-size: ${tokens.fontSize.xl};
 `;
 
-const PlaceholderText = styled.p``;
+const PlaceholderText = styled.p`
+    font-weight: ${tokens.fontWeight.light};
+`;
 
 const RobotIcon = styled.img`
     width: 24px;
@@ -1251,6 +1270,7 @@ const SendButton = styled.button`
     img {
         width: 12px;
         height: 12px;
+        transform: rotate(-90deg);
     }
 
     &:active {

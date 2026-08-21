@@ -193,10 +193,11 @@ export const updateMockPassword = async (
 };
 
 // ===== 좋아요한 아이디어 목록 조회 =====
+// 내 아이디어는 좋아요를 누를 수 없으므로(자기 자신 좋아요 불가) 목록에서 제외
 export const fetchMockLikedIdeas = async (): Promise<IdeaCard[]> => {
   await new Promise((r) => setTimeout(r, 300));
 
-  return mockIdeaCards.filter((idea) => idea.likedByMe);
+  return mockIdeaCards.filter((idea) => idea.likedByMe && idea.authorId !== mockUser.id);
 };
 
 // ===== 좋아요 취소 =====
