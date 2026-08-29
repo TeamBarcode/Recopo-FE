@@ -20,10 +20,11 @@ function ProfileSetupPage() {
     userIdMessage,
     isCheckingUserId,
     isSubmitting,
+    isUploadingImage,
     isNextEnabled,
     handleUserIdChange,
     handleNicknameChange,
-    handleProfileImageChange,
+    handleProfileImageSelect,
     checkUserId,
     confirmNickname,
     submitProfileSetup,
@@ -34,7 +35,7 @@ function ProfileSetupPage() {
 
     if (!file) return;
 
-    handleProfileImageChange(URL.createObjectURL(file));
+    handleProfileImageSelect(file);
   };
 
   const handleNext = async () => {
@@ -62,14 +63,18 @@ function ProfileSetupPage() {
           <ProfileArea>
             <Avatar src={profileImage ?? undefined} size="lg" />
 
-            <UploadButton type="button" onClick={() => fileInputRef.current?.click()}>
-              이미지 업로드
+            <UploadButton
+              type="button"
+              disabled={isUploadingImage}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {isUploadingImage ? '업로드 중' : '이미지 업로드'}
             </UploadButton>
 
             <HiddenFileInput
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
               onChange={handleImageUpload}
             />
           </ProfileArea>
@@ -215,7 +220,12 @@ const UploadButton = styled.button`
   font-weight: ${tokens.fontWeight.regular};
   cursor: pointer;
 
-  &:active {
+  &:disabled {
+    cursor: wait;
+    opacity: 0.6;
+  }
+
+  &:not(:disabled):active {
     opacity: 0.6;
   }
 `;
