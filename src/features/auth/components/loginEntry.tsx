@@ -3,11 +3,14 @@ import Recobot from '@/assets/recobot.svg';
 import GoogleIcon from '@/assets/google Logo.svg';
 import styled from 'styled-components';
 import {tokens} from '@/styles/tokens';
+import { useGoogleLogin } from '@/features/auth/hooks/useGoogleLogin';
 
 /*LoginEntry 컴포넌트 정의 */
 //PageContainer : 배경색을 화면 전체까지 깔아주는 가장 바깥 껍데기
 //PageInner : 실제 눈에 보이는 콘텐츠가 들어갈 자리 정함.
 function LoginEntry() {
+    const { buttonContainerRef } = useGoogleLogin();
+
     return (
         <PageContainer>
             <PageInner>
@@ -23,11 +26,14 @@ function LoginEntry() {
                         <Title>로그인</Title>
                     </TitleRow>
 
-                    {/* 구글 로그인 버튼 */}
-                    <GoogleLoginButton variant="primary" onClick={() => {/*Todo : 구글 로그인 연결*/}}>
-                        <GoogleIconImg src={GoogleIcon} width={24} height={24} alt="" />
-                        구글로 로그인
-                    </GoogleLoginButton>
+                    {/* 구글 로그인 버튼: 실제 구글 버튼(투명)을 커스텀 디자인 버튼 위에 겹쳐서 클릭을 받음 */}
+                    <GoogleButtonWrapper>
+                        <GoogleLoginButton variant="primary">
+                            <GoogleIconImg src={GoogleIcon} width={24} height={24} alt="" />
+                            구글로 로그인
+                        </GoogleLoginButton>
+                        <GoogleButtonOverlay ref={buttonContainerRef} />
+                    </GoogleButtonWrapper>
                 </Content>
             </PageInner>
         </PageContainer>
@@ -120,22 +126,42 @@ const Title = styled.h1`
 `;
 //margin : 0인 이유 브라우저가 h1 태그에 기본적으로 위아래 여백을 줘서
 
-const GoogleLoginButton = styled(Button)`
-  position: relative; 
-  box-sizing: border-box;
+const GoogleButtonWrapper = styled.div`
+  position: relative;
   width: 280px;
   height: 42px;
+  margin-bottom: 83px;
+`;
+
+const GoogleLoginButton = styled(Button)`
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
   border: 1px solid #E7E7E7;
   font-weight: ${tokens.fontWeight.bold};
   display: flex;
   align-items: center;
-  justify-content: center; 
-  margin-bottom : 83px;
+  justify-content: center;
 `;
 /*
 position : relative 아이콘의 기준점이 구글 로그인 버튼이 되게 함.
 justify-content: center; 텍스트를 버튼 중앙에 정렬
 */
+
+// 실제 구글 로그인 버튼(iframe)을 투명하게 겹쳐서, 사용자 클릭이 진짜 구글 버튼에 전달되게 함
+const GoogleButtonOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0;
+
+  > div {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+`;
 
 const GoogleIconImg = styled.img`
   position: absolute;
