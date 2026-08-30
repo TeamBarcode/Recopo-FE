@@ -12,6 +12,7 @@ import {
 import type { Notification } from '@/mocks/notifications';
 import { acceptMockFriendRequest, rejectMockFriendRequest } from '@/mocks/friends';
 import Avatar from '@/components/common/Avatar';
+import Loading from '@/components/common/Loading';
 import Modal from '@/components/common/Modal';
 import acceptIcon from '@/assets/notification-accept.svg';
 import rejectIcon from '@/assets/notification-reject.svg';
@@ -86,11 +87,19 @@ function NotificationPanel({ onNavigate }: NotificationPanelProps) {
     const [fixedHeight, setFixedHeight] = useState<number | null>(null);
     const listScrollRef = useRef<HTMLDivElement>(null);
     const [actionTarget, setActionTarget] = useState<{ notification: Notification; action: 'accept' | 'reject' } | null>(null);
+    const [isActionFailedModalOpen, setIsActionFailedModalOpen] = useState(false);
+    const [isClickFailedModalOpen, setIsClickFailedModalOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    // 알림 항목마다 독립적으로 연타 방지해야 해서(다른 알림은 계속 클릭 가능해야 함) id를 담는 Set으로 관리
+    const processingNotificationIdsRef = useRef<Set<string>>(new Set());
+    const isActionProcessingRef = useRef(false);
 
     useEffect(() => {
         fetchMockNotifications(1).then(({ notifications: list, hasMore: more }) => {
             setNotifications(list);
             setHasMore(more);
+            setIsLoading(false);
         });
     }, []);
 
@@ -99,10 +108,12 @@ function NotificationPanel({ onNavigate }: NotificationPanelProps) {
         if (listScrollRef.current) {
             setFixedHeight(listScrollRef.current.offsetHeight);
         }
+        setIsLoadingMore(true);
         const { notifications: list, hasMore: more } = await fetchMockNotifications(1, mockNotifications.length);
         setNotifications(list);
         setHasMore(more);
         setIsExpanded(true);
+        setIsLoadingMore(false);
     };
 
     const handleMarkAllRead = async () => {
@@ -113,7 +124,17 @@ function NotificationPanel({ onNavigate }: NotificationPanelProps) {
 
     // 알림 클릭 시: 목록에서 제거 + 타입별로 관련 화면으로 이동
     const handleClickNotification = async (notification: Notification) => {
-        await markMockNotificationRead(notification.id);
+        if (processingNotificationIdsRef.current.has(notification.id)) return;
+        processingNotificationIdsRef.current.add(notification.id);
+
+        try {
+            await markMockNotificationRead(notification.id);
+        } catch {
+            setIsClickFailedModalOpen(true);
+            return;
+        } finally {
+            processingNotificationIdsRef.current.delete(notification.id);
+        }
         setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
 
         switch (notification.type) {
@@ -152,22 +173,29 @@ function NotificationPanel({ onNavigate }: NotificationPanelProps) {
     };
 
     const handleConfirmAction = async () => {
-        if (!actionTarget) return;
+        if (!actionTarget || isActionProcessingRef.current) return;
         const { notification, action } = actionTarget;
         if (!notification.relatedRequestId) return;
 
-        if (action === 'accept') {
-            await acceptMockFriendRequest(notification.relatedRequestId, {
-                userId: notification.actorUserId ?? notification.actorNickname,
-                nickname: notification.actorNickname,
-                profileImageUrl: notification.actorProfileImageUrl,
-            });
-        } else {
-            await rejectMockFriendRequest(notification.relatedRequestId);
-        }
-        await markMockNotificationRead(notification.id);
-        setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+        isActionProcessingRef.current = true;
         setActionTarget(null);
+        try {
+            if (action === 'accept') {
+                await acceptMockFriendRequest(notification.relatedRequestId, {
+                    userId: notification.actorUserId ?? notification.actorNickname,
+                    nickname: notification.actorNickname,
+                    profileImageUrl: notification.actorProfileImageUrl,
+                });
+            } else {
+                await rejectMockFriendRequest(notification.relatedRequestId);
+            }
+            await markMockNotificationRead(notification.id);
+            setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+        } catch {
+            setIsActionFailedModalOpen(true);
+        } finally {
+            isActionProcessingRef.current = false;
+        }
     };
 
     const groups = groupNotifications(notifications);
@@ -190,9 +218,11 @@ function NotificationPanel({ onNavigate }: NotificationPanelProps) {
             <Divider />
 
             <ListScroll ref={listScrollRef} $expanded={isExpanded} $fixedHeight={fixedHeight ?? undefined}>
-                {groups.length === 0 && <EmptyText>알림이 없어요</EmptyText>}
+                {isLoading && <Loading size={36} label="" minHeight="80px" />}
 
-                {groups.map((group) => (
+                {!isLoading && groups.length === 0 && <EmptyText>알림이 없어요</EmptyText>}
+
+                {!isLoading && groups.map((group) => (
                     <Group key={group.label}>
                         <GroupLabelText>{group.label}</GroupLabelText>
                         {group.items.map((notification) => {
@@ -232,7 +262,9 @@ function NotificationPanel({ onNavigate }: NotificationPanelProps) {
                     </Group>
                 ))}
 
-                {hasMore && (
+                {isLoadingMore && <Loading size={28} label="" minHeight="40px" />}
+
+                {!isLoadingMore && hasMore && (
                     <LoadMoreButton type="button" onClick={handleLoadMore}>
                         더 많이 보기 <img src={chevronIcon} alt="" />
                     </LoadMoreButton>
@@ -243,8 +275,22 @@ function NotificationPanel({ onNavigate }: NotificationPanelProps) {
                 type="confirm"
                 isOpen={!!actionTarget}
                 onClose={() => setActionTarget(null)}
-                onConfirm={handleConfirmAction}
+                onConfirm={() => handleConfirmAction()}
                 message={confirmMessage}
+            />
+            <Modal
+                type="confirm"
+                isOpen={isActionFailedModalOpen}
+                onClose={() => setIsActionFailedModalOpen(false)}
+                message={'처리에 실패했어요.\n다시 시도해주세요'}
+                cancelText="닫기"
+            />
+            <Modal
+                type="confirm"
+                isOpen={isClickFailedModalOpen}
+                onClose={() => setIsClickFailedModalOpen(false)}
+                message={'처리에 실패했어요.\n다시 시도해주세요'}
+                cancelText="닫기"
             />
         </Panel>
     );

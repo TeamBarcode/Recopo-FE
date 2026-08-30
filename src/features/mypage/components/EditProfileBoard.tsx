@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 import Avatar from '@/components/common/Avatar';
+import Loading from '@/components/common/Loading';
 import { tokens } from '@/styles/tokens';
 import {
     fetchMockMyPageSummary,
@@ -30,6 +31,7 @@ function EditProfileBoard() {
     const [userIdInput, setUserIdInput] = useState('');
     const [isEditingUserId, setIsEditingUserId] = useState(false);
     const [userIdCheckStatus, setUserIdCheckStatus] = useState<UserIdCheckStatus>('idle');
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         fetchMockMyPageSummary().then((summary) => {
@@ -38,6 +40,7 @@ function EditProfileBoard() {
             setNicknameInput(summary.nickname);
             setUserId(summary.userId);
             setUserIdInput(summary.userId);
+            setIsLoading(false);
         });
     }, []);
 
@@ -115,6 +118,8 @@ function EditProfileBoard() {
         : userIdCheckStatus === 'duplicate'
         ? '아이디가 중복이에요'
         : '';
+
+    if (isLoading) return <Loading minHeight="480px" />;
 
     return (
         <Wrapper>

@@ -7,6 +7,7 @@ import {tokens} from '@/styles/tokens';
 import Dropdown from '@/components/common/Dropdown';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
+import Modal from '@/components/common/Modal';
 import { createMockBrainstormCard, UpdateMockBrainstormCard } from '@/mocks/brainstormCards';
 import tape from '@/assets/tape.svg';
 import profileEditIcon from '@/assets/profile_edit.svg';
@@ -34,6 +35,8 @@ function RecordForm({mode = 'create', cardId, initialData} : RecordFormProps) {
     const [tags, setTags] = useState<string[]>(initialData?.tags ?? []);
     const [tagInput, setTagInput] = useState('');
     const [editingTagIndex, setEditingTagIndex] = useState<number | null>(null);
+    const [isSaveFailedModalOpen, setIsSaveFailedModalOpen] = useState(false);
+    const isSubmittingRef = useRef(false);
 
     const navigate = useNavigate();
 
@@ -79,16 +82,26 @@ function RecordForm({mode = 'create', cardId, initialData} : RecordFormProps) {
     };
 
     const handleSubmit = async() => {
+        if (isSubmittingRef.current) return;
+        isSubmittingRef.current = true;
+
         //저장버튼 눌렀을 때 새 카드 생성인지 수정인지에 따라 다른 mock 함수 호출
         if(mode === 'edit' && cardId){
-            await UpdateMockBrainstormCard(cardId, {title, content, category, tags});
-            navigate(`/brainstorm/${cardId}`);
+            try {
+                await UpdateMockBrainstormCard(cardId, {title, content, category, tags});
+                navigate(`/brainstorm/${cardId}`);
+            } catch {
+                setIsSaveFailedModalOpen(true);
+            } finally {
+                isSubmittingRef.current = false;
+            }
         }else {
             // mock 서버(가짜 API)한테 카드 생성 요청 보내고, 응답 기다리기
             const newCard = await createMockBrainstormCard({
                 title, content, category, tags,
             });
             // await가 있어서 여기서 500ms 동안 멈춰있다가 서버가 만들어준 완성된 카드(id 포함)를 newCard에 받음
+            isSubmittingRef.current = false;
 
             // 방금 만든 카드의 id로 상세 페이지 이동
             navigate(`/brainstorm/${newCard.id}`);
@@ -141,6 +154,15 @@ function RecordForm({mode = 'create', cardId, initialData} : RecordFormProps) {
             </HashtagInputRow>
 
             <ContentTextArea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} placeholder="내용을 입력하세요" />
+
+            <Modal
+                type="confirm"
+                isOpen={isSaveFailedModalOpen}
+                onClose={() => setIsSaveFailedModalOpen(false)}
+                message={'저장에 실패했어요.\n다시 시도해주세요'}
+                cancelText="닫기"
+                messageFontSize={tokens.fontSize.xl}
+            />
         </NoteWrapper>
     );
 }

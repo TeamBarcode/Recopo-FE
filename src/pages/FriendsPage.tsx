@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -25,6 +25,8 @@ import Avatar from '@/components/common/Avatar';
 import Button from '@/components/common/Button';
 import Dropdown from '@/components/common/Dropdown';
 import IconButton from '@/components/common/IconButton';
+import Loading from '@/components/common/Loading';
+import ErrorState from '@/components/common/ErrorState';
 import Modal from '@/components/common/Modal';
 import Tag from '@/components/common/Tag';
 import IdeaCard from '@/features/idea/IdeaCard';
@@ -57,15 +59,26 @@ function FriendsPage() {
 
     const [openIdea, setOpenIdea] = useState<IdeaDetail | null>(null);
     const [isCommentDrawerOpen, setIsCommentDrawerOpen] = useState(false);
+    const [isLoadingFriends, setIsLoadingFriends] = useState(true);
+    // effect 안에서 동기적으로 setState(true)를 호출하지 않기 위해, 로딩 여부를
+    // "지금 보여줄 조건(친구+카테고리+정렬)"과 "마지막으로 로드 완료된 조건"을 비교해서 파생시킴
+    const [loadedIdeasKey, setLoadedIdeasKey] = useState<string | null>(null);
+    const [isLoadingIdea, setIsLoadingIdea] = useState(false);
+    const [openIdeaError, setOpenIdeaError] = useState<string | null>(null);
 
     const [cancelTarget, setCancelTarget] = useState<SearchedUser | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<Friend | null>(null);
+    const [isDeleteFriendFailedModalOpen, setIsDeleteFriendFailedModalOpen] = useState(false);
+    const isDeletingFriendRef = useRef(false);
     const [openFriendMenuId, setOpenFriendMenuId] = useState<string | null>(null);
 
     const [searchParams, setSearchParams] = useSearchParams();
 
     useEffect(() => {
-        fetchMockFriends().then(setFriends);
+        fetchMockFriends().then((list) => {
+            setFriends(list);
+            setIsLoadingFriends(false);
+        });
     }, []);
 
     // 알림/마이페이지에서 "친구 아이디어 페이지로 이동" 클릭 시 ?friendId=xxx(&ideaId=yyy)로 들어오면
@@ -101,11 +114,17 @@ function FriendsPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [friends]);
 
+    const ideasKey = selectedFriend ? `${selectedFriend.id}|${ideaCategory}|${ideaSort}` : null;
+    const isLoadingIdeas = !!selectedFriend && loadedIdeasKey !== ideasKey;
+
     useEffect(() => {
-        if (!selectedFriend) return;
+        if (!selectedFriend || !ideasKey) return;
         const sortBy = ideaSort === '최신 순' ? 'latest' : ideaSort === '오래된 순' ? 'oldest' : ideaSort === '좋아요 순' ? 'popular' : undefined;
-        fetchMockFriendsIdeas(selectedFriend.id, ideaCategory || undefined, sortBy).then(setFriendIdeas);
-    }, [selectedFriend, ideaCategory, ideaSort]);
+        fetchMockFriendsIdeas(selectedFriend.id, ideaCategory || undefined, sortBy).then((ideas) => {
+            setFriendIdeas(ideas);
+            setLoadedIdeasKey(ideasKey);
+        });
+    }, [selectedFriend, ideaCategory, ideaSort, ideasKey]);
 
     const handleSearch = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -151,14 +170,22 @@ function FriendsPage() {
     };
 
     const handleConfirmDeleteFriend = async () => {
-        if (!deleteTarget) return;
-        await deleteMockFriend(deleteTarget.id);
-        setFriends((prev) => prev.filter((f) => f.id !== deleteTarget.id));
-        if (selectedFriend?.id === deleteTarget.id) {
-            setSelectedFriend(null);
-            setFriendIdeas([]);
-        }
+        const friend = deleteTarget;
+        if (!friend || isDeletingFriendRef.current) return;
+        isDeletingFriendRef.current = true;
         setDeleteTarget(null);
+        try {
+            await deleteMockFriend(friend.id);
+            setFriends((prev) => prev.filter((f) => f.id !== friend.id));
+            if (selectedFriend?.id === friend.id) {
+                setSelectedFriend(null);
+                setFriendIdeas([]);
+            }
+        } catch {
+            setIsDeleteFriendFailedModalOpen(true);
+        } finally {
+            isDeletingFriendRef.current = false;
+        }
     };
 
     const handleRequestDeleteFriend = (friend: Friend) => {
@@ -167,13 +194,22 @@ function FriendsPage() {
     };
 
     const handleOpenIdea = async (ideaId: string) => {
-        const detail = await fetchMockFriendIdeaDetail(ideaId);
-        setOpenIdea(detail);
+        setIsLoadingIdea(true);
+        setOpenIdeaError(null);
+        try {
+            const detail = await fetchMockFriendIdeaDetail(ideaId);
+            setOpenIdea(detail);
+        } catch (err) {
+            setOpenIdeaError((err as { message?: string })?.message ?? '아이디어를 불러오지 못했어요');
+        } finally {
+            setIsLoadingIdea(false);
+        }
     };
 
     const handleCloseIdeaModal = () => {
         setOpenIdea(null);
         setIsCommentDrawerOpen(false);
+        setOpenIdeaError(null);
     };
 
     // 좋아요 토글 mock API가 따로 없어서 로컬 상태에서만 반영
@@ -243,8 +279,9 @@ function FriendsPage() {
                         <>
                             <PanelTitle>Friends ({friends.length})</PanelTitle>
                             <Divider />
+                            {isLoadingFriends && <Loading size={32} label="" minHeight="80px" />}
                             <FriendListScroll>
-                                {friends.map((friend) => (
+                                {!isLoadingFriends && friends.map((friend) => (
                                     <FriendRow key={friend.id} $active={selectedFriend?.id === friend.id}>
                                         <FriendRowMain type="button" onClick={() => handleSelectFriend(friend)}>
                                             <Avatar size="sm" src={friend.profileImageUrl} />
@@ -298,7 +335,9 @@ function FriendsPage() {
                             </FilterRow>
                         </IdeaListHeader>
 
-                        {friendIdeas.length > 0 ? (
+                        {isLoadingIdeas ? (
+                            <Loading minHeight="480px" />
+                        ) : friendIdeas.length > 0 ? (
                             <IdeaGrid>
                                 {friendIdeas.map((idea) => (
                                     <IdeaCard key={idea.id} idea={idea} onClick={() => handleOpenIdea(idea.id)} hideVisibility />
@@ -316,7 +355,9 @@ function FriendsPage() {
                 )}
             </MainArea>
 
-            <IdeaDetailModal type="default" size="lg" isOpen={!!openIdea} onClose={handleCloseIdeaModal}>
+            <IdeaDetailModal type="default" size="lg" isOpen={isLoadingIdea || !!openIdea || !!openIdeaError} onClose={handleCloseIdeaModal}>
+                {isLoadingIdea && !openIdea && <Loading minHeight="240px" />}
+                {openIdeaError && <ErrorState title={openIdeaError} minHeight="240px" />}
                 {openIdea && (
                     <DetailWrapper>
                         <DetailHeaderRow>
@@ -418,8 +459,15 @@ function FriendsPage() {
                 type="confirm"
                 isOpen={!!deleteTarget}
                 onClose={() => setDeleteTarget(null)}
-                onConfirm={handleConfirmDeleteFriend}
+                onConfirm={() => handleConfirmDeleteFriend()}
                 message={deleteTarget ? `${deleteTarget.nickname}님을 친구 목록에서 삭제할까요?` : ''}
+            />
+            <Modal
+                type="confirm"
+                isOpen={isDeleteFriendFailedModalOpen}
+                onClose={() => setIsDeleteFriendFailedModalOpen(false)}
+                message={'삭제에 실패했어요.\n다시 시도해주세요'}
+                cancelText="닫기"
             />
         </Wrapper>
     );

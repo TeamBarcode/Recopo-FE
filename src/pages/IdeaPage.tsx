@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 import Dropdown from '@/components/common/Dropdown';
+import Loading from '@/components/common/Loading';
 import IdeaCard from '@/features/idea/IdeaCard';
 import { categoryOptions, sortOptions, visibilityOptions } from '@/features/idea/ideaData';
 import { fetchMockIdeas } from '@/mocks/ideaCards';
@@ -28,6 +29,7 @@ function IdeaPage() {
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredIdeas, setFilteredIdeas] = useState<IdeaCardData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchMockIdeas(
@@ -35,7 +37,10 @@ function IdeaPage() {
       category === '전체' || !category ? undefined : category,
       SORT_VALUE_MAP[sort as keyof typeof SORT_VALUE_MAP],
       searchTerm.trim().replace(/^#/, '') || undefined,
-    ).then(setFilteredIdeas);
+    ).then((ideas) => {
+      setFilteredIdeas(ideas);
+      setIsLoading(false);
+    });
   }, [category, searchTerm, sort, visibility]);
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
@@ -72,7 +77,9 @@ function IdeaPage() {
           </FilterGroup>
         </Toolbar>
 
-        {filteredIdeas.length > 0 ? (
+        {isLoading ? (
+          <Loading minHeight="480px" />
+        ) : filteredIdeas.length > 0 ? (
           <IdeaGrid>
             {filteredIdeas.map((idea) => <IdeaCard key={idea.id} idea={idea} onClick={() => navigate(`/ideas/${idea.id}`)} />)}
           </IdeaGrid>

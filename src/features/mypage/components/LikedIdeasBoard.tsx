@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 import Avatar from '@/components/common/Avatar';
+import Loading from '@/components/common/Loading';
 import Modal from '@/components/common/Modal';
 import { tokens } from '@/styles/tokens';
 import { fetchMockLikedIdeas, unlikeMockIdea } from '@/mocks/mypage';
@@ -15,30 +16,46 @@ function LikedIdeasBoard() {
     const [likedIdeas, setLikedIdeas] = useState<IdeaCard[]>([]);
     const [friendsById, setFriendsById] = useState<Record<string, Friend>>({});
     const [unlikeTargetId, setUnlikeTargetId] = useState<string | null>(null);
+    const [isUnlikeFailedModalOpen, setIsUnlikeFailedModalOpen] = useState(false);
+    const isUnlikingRef = useRef(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        fetchMockLikedIdeas().then(setLikedIdeas);
-        fetchMockFriends().then((friends) => {
-            const map: Record<string, Friend> = {};
-            friends.forEach((friend) => {
-                map[friend.id] = friend;
-            });
-            setFriendsById(map);
-        });
+        Promise.all([
+            fetchMockLikedIdeas().then(setLikedIdeas),
+            fetchMockFriends().then((friends) => {
+                const map: Record<string, Friend> = {};
+                friends.forEach((friend) => {
+                    map[friend.id] = friend;
+                });
+                setFriendsById(map);
+            }),
+        ]).then(() => setIsLoading(false));
     }, []);
 
     const handleConfirmUnlike = async () => {
-        if (!unlikeTargetId) return;
+        const ideaId = unlikeTargetId;
+        if (!ideaId || isUnlikingRef.current) return;
+        isUnlikingRef.current = true;
 
-        await unlikeMockIdea(unlikeTargetId);
-        setLikedIdeas((prev) => prev.filter((idea) => idea.id !== unlikeTargetId));
         setUnlikeTargetId(null);
+        try {
+            await unlikeMockIdea(ideaId);
+            setLikedIdeas((prev) => prev.filter((idea) => idea.id !== ideaId));
+        } catch {
+            setIsUnlikeFailedModalOpen(true);
+        } finally {
+            isUnlikingRef.current = false;
+        }
     };
 
     return (
         <Wrapper>
             <Title>좋아요한 아이디어</Title>
 
+            {isLoading ? (
+                <Loading minHeight="480px" />
+            ) : (
             <ListBox>
                 {likedIdeas.map((idea) => {
                     const author = friendsById[idea.authorId];
@@ -96,14 +113,22 @@ function LikedIdeasBoard() {
                     );
                 })}
             </ListBox>
+            )}
 
             <Modal
                 type="confirm"
                 isOpen={unlikeTargetId !== null}
                 onClose={() => setUnlikeTargetId(null)}
-                onConfirm={handleConfirmUnlike}
+                onConfirm={() => handleConfirmUnlike()}
                 message="좋아요를 취소하겠습니까?"
                 confirmText="네"
+            />
+            <Modal
+                type="confirm"
+                isOpen={isUnlikeFailedModalOpen}
+                onClose={() => setIsUnlikeFailedModalOpen(false)}
+                message={'좋아요 취소에 실패했어요.\n다시 시도해주세요'}
+                cancelText="닫기"
             />
         </Wrapper>
     );

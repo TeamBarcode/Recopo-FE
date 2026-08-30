@@ -17,6 +17,8 @@ import Modal from '@/components/common/Modal';
 import Tag from '@/components/common/Tag';
 import type { Category } from '@/components/common/Tag';
 import Avatar from '@/components/common/Avatar';
+import Loading from '@/components/common/Loading';
+import ErrorState from '@/components/common/ErrorState';
 import heartIcon from '@/assets/idea-heart.svg';
 import commentIcon from '@/assets/idea-comment.svg';
 import sendArrowIcon from '@/assets/comment-send-arrow.svg';
@@ -43,7 +45,10 @@ function IdeaDetailPageContent() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [idea, setIdea] = useState<IdeaDetail | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isDeleteFailedModalOpen, setIsDeleteFailedModalOpen] = useState(false);
+    const isDeletingRef = useRef(false);
     // 알림에서 "댓글창으로 이동" 클릭 시 ?openComments=1&commentId=xxx로 들어오면
     // 댓글 영역을 처음부터 펼쳐서 보여줌
     const [isCommentSectionOpen, setIsCommentSectionOpen] = useState(() => !!searchParams.get('openComments'));
@@ -52,21 +57,45 @@ function IdeaDetailPageContent() {
 
     useEffect(() => {
         if (!ideaId) return;
-        fetchMockIdeaDetail(ideaId).then((detail) =>
-            setIdea({ ...detail, commentCount: countCommentsAndReplies(detail.comments) }),
-        );
+        fetchMockIdeaDetail(ideaId)
+            .then((detail) => {
+                setError(null);
+                setIdea({ ...detail, commentCount: countCommentsAndReplies(detail.comments) });
+            })
+            .catch((err) => setError(err?.message ?? '아이디어를 불러오지 못했어요'));
     }, [ideaId]);
 
-    if (!idea) return <div>로딩중...</div>;
+    if (error) {
+        return (
+            <ErrorState
+                title={error}
+                description="삭제되었거나 잘못된 링크일 수 있어요"
+                actionLabel="아이디어 목록으로"
+                onAction={() => navigate('/ideas')}
+                minHeight="480px"
+                size="lg"
+            />
+        );
+    }
+
+    if (!idea) return <Loading minHeight="480px" />;
 
     const handleEdit = () => {
         navigate(`/ideas/${ideaId}/edit`);
     };
 
     const handleConfirmDelete = async () => {
-        if (!ideaId) return;
-        await deleteMockIdea(ideaId);
-        navigate('/ideas');
+        if (!ideaId || isDeletingRef.current) return;
+        isDeletingRef.current = true;
+        setIsDeleteModalOpen(false);
+        try {
+            await deleteMockIdea(ideaId);
+            navigate('/ideas');
+        } catch {
+            setIsDeleteFailedModalOpen(true);
+        } finally {
+            isDeletingRef.current = false;
+        }
     };
 
     // RecoBot 추천은 실제로 한 번에 레포 1개만 추천해주는 구조라, 여러 개 중 첫 번째만 보여줌
@@ -170,6 +199,14 @@ function IdeaDetailPageContent() {
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={handleConfirmDelete}
                 message="카드를 삭제할까요?"
+                messageFontSize={tokens.fontSize.xl}
+            />
+            <Modal
+                type="confirm"
+                isOpen={isDeleteFailedModalOpen}
+                onClose={() => setIsDeleteFailedModalOpen(false)}
+                message={'삭제에 실패했어요.\n다시 시도해주세요'}
+                cancelText="닫기"
                 messageFontSize={tokens.fontSize.xl}
             />
         </Wrapper>
