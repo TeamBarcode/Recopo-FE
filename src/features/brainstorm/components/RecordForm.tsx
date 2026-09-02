@@ -96,15 +96,20 @@ function RecordForm({mode = 'create', cardId, initialData} : RecordFormProps) {
                 isSubmittingRef.current = false;
             }
         }else {
-            // mock 서버(가짜 API)한테 카드 생성 요청 보내고, 응답 기다리기
-            const newCard = await createMockBrainstormCard({
-                title, content, category, tags,
-            });
-            // await가 있어서 여기서 500ms 동안 멈춰있다가 서버가 만들어준 완성된 카드(id 포함)를 newCard에 받음
-            isSubmittingRef.current = false;
+            try {
+                // mock 서버(가짜 API)한테 카드 생성 요청 보내고, 응답 기다리기
+                const newCard = await createMockBrainstormCard({
+                    title, content, category, tags,
+                });
+                // await가 있어서 여기서 500ms 동안 멈춰있다가 서버가 만들어준 완성된 카드(id 포함)를 newCard에 받음
 
-            // 방금 만든 카드의 id로 상세 페이지 이동
-            navigate(`/brainstorm/${newCard.id}`);
+                // 방금 만든 카드의 id로 상세 페이지 이동
+                navigate(`/brainstorm/${newCard.id}`);
+            } catch {
+                setIsSaveFailedModalOpen(true);
+            } finally {
+                isSubmittingRef.current = false;
+            }
         }
     };
 

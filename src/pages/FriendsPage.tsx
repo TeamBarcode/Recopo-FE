@@ -210,6 +210,7 @@ function FriendsPage() {
         setOpenIdea(null);
         setIsCommentDrawerOpen(false);
         setOpenIdeaError(null);
+        setIsLoadingIdea(false);
     };
 
     // 좋아요 토글 mock API가 따로 없어서 로컬 상태에서만 반영
