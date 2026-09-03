@@ -4,6 +4,7 @@ import {useNavigate} from 'react-router-dom';
 
 import {tokens} from '@/styles/tokens';
 import Dropdown from '@/components/common/Dropdown';
+import Loading from '@/components/common/Loading';
 import BrainstormCardPreview from './BrainstormCardPreview';
 import searchIcon from '@/assets/search.svg';
 import HomeEmpty from '@/assets/Home_empty.svg';
@@ -26,6 +27,7 @@ function BrainstormBoard(){
     const [search, setSearch] = useState('');
 
     const [cards, setCards] = useState<BrainstormCard[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     const navigate = useNavigate();
 
@@ -34,7 +36,10 @@ function BrainstormBoard(){
         // 드롭다운 옵션 자체가 한글 라벨('최신 순'/'오래된 순')이라, fetchMockCards가 기대하는
         // 영문 값('latest'/'oldest')으로 변환해서 넘겨야 실제로 정렬이 적용됨
         const sortBy = sort === '최신 순' ? 'latest' : sort === '오래된 순' ? 'oldest' : undefined;
-        fetchMockCards(category, sortBy, search).then(setCards);
+        fetchMockCards(category, sortBy, search).then((result) => {
+            setCards(result);
+            setIsLoading(false);
+        });
         //categort, sort, search 중 하나라도 바뀌면 다시 불러옴
     }, [category, sort, search]);
 
@@ -66,7 +71,9 @@ function BrainstormBoard(){
                 </FilterGroup>
             </Toolbar>
             <CardScrollArea>
-                {cards.length === 0 ? (
+                {isLoading ? (
+                    <Loading minHeight="480px" />
+                ) : cards.length === 0 ? (
                     <EmptyState>
                         <img src={HomeEmpty} alt="첫 번째 아이디어를 작성해보세요" />
                     </EmptyState>

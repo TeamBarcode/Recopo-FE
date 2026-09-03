@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -9,6 +9,8 @@ import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import Dropdown from '@/components/common/Dropdown';
 import Modal from '@/components/common/Modal';
+import Loading from '@/components/common/Loading';
+import ErrorState from '@/components/common/ErrorState';
 import profileEditIcon from '@/assets/profile_edit.svg';
 
 const CATEGORY_OPTIONS = [
@@ -22,6 +24,7 @@ function EditIdeaPage() {
     const navigate = useNavigate();
 
     const [idea, setIdea] = useState<IdeaDetail | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const [title, setTitle] = useState('');
     const [category, setCategory] = useState('');
     const [isPublic, setIsPublic] = useState(true);
@@ -32,19 +35,37 @@ function EditIdeaPage() {
 
     const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    const [isSaveFailedModalOpen, setIsSaveFailedModalOpen] = useState(false);
+    const isSavingRef = useRef(false);
 
     useEffect(() => {
         if (!ideaId) return;
-        fetchMockIdeaDetail(ideaId).then((data) => {
-            setIdea(data);
-            setTitle(data.title);
-            setCategory(data.category);
-            setIsPublic(data.isPublic);
-            setTags(data.tags ?? []);
-        });
+        fetchMockIdeaDetail(ideaId)
+            .then((data) => {
+                setError(null);
+                setIdea(data);
+                setTitle(data.title);
+                setCategory(data.category);
+                setIsPublic(data.isPublic);
+                setTags(data.tags ?? []);
+            })
+            .catch((err) => setError(err?.message ?? '아이디어를 불러오지 못했어요'));
     }, [ideaId]);
 
-    if (!idea) return <div>로딩중...</div>;
+    if (error) {
+        return (
+            <ErrorState
+                title={error}
+                description="삭제되었거나 잘못된 링크일 수 있어요"
+                actionLabel="아이디어 목록으로"
+                onAction={() => navigate('/ideas')}
+                minHeight="480px"
+                size="lg"
+            />
+        );
+    }
+
+    if (!idea) return <Loading minHeight="480px" />;
 
     const handleConfirmTag = () => {
         const trimmed = tagInput.trim();
@@ -77,9 +98,17 @@ function EditIdeaPage() {
     };
 
     const handleConfirmSave = async () => {
-        if (!ideaId) return;
-        await updateMockIdea(ideaId, { title, category, isPublic, tags });
-        navigate(`/ideas/${ideaId}`);
+        if (!ideaId || isSavingRef.current) return;
+        isSavingRef.current = true;
+        setIsSaveModalOpen(false);
+        try {
+            await updateMockIdea(ideaId, { title, category, isPublic, tags });
+            navigate(`/ideas/${ideaId}`);
+        } catch {
+            setIsSaveFailedModalOpen(true);
+        } finally {
+            isSavingRef.current = false;
+        }
     };
 
     const handleConfirmCancel = () => {
@@ -165,6 +194,14 @@ function EditIdeaPage() {
                 onClose={() => setIsCancelModalOpen(false)}
                 onConfirm={handleConfirmCancel}
                 message={'수정을 취소할까요?\n변경사항은 저장되지 않아요'}
+                messageFontSize={tokens.fontSize.xl}
+            />
+            <Modal
+                type="confirm"
+                isOpen={isSaveFailedModalOpen}
+                onClose={() => setIsSaveFailedModalOpen(false)}
+                message={'저장에 실패했어요.\n다시 시도해주세요'}
+                cancelText="닫기"
                 messageFontSize={tokens.fontSize.xl}
             />
         </Wrapper>

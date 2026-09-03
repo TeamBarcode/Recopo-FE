@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 import Avatar from '@/components/common/Avatar';
+import Loading from '@/components/common/Loading';
 import Modal from '@/components/common/Modal';
 import CardColorModal from './CardColorModal';
 import { tokens } from '@/styles/tokens';
@@ -39,7 +40,7 @@ function MyPageBoard() {
         navigate('/login');
     };
 
-    if (!summary) return null;
+    if (!summary) return <Loading minHeight="480px" />;
 
     return (
         <Wrapper>
