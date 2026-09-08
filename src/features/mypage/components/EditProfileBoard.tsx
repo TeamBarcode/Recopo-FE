@@ -12,11 +12,9 @@ import {
     deleteMockProfileImage,
     updateMockProfileImage,
 } from '@/mocks/mypage';
+import { USER_ID_REGEX, USER_ID_FORMAT_MESSAGE } from '@/utils/validators';
 
 type UserIdCheckStatus = 'idle' | 'available' | 'duplicate';
-
-const USER_ID_REGEX = /^[a-zA-Z0-9_]{2,20}$/;
-const USER_ID_FORMAT_MESSAGE = '영문, 숫자, 언더바만 허용하며 2~20자 이내로 입력해주세요';
 
 function EditProfileBoard() {
     const fileInputRef = useRef<HTMLInputElement>(null);
