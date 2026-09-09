@@ -101,7 +101,7 @@ export interface IdeaDetailResponse {
   likeCount: number;
   createdAt: string;
   // 명세 예시엔 null만 있어서 실제 추천 결과가 있을 때의 구조는 확인 필요
-  recommendation: unknown | null;
+  recommendation: unknown;
 }
 
 export const getIdeaDetail = async (ideaId: number): Promise<IdeaDetailResponse> => {
