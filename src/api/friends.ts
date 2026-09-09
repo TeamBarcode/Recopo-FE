@@ -69,6 +69,28 @@ export const getFriendCards = async (friendId: number): Promise<FriendCardsRespo
   return data;
 };
 
+// ===== 친구 카드(아이디어) 상세 조회 =====
+// 친구 도메인 전용 상세 조회 API는 따로 없고, idea 도메인의 "idea 상세 조회"를 그대로 재사용함.
+// (다른 팀원이 idea 도메인 전용 api 파일을 만들면 그쪽으로 옮겨도 됨)
+export interface IdeaDetailResponse {
+  ideaId: number;
+  title: string;
+  content: string;
+  // 명세 예시엔 단일 문자열("#태그1")로 내려옴 — 여러 개일 때 형식(배열 vs 공백 구분 등)은 확인 필요
+  hashtag: string;
+  category: string;
+  visibility: 'PUBLIC' | 'PRIVATE';
+  likeCount: number;
+  createdAt: string;
+  // 명세 예시엔 null만 있어서 실제 추천 결과가 있을 때의 구조는 확인 필요
+  recommendation: unknown | null;
+}
+
+export const getIdeaDetail = async (ideaId: number): Promise<IdeaDetailResponse> => {
+  const { data } = await apiClient.get<IdeaDetailResponse>(`/api/ideas/${ideaId}`);
+  return data;
+};
+
 // ===== 친구 요청 확인(받은 요청 목록) =====
 export interface ReceivedFriendRequest {
   requestId: number;

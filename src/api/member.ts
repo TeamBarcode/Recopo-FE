@@ -46,3 +46,23 @@ export const putProfileImage = async (file: File): Promise<ProfileImageResponse>
   const { data } = await apiClient.put<ProfileImageResponse>('/api/members/me/profile-image', formData);
   return data;
 };
+
+// ===== 회원 검색 (친구 추가용) =====
+export interface SearchedMember {
+  memberId: number;
+  nickname: string;
+  profileImageUrl: string;
+  // 명세 예시엔 'NONE'만 나와있어서 다른 값(요청됨/이미 친구 등)의 정확한 문자열은 확인 필요
+  friendStatus: string;
+}
+
+export interface MemberSearchResponse {
+  members: SearchedMember[];
+}
+
+export const getMemberSearch = async (nickname: string): Promise<MemberSearchResponse> => {
+  const { data } = await apiClient.get<MemberSearchResponse>('/api/members/search', {
+    params: { nickname },
+  });
+  return data;
+};
