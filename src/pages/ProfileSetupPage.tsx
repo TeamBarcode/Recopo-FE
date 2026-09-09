@@ -7,6 +7,7 @@ import Avatar from '@/components/common/Avatar';
 import Input from '@/components/common/Input';
 import { useProfileSetup } from '@/features/auth/hooks/useProfileSetup';
 import { tokens } from '@/styles/tokens';
+import { USER_ID_FORMAT_MESSAGE } from '@/utils/validators';
 
 function ProfileSetupPage() {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ function ProfileSetupPage() {
     profileImage,
     userIdStatus,
     userIdMessage,
+    isUserIdFormatValid,
     isCheckingUserId,
     isSubmitting,
     isUploadingImage,
@@ -94,16 +96,24 @@ function ProfileSetupPage() {
                   />
                 </UnderlinedInput>
 
-                <CheckButton type="button" disabled={isCheckingUserId} onClick={checkUserId}>
+                <CheckButton
+                  type="button"
+                  disabled={isCheckingUserId || !isUserIdFormatValid}
+                  onClick={checkUserId}
+                >
                   {isCheckingUserId ? '확인 중' : '중복 확인'}
                 </CheckButton>
               </FieldRow>
 
-              {userIdStatus === 'available' && (
+              {!isUserIdFormatValid && (
+                <ErrorMessage aria-live="polite">{USER_ID_FORMAT_MESSAGE}</ErrorMessage>
+              )}
+
+              {isUserIdFormatValid && userIdStatus === 'available' && (
                 <SuccessMessage aria-live="polite">{userIdMessage}</SuccessMessage>
               )}
 
-              {userIdStatus === 'duplicate' && (
+              {isUserIdFormatValid && userIdStatus === 'duplicate' && (
                 <ErrorMessage aria-live="polite">{userIdMessage}</ErrorMessage>
               )}
             </FieldGroup>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 
 import { getCheckLoginId, patchProfileSetup, putProfileImage } from '@/api/member';
+import { USER_ID_REGEX, USER_ID_FORMAT_MESSAGE } from '@/utils/validators';
 
 type UserIdStatus = 'idle' | 'available' | 'duplicate';
 
@@ -70,6 +71,12 @@ export const useProfileSetup = () => {
       return;
     }
 
+    if (!USER_ID_REGEX.test(trimmedUserId)) {
+      setUserIdStatus('duplicate');
+      setUserIdMessage(USER_ID_FORMAT_MESSAGE);
+      return;
+    }
+
     setIsCheckingUserId(true);
     setUserIdMessage('');
 
@@ -94,6 +101,8 @@ export const useProfileSetup = () => {
   const confirmNickname = () => {
     setIsNicknameConfirmed(nickname.trim() !== '');
   };
+
+  const isUserIdFormatValid = userId.trim() === '' || USER_ID_REGEX.test(userId.trim());
 
   const isNextEnabled =
     userIdStatus === 'available' && nickname.trim() !== '' && isNicknameConfirmed && !isSubmitting;
@@ -121,6 +130,7 @@ export const useProfileSetup = () => {
     profileImage,
     userIdStatus,
     userIdMessage,
+    isUserIdFormatValid,
     isNicknameConfirmed,
     isCheckingUserId,
     isSubmitting,
