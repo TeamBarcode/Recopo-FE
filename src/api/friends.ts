@@ -47,6 +47,24 @@ export const deleteFriend = async (friendId: number): Promise<DeleteFriendRespon
   return data;
 };
 
+// ===== 친구 요청 취소(보낸 요청) =====
+// 명세 표에는 "Query Parameter"로 적혀있지만 URL 패턴은 /friends/requests/{requestId}라서
+// 다른 엔드포인트들과 동일하게 path variable로 처리함
+export interface CancelFriendRequestResponse {
+  requestId: number;
+  message: string;
+  cancelledAt: string;
+}
+
+export const deleteFriendRequest = async (
+  requestId: number,
+): Promise<CancelFriendRequestResponse> => {
+  const { data } = await apiClient.delete<CancelFriendRequestResponse>(
+    `/api/friends/requests/${requestId}`,
+  );
+  return data;
+};
+
 // ===== 친구 카드 목록 조회 =====
 export interface FriendCard {
   cardId: number;
