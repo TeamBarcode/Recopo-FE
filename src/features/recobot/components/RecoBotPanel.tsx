@@ -275,14 +275,12 @@ function RecoBotPanel({ onSaved }: RecoBotPanelProps, ref: React.ForwardedRef<Re
 
     await saveMockRecommendationAsIdea(selectedRecommendationId, isPublic ? 'PUBLIC' : 'PRIVATE');
 
-    const newIdea = await createMockIdeaFromRecommendation({
-      cardTitle: sentCard.title,
-      cardContent: sentCard.content,
-      category: sentCard.category ?? '기타',
-      tags: sentCard.tags,
-      recoItem: toRecoItem(selected.repository),
+    const newIdea = await createMockIdeaFromRecommendation(
+      sentCard.id,
       isPublic,
-    });
+      selectedRecommendationId,
+      selected.repository.repositoryId,
+    );
 
     setIsSaveModalOpen(false);
     resetPanel();
