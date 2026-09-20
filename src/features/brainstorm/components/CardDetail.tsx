@@ -4,7 +4,6 @@ import styled from 'styled-components';
 import { fetchMockCardDetail, deleteMockBrainstormCard } from '@/mocks/brainstormCards';
 import type { BrainstormCardDetail } from '@/mocks/brainstormCards';
 import { createMockIdeaFromRecommendation } from '@/mocks/ideaCards';
-import type { RecoItem } from '@/mocks/recobot';
 import tape from '@/assets/tape.svg';
 import Button from '@/components/common/Button';
 import Loading from '@/components/common/Loading';
@@ -127,17 +126,12 @@ function CardDetail({ onRecommend }: CardDetailProps, ref: React.ForwardedRef<Ca
 
     // 공개(네) / 비공개(아니오) 버튼을 누르는 것 자체가 공개 여부 선택임
     const handleConfirmSaveIdea = async (isPublic: boolean) => {
-        const selected: RecoItem | undefined = card.recoBotResult?.find((item) => item.id === selectedRecoId);
         setIsSaveIdeaModalOpen(false);
 
-        const newIdea = await createMockIdeaFromRecommendation({
-            cardTitle: card.title,
-            cardContent: card.content,
-            category: card.category,
-            tags: card.tags,
-            recoItem: selected,
-            isPublic,
-        });
+        // NOTE: 여기서 다루는 card.recoBotResult(RecoItem)는 화면 표시용으로 가공된 데이터라
+        // recommendationId/repositoryId(숫자 원본 id)를 안 갖고 있음 — 추천 없이 카드만 저장하는
+        // 경로와 동일하게 cardId/공개여부만 넘김(둘 다 API 스펙상 선택값이라 문제 없음).
+        const newIdea = await createMockIdeaFromRecommendation(card.id, isPublic);
 
         navigate(`/ideas/${newIdea.id}`);
     };
