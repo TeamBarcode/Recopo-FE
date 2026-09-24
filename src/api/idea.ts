@@ -69,3 +69,27 @@ export const saveIdeaFromCard = async (
   const { data } = await apiClient.post<Idea>(`/api/ideas/cards/${cardId}/ideas`, request);
   return data;
 };
+
+// ===== 좋아요한 아이디어 목록 조회 (마이페이지) =====
+// likedAt(내가 좋아요 누른 시각) 내림차순으로 정렬돼서 내려옴
+export interface LikedIdea {
+  ideaId: number;
+  memberId: number;
+  nickname: string;
+  title: string;
+  thumbnailUrl: string;
+  likedByMe: boolean;
+  likeCount: number;
+  commentCount: number;
+  likedAt: string;
+  updatedAt: string;
+}
+
+export interface LikedIdeasResponse {
+  ideas: LikedIdea[];
+}
+
+export const getLikedIdeas = async (): Promise<LikedIdeasResponse> => {
+  const { data } = await apiClient.get<LikedIdeasResponse>('/api/ideas/liked');
+  return data;
+};
