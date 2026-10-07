@@ -67,7 +67,8 @@ export interface MyProfile {
   loginId: string;
   email: string;
   nickname: string;
-  profileImageUrl: string;
+  // 프로필 사진을 삭제했거나 설정한 적 없으면 null (deleteProfileImage 응답과 동일)
+  profileImageUrl: string | null;
   profileCompleted: boolean;
   createdAt: string;
   cardCount: number;

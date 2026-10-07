@@ -89,7 +89,9 @@ export interface LikedIdeasResponse {
   ideas: LikedIdea[];
 }
 
-export const getLikedIdeas = async (): Promise<LikedIdeasResponse> => {
-  const { data } = await apiClient.get<LikedIdeasResponse>('/api/ideas/liked');
-  return data;
+// 명세는 { ideas: [...] }인데 실제 서버는 빈 목록일 때 []를 바로 내려줌 — 두 모양 모두 처리
+// (좋아요가 있을 때의 실제 응답 모양은 백엔드 확인 필요)
+export const getLikedIdeas = async (): Promise<LikedIdea[]> => {
+  const { data } = await apiClient.get<LikedIdeasResponse | LikedIdea[]>('/api/ideas/liked');
+  return Array.isArray(data) ? data : data.ideas;
 };

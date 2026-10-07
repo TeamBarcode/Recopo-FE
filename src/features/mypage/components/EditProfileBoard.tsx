@@ -2,22 +2,27 @@ import { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 import Avatar from '@/components/common/Avatar';
+import ErrorState from '@/components/common/ErrorState';
 import Loading from '@/components/common/Loading';
+import Modal from '@/components/common/Modal';
 import { tokens } from '@/styles/tokens';
 import {
-    fetchMockMyPageSummary,
-    updateMockNickname,
-    updateMockUserId,
-    checkMockUserIdDuplicate,
-    deleteMockProfileImage,
-    updateMockProfileImage,
-} from '@/mocks/mypage';
+    deleteProfileImage,
+    getCheckLoginId,
+    getMe,
+    putProfileImage,
+    updateMe,
+} from '@/api/member';
+import { useMyProfileStore } from '@/store/myProfileStore';
 import { USER_ID_REGEX, USER_ID_FORMAT_MESSAGE } from '@/utils/validators';
 
 type UserIdCheckStatus = 'idle' | 'available' | 'duplicate';
 
 function EditProfileBoard() {
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const isBusyRef = useRef(false);
+    const setProfile = useMyProfileStore((state) => state.setProfile);
+    const patchProfile = useMyProfileStore((state) => state.patchProfile);
 
     const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(undefined);
 
@@ -30,44 +35,74 @@ function EditProfileBoard() {
     const [isEditingUserId, setIsEditingUserId] = useState(false);
     const [userIdCheckStatus, setUserIdCheckStatus] = useState<UserIdCheckStatus>('idle');
     const [isLoading, setIsLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
+    const [retryCount, setRetryCount] = useState(0);
+    const [failedMessage, setFailedMessage] = useState<string | null>(null);
 
     useEffect(() => {
-        fetchMockMyPageSummary().then((summary) => {
-            setProfileImageUrl(summary.profileImageUrl);
-            setNickname(summary.nickname);
-            setNicknameInput(summary.nickname);
-            setUserId(summary.userId);
-            setUserIdInput(summary.userId);
-            setIsLoading(false);
-        });
-    }, []);
+        getMe()
+            .then((me) => {
+                setLoadError(null);
+                setProfile(me);
+                setProfileImageUrl(me.profileImageUrl ?? undefined);
+                setNickname(me.nickname);
+                setNicknameInput(me.nickname);
+                setUserId(me.loginId);
+                setUserIdInput(me.loginId);
+                setIsLoading(false);
+            })
+            .catch(() => setLoadError('내 정보를 불러오지 못했어요'));
+    }, [retryCount, setProfile]);
 
-    const handleChangeImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-
-        const objectUrl = URL.createObjectURL(file);
-        await updateMockProfileImage(objectUrl);
-        setProfileImageUrl(objectUrl);
+    // 연타로 같은 요청이 여러 번 나가는 걸 막고, 실패하면 안내 모달을 띄움
+    const runGuarded = async (action: () => Promise<void>, failMessage: string) => {
+        if (isBusyRef.current) return;
+        isBusyRef.current = true;
+        try {
+            await action();
+        } catch {
+            setFailedMessage(failMessage);
+        } finally {
+            isBusyRef.current = false;
+        }
     };
 
-    const handleDeleteImage = async () => {
-        await deleteMockProfileImage();
-        setProfileImageUrl(undefined);
+    const handleChangeImage = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        // 같은 파일을 다시 골라도 change 이벤트가 나도록 비워줌
+        event.target.value = '';
+        if (!file) return;
+
+        runGuarded(async () => {
+            const { profileImageUrl: newUrl } = await putProfileImage(file);
+            setProfileImageUrl(newUrl);
+            patchProfile({ profileImageUrl: newUrl });
+        }, '이미지 변경에 실패했어요.\n다시 시도해주세요');
+    };
+
+    const handleDeleteImage = () => {
+        runGuarded(async () => {
+            await deleteProfileImage();
+            setProfileImageUrl(undefined);
+            patchProfile({ profileImageUrl: null });
+        }, '이미지 삭제에 실패했어요.\n다시 시도해주세요');
     };
 
     const handleStartEditName = () => {
         setIsEditingName(true);
     };
 
-    const handleSaveNickname = async () => {
+    const handleSaveNickname = () => {
         const trimmed = nicknameInput.trim();
         if (!trimmed) return;
 
-        const updated = await updateMockNickname({ nickname: trimmed });
-        setNickname(updated.nickname);
-        setNicknameInput(updated.nickname);
-        setIsEditingName(false);
+        runGuarded(async () => {
+            const updated = await updateMe({ nickname: trimmed });
+            setNickname(updated.nickname);
+            setNicknameInput(updated.nickname);
+            setIsEditingName(false);
+            patchProfile({ nickname: updated.nickname });
+        }, '닉네임 변경에 실패했어요.\n다시 시도해주세요');
     };
 
     const handleCancelNickname = () => {
@@ -87,22 +122,27 @@ function EditProfileBoard() {
         setUserIdCheckStatus('idle');
     };
 
-    const handleCheckUserIdDuplicate = async () => {
+    const handleCheckUserIdDuplicate = () => {
         const trimmed = userIdInput.trim();
         if (!USER_ID_REGEX.test(trimmed)) return;
 
-        const { isDuplicate } = await checkMockUserIdDuplicate(trimmed);
-        setUserIdCheckStatus(isDuplicate ? 'duplicate' : 'available');
+        runGuarded(async () => {
+            const { available } = await getCheckLoginId(trimmed);
+            setUserIdCheckStatus(available ? 'available' : 'duplicate');
+        }, '중복 확인에 실패했어요.\n다시 시도해주세요');
     };
 
-    const handleSaveUserId = async () => {
+    const handleSaveUserId = () => {
         if (!canSaveUserId) return;
 
-        const updated = await updateMockUserId({ userId: userIdInput.trim() });
-        setUserId(updated.userId);
-        setUserIdInput(updated.userId);
-        setUserIdCheckStatus('idle');
-        setIsEditingUserId(false);
+        runGuarded(async () => {
+            const updated = await updateMe({ loginId: userIdInput.trim() });
+            setUserId(updated.loginId);
+            setUserIdInput(updated.loginId);
+            setUserIdCheckStatus('idle');
+            setIsEditingUserId(false);
+            patchProfile({ loginId: updated.loginId });
+        }, '아이디 변경에 실패했어요.\n다시 시도해주세요');
     };
 
     const handleCancelUserId = () => {
@@ -116,6 +156,19 @@ function EditProfileBoard() {
         : userIdCheckStatus === 'duplicate'
         ? '아이디가 중복이에요'
         : '';
+
+    if (loadError) {
+        return (
+            <ErrorState
+                title={loadError}
+                description="잠시 후 다시 시도해주세요"
+                actionLabel="다시 시도"
+                onAction={() => setRetryCount((count) => count + 1)}
+                minHeight="480px"
+                size="lg"
+            />
+        );
+    }
 
     if (isLoading) return <Loading minHeight="480px" />;
 
@@ -212,6 +265,14 @@ function EditProfileBoard() {
                     </ButtonGroupRow>
                 )}
             </FieldGroup>
+
+            <Modal
+                type="confirm"
+                isOpen={failedMessage !== null}
+                onClose={() => setFailedMessage(null)}
+                message={failedMessage ?? ''}
+                cancelText="닫기"
+            />
         </Wrapper>
     );
 }

@@ -3,45 +3,64 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 import Avatar from '@/components/common/Avatar';
+import ErrorState from '@/components/common/ErrorState';
 import Loading from '@/components/common/Loading';
 import Modal from '@/components/common/Modal';
 import { tokens } from '@/styles/tokens';
-import { fetchMockLikedIdeas, unlikeMockIdea } from '@/mocks/mypage';
-import { fetchMockFriends } from '@/mocks/friends';
-import type { IdeaCard } from '@/mocks/ideaCards';
-import type { Friend } from '@/mocks/friends';
+import { getFriends } from '@/api/friends';
+import type { Friend } from '@/api/friends';
+import { getLikedIdeas } from '@/api/idea';
+import type { LikedIdea } from '@/api/idea';
+import { deleteIdeaLike } from '@/api/social';
+
+const formatDate = (iso: string) => {
+    const date = new Date(iso);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${date.getFullYear()}.${month}.${day}`;
+};
 
 function LikedIdeasBoard() {
     const navigate = useNavigate();
-    const [likedIdeas, setLikedIdeas] = useState<IdeaCard[]>([]);
-    const [friendsById, setFriendsById] = useState<Record<string, Friend>>({});
-    const [unlikeTargetId, setUnlikeTargetId] = useState<string | null>(null);
+    const [likedIdeas, setLikedIdeas] = useState<LikedIdea[]>([]);
+    const [friendsById, setFriendsById] = useState<Record<number, Friend>>({});
+    const [unlikeTargetId, setUnlikeTargetId] = useState<number | null>(null);
     const [isUnlikeFailedModalOpen, setIsUnlikeFailedModalOpen] = useState(false);
     const isUnlikingRef = useRef(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [retryCount, setRetryCount] = useState(0);
 
     useEffect(() => {
         Promise.all([
-            fetchMockLikedIdeas().then(setLikedIdeas),
-            fetchMockFriends().then((friends) => {
-                const map: Record<string, Friend> = {};
-                friends.forEach((friend) => {
-                    map[friend.id] = friend;
-                });
-                setFriendsById(map);
-            }),
-        ]).then(() => setIsLoading(false));
-    }, []);
+            getLikedIdeas().then(setLikedIdeas),
+            // 친구 목록은 프로필 사진/클릭 이동용 부가 정보라 실패해도 목록 자체는 보여줌
+            getFriends()
+                .then(({ friends }) => {
+                    const map: Record<number, Friend> = {};
+                    friends.forEach((friend) => {
+                        map[friend.memberId] = friend;
+                    });
+                    setFriendsById(map);
+                })
+                .catch(() => {}),
+        ])
+            .then(() => {
+                setError(null);
+                setIsLoading(false);
+            })
+            .catch(() => setError('좋아요한 아이디어를 불러오지 못했어요'));
+    }, [retryCount]);
 
     const handleConfirmUnlike = async () => {
         const ideaId = unlikeTargetId;
-        if (!ideaId || isUnlikingRef.current) return;
+        if (ideaId === null || isUnlikingRef.current) return;
         isUnlikingRef.current = true;
 
         setUnlikeTargetId(null);
         try {
-            await unlikeMockIdea(ideaId);
-            setLikedIdeas((prev) => prev.filter((idea) => idea.id !== ideaId));
+            await deleteIdeaLike(ideaId);
+            setLikedIdeas((prev) => prev.filter((idea) => idea.ideaId !== ideaId));
         } catch {
             setIsUnlikeFailedModalOpen(true);
         } finally {
@@ -53,20 +72,29 @@ function LikedIdeasBoard() {
         <Wrapper>
             <Title>좋아요한 아이디어</Title>
 
-            {isLoading ? (
+            {error ? (
+                <ErrorState
+                    title={error}
+                    description="잠시 후 다시 시도해주세요"
+                    actionLabel="다시 시도"
+                    onAction={() => setRetryCount((count) => count + 1)}
+                    minHeight="480px"
+                    size="lg"
+                />
+            ) : isLoading ? (
                 <Loading minHeight="480px" />
             ) : (
             <ListBox>
                 {likedIdeas.map((idea) => {
-                    const author = friendsById[idea.authorId];
+                    const author = friendsById[idea.memberId];
 
                     const handleOpenIdea = () => {
-                        navigate(`/friends?friendId=${idea.authorId}&ideaId=${idea.id}`);
+                        navigate(`/friends?friendId=${idea.memberId}&ideaId=${idea.ideaId}`);
                     };
 
                     return (
                         <Row
-                            key={idea.id}
+                            key={idea.ideaId}
                             role="button"
                             tabIndex={0}
                             onClick={handleOpenIdea}
@@ -82,16 +110,16 @@ function LikedIdeasBoard() {
                                 onClick={(e) => {
                                     if (!author) return;
                                     e.stopPropagation();
-                                    navigate(`/friends?friendId=${idea.authorId}`);
+                                    navigate(`/friends?friendId=${idea.memberId}`);
                                 }}
                             >
                                 <Avatar src={author?.profileImageUrl} size="sm" />
-                                <Nickname>{author?.nickname ?? '닉네임'}</Nickname>
+                                <Nickname>{author?.nickname ?? idea.nickname}</Nickname>
                             </AuthorGroup>
 
                             <IdeaInfo>
                                 <IdeaTitle>{idea.title}</IdeaTitle>
-                                <IdeaMeta>· {idea.category} · {idea.createdAt}</IdeaMeta>
+                                <IdeaMeta>· {formatDate(idea.updatedAt)}</IdeaMeta>
                             </IdeaInfo>
 
                             <LikeButton
@@ -99,7 +127,7 @@ function LikedIdeasBoard() {
                                 aria-label="좋아요 취소"
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    setUnlikeTargetId(idea.id);
+                                    setUnlikeTargetId(idea.ideaId);
                                 }}
                             >
                                 <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
