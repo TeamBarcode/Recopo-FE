@@ -1,12 +1,13 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react';
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
 import styled from 'styled-components';
 import { fetchMockCardDetail, deleteMockBrainstormCard } from '@/mocks/brainstormCards';
 import type { BrainstormCardDetail } from '@/mocks/brainstormCards';
 import { createMockIdeaFromRecommendation } from '@/mocks/ideaCards';
-import type { RecoItem } from '@/mocks/recobot';
 import tape from '@/assets/tape.svg';
 import Button from '@/components/common/Button';
+import Loading from '@/components/common/Loading';
+import ErrorState from '@/components/common/ErrorState';
 import Modal from '@/components/common/Modal';
 import {tokens} from '@/styles/tokens';
 import Tag from '@/components/common/Tag';
@@ -32,14 +33,22 @@ function CardDetail({ onRecommend }: CardDetailProps, ref: React.ForwardedRef<Ca
     const{cardId} = useParams();
     const navigate = useNavigate();
     const[card, setCard] = useState<BrainstormCardDetail | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isDeleteFailedModalOpen, setIsDeleteFailedModalOpen] = useState(false);
+    const isDeletingRef = useRef(false);
     const [selectedRecoId, setSelectedRecoId] = useState<string | null>(null);
     const [isSaveIdeaModalOpen, setIsSaveIdeaModalOpen] = useState(false);
 
     const loadCard = useCallback(() => {
         if(!cardId) return; //값이 없으면 멈추기
-        fetchMockCardDetail(cardId).then(setCard); //카드 정보 가져와서 setCard한테 넘겨서 실행 -> 리렌더링 발생
+        fetchMockCardDetail(cardId)
+            .then((data) => {
+                setError(null);
+                setCard(data);
+            })
+            .catch((err) => setError(err?.message ?? '카드를 불러오지 못했어요'));
     }, [cardId]);
 
     useEffect(() => {
@@ -48,7 +57,20 @@ function CardDetail({ onRecommend }: CardDetailProps, ref: React.ForwardedRef<Ca
 
     useImperativeHandle(ref, () => ({ refetch: loadCard }));
 
-    if(!card) return <div>로딩중...</div>;
+    if (error) {
+        return (
+            <ErrorState
+                title={error}
+                description="삭제되었거나 잘못된 링크일 수 있어요"
+                actionLabel="홈으로"
+                onAction={() => navigate('/')}
+                minHeight="480px"
+                size="lg"
+            />
+        );
+    }
+
+    if(!card) return <Loading />;
 
     const handleEdit = () => {
         navigate(`/brainstorm/${cardId}/edit`);
@@ -60,9 +82,17 @@ function CardDetail({ onRecommend }: CardDetailProps, ref: React.ForwardedRef<Ca
     }; // 삭제 버튼 클릭하면 handleDelete 실행됨, isDeleteModalOpen가 true가 됨 -> 모달이 화면에 뜸
 
     const handleConfirmDelete = async () => {
-        if(!cardId) return;
-        await deleteMockBrainstormCard(cardId);
-        navigate('/');
+        if(!cardId || isDeletingRef.current) return;
+        isDeletingRef.current = true;
+        setIsDeleteModalOpen(false);
+        try {
+            await deleteMockBrainstormCard(cardId);
+            navigate('/');
+        } catch {
+            setIsDeleteFailedModalOpen(true);
+        } finally {
+            isDeletingRef.current = false;
+        }
     }; //모달에서 네를 클릭하면 실행되는 부분.
     /*
     if (!cardId) return; — cardId 없으면 그냥 멈추는 안전장치
@@ -96,17 +126,12 @@ function CardDetail({ onRecommend }: CardDetailProps, ref: React.ForwardedRef<Ca
 
     // 공개(네) / 비공개(아니오) 버튼을 누르는 것 자체가 공개 여부 선택임
     const handleConfirmSaveIdea = async (isPublic: boolean) => {
-        const selected: RecoItem | undefined = card.recoBotResult?.find((item) => item.id === selectedRecoId);
         setIsSaveIdeaModalOpen(false);
 
-        const newIdea = await createMockIdeaFromRecommendation({
-            cardTitle: card.title,
-            cardContent: card.content,
-            category: card.category,
-            tags: card.tags,
-            recoItem: selected,
-            isPublic,
-        });
+        // NOTE: 여기서 다루는 card.recoBotResult(RecoItem)는 화면 표시용으로 가공된 데이터라
+        // recommendationId/repositoryId(숫자 원본 id)를 안 갖고 있음 — 추천 없이 카드만 저장하는
+        // 경로와 동일하게 cardId/공개여부만 넘김(둘 다 API 스펙상 선택값이라 문제 없음).
+        const newIdea = await createMockIdeaFromRecommendation(card.id, isPublic);
 
         navigate(`/ideas/${newIdea.id}`);
     };
@@ -202,6 +227,13 @@ function CardDetail({ onRecommend }: CardDetailProps, ref: React.ForwardedRef<Ca
             </RecoSection>
         </DetailWrapper>
         <Modal type="confirm" isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} onConfirm={handleConfirmDelete} message="정말 삭제하시겠어요?"/>
+        <Modal
+            type="confirm"
+            isOpen={isDeleteFailedModalOpen}
+            onClose={() => setIsDeleteFailedModalOpen(false)}
+            message={'삭제에 실패했어요.\n다시 시도해주세요'}
+            cancelText="닫기"
+        />
         <CompactModal type="default" size="sm" isOpen={isSaveIdeaModalOpen} onClose={() => setIsSaveIdeaModalOpen(false)}>
             <SaveIdeaModalTitle>이 아이디어를 공개할까요?</SaveIdeaModalTitle>
             <SaveIdeaDescription>

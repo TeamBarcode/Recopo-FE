@@ -7,6 +7,7 @@ import Avatar from '@/components/common/Avatar';
 import Input from '@/components/common/Input';
 import { useProfileSetup } from '@/features/auth/hooks/useProfileSetup';
 import { tokens } from '@/styles/tokens';
+import { USER_ID_FORMAT_MESSAGE } from '@/utils/validators';
 
 function ProfileSetupPage() {
   const navigate = useNavigate();
@@ -18,12 +19,14 @@ function ProfileSetupPage() {
     profileImage,
     userIdStatus,
     userIdMessage,
+    isUserIdFormatValid,
     isCheckingUserId,
     isSubmitting,
+    isUploadingImage,
     isNextEnabled,
     handleUserIdChange,
     handleNicknameChange,
-    handleProfileImageChange,
+    handleProfileImageSelect,
     checkUserId,
     confirmNickname,
     submitProfileSetup,
@@ -34,7 +37,7 @@ function ProfileSetupPage() {
 
     if (!file) return;
 
-    handleProfileImageChange(URL.createObjectURL(file));
+    handleProfileImageSelect(file);
   };
 
   const handleNext = async () => {
@@ -62,14 +65,18 @@ function ProfileSetupPage() {
           <ProfileArea>
             <Avatar src={profileImage ?? undefined} size="lg" />
 
-            <UploadButton type="button" onClick={() => fileInputRef.current?.click()}>
-              이미지 업로드
+            <UploadButton
+              type="button"
+              disabled={isUploadingImage}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {isUploadingImage ? '업로드 중' : '이미지 업로드'}
             </UploadButton>
 
             <HiddenFileInput
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
               onChange={handleImageUpload}
             />
           </ProfileArea>
@@ -89,16 +96,24 @@ function ProfileSetupPage() {
                   />
                 </UnderlinedInput>
 
-                <CheckButton type="button" disabled={isCheckingUserId} onClick={checkUserId}>
+                <CheckButton
+                  type="button"
+                  disabled={isCheckingUserId || !isUserIdFormatValid}
+                  onClick={checkUserId}
+                >
                   {isCheckingUserId ? '확인 중' : '중복 확인'}
                 </CheckButton>
               </FieldRow>
 
-              {userIdStatus === 'available' && (
+              {!isUserIdFormatValid && (
+                <ErrorMessage aria-live="polite">{USER_ID_FORMAT_MESSAGE}</ErrorMessage>
+              )}
+
+              {isUserIdFormatValid && userIdStatus === 'available' && (
                 <SuccessMessage aria-live="polite">{userIdMessage}</SuccessMessage>
               )}
 
-              {userIdStatus === 'duplicate' && (
+              {isUserIdFormatValid && userIdStatus === 'duplicate' && (
                 <ErrorMessage aria-live="polite">{userIdMessage}</ErrorMessage>
               )}
             </FieldGroup>
@@ -215,7 +230,12 @@ const UploadButton = styled.button`
   font-weight: ${tokens.fontWeight.regular};
   cursor: pointer;
 
-  &:active {
+  &:disabled {
+    cursor: wait;
+    opacity: 0.6;
+  }
+
+  &:not(:disabled):active {
     opacity: 0.6;
   }
 `;

@@ -3,6 +3,18 @@ import { mockRecoSuccess } from './recobot';
 import { mockRecoEmpty } from './recobot';
 import { mockUser } from './user'; // 댓글/답글 작성자 정보용
 
+import { getIdeas, getIdea, updateIdea, deleteIdea, saveIdeaFromCard } from '@/api/idea';
+import type { Idea as ApiIdea } from '@/api/idea';
+import {
+  postIdeaLike,
+  deleteIdeaLike,
+  getIdeaComments,
+  postIdeaComment,
+  deleteComment,
+  postCommentReply,
+} from '@/api/social';
+import type { Comment as ApiComment, Reply as ApiReply } from '@/api/social';
+
 // 다른 시드 데이터('2026.06.24' 등)와 형식을 맞추기 위한 헬퍼
 const formatMockDate = (date: Date) => {
   const year = date.getFullYear();
@@ -51,7 +63,7 @@ export interface Reply {
   createdAt: string;
 }
 
-// ===== 댓글/답글 mock 데이터 =====
+// ===== 댓글/답글 mock 데이터 (friends.ts의 fetchMockFriendIdeaDetail이 아직 이 시드를 씀) =====
 export const mockReplies: Reply[] = [
   {
     id: 'reply1',
@@ -79,6 +91,9 @@ export const mockComments: Comment[] = [
 ];
 
 // ===== 목록 mock 데이터 (미리보기) =====
+// NOTE: 아래 mockIdeaCards/mockIdeaCardsEmpty/mockIdeaDetail은 이 파일 자신의 함수들은 더 이상 안 쓰지만,
+// friends.ts(fetchMockFriendsIdeas/fetchMockFriendIdeaDetail)와 mypage.ts(팀원 담당, 아직 mock 단계)가
+// 그대로 참조하고 있어서 남겨둠 — 그쪽 도메인이 실 API로 전환되기 전까지 지우면 안 됨.
 export const mockIdeaCards: IdeaCard[] = [
   {
     id: 'idea1',
@@ -255,7 +270,7 @@ export const mockIdeaCards: IdeaCard[] = [
 
 export const mockIdeaCardsEmpty: IdeaCard[] = [];
 
-// ===== 상세 mock 데이터 =====
+// ===== 상세 mock 데이터 (friends.ts의 fetchMockFriendIdeaDetail이 아직 이 시드를 씀) =====
 export const mockIdeaDetail: IdeaDetail = {
   ...mockIdeaCards[0],
   brainstormContent:
@@ -264,106 +279,107 @@ export const mockIdeaDetail: IdeaDetail = {
   comments: mockComments,
 };
 
-// ===== 아이디어 상세 조회 (id로 하나) =====
-export const fetchMockIdeaDetail = async (ideaId: string): Promise<IdeaDetail> => {
-  await new Promise((r) => setTimeout(r, 300));
+// ===== API 응답 ↔ 컴포넌트 타입 매퍼 =====
 
-  // idea1(mockIdeaDetail)은 brainstormContent/techStack/comments가 채워진 상세 mock이라 그대로 반환
-  if (ideaId === mockIdeaDetail.id) {
-    return mockIdeaDetail;
-  }
+// API는 해시태그를 콤마 구분 단일 문자열로 내려줌(예: "#AI,#카페") — 배열로 상호 변환
+const parseHashtag = (hashtag: string): string[] =>
+  hashtag
+    ? hashtag
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean)
+    : [];
 
-  const idea = mockIdeaCards.find((i) => i.id === ideaId);
-  if (!idea) {
-    throw { message: '존재하지 않는 아이디어예요' };
-  }
+const joinHashtag = (tags?: string[]): string => (tags ?? []).join(',');
 
-  // 그 외 아이디어는 아직 상세 mock이 준비 안 되어 있어서 빈 값으로 반환
-  return {
-    ...idea,
-    brainstormContent: '',
-    techStack: [],
-    comments: [],
-  };
-};
+const mapApiIdeaToCard = (idea: ApiIdea): IdeaCard => ({
+  id: String(idea.ideaId),
+  // TODO(2차): 응답에 작성자 정보가 없어서 임시로 내 계정으로 고정함.
+  // (친구 아이디어 목록은 이 값에 의존하지 않고 별도 엔드포인트(GET /friends/{friendId}/cards)를 쓰므로 영향 없음)
+  authorId: mockUser.id,
+  title: idea.title,
+  summary: idea.content,
+  tags: parseHashtag(idea.hashtag),
+  // TODO(2차): 실제 카테고리 enum 값이 확정되면 한글 라벨 매핑 테이블 추가 필요 (지금은 그대로 노출)
+  category: idea.category,
+  // TODO(2차): idea.recommendation 구조가 확정되면 추천 레포 매핑 필요
+  recoBotResult: [],
+  createdAt: formatMockDate(new Date(idea.createdAt)),
+  isPublic: idea.visibility === 'PUBLIC',
+  likeCount: idea.likeCount,
+  // 내 담당 화면(IdeaPage/IdeaDetailPage)엔 좋아요 인터랙션이 없어서 실제로는 안 쓰임
+  likedByMe: false,
+  // TODO(2차): 목록 조회 응답에 댓글 수 필드가 없어서 임시로 0 — 백엔드 확인 필요
+  commentCount: 0,
+});
 
-// ===== 목록 조회 + 필터링 가짜 서버 로직 =====
+const mapApiReplyToReply = (reply: ApiReply): Reply => ({
+  id: String(reply.replyId),
+  authorNickname: reply.writerNickname,
+  authorProfileImageUrl: reply.writerProfileImageUrl,
+  content: reply.content,
+  createdAt: formatMockDate(new Date(reply.createdAt)),
+});
+
+const mapApiCommentToComment = (comment: ApiComment): Comment => ({
+  id: String(comment.commentId),
+  authorNickname: comment.writerNickname,
+  authorProfileImageUrl: comment.writerProfileImageUrl,
+  content: comment.content,
+  createdAt: formatMockDate(new Date(comment.createdAt)),
+  replies: comment.replies.map(mapApiReplyToReply),
+});
+
+// ===== 아이디어 목록 조회 (필터/검색/정렬 조합) =====
 export const fetchMockIdeas = async (
   visibility?: '전체' | '공개' | '비공개',
   category?: string,
   sortBy?: 'latest' | 'oldest' | 'popular',
   searchQuery?: string,
 ): Promise<IdeaCard[]> => {
-  await new Promise((r) => setTimeout(r, 300));
+  const sortByMap = { latest: 'LATEST', oldest: 'OLDEST', popular: 'POPULAR' } as const;
+  const visibilityMap = { 공개: 'PUBLIC', 비공개: 'PRIVATE' } as const;
 
-  // /ideas 페이지는 "내 아이디어" 목록임 — 친구들 아이디어는 Friends 페이지(fetchMockFriendsIdeas)에서 따로 봄
-  let result = mockIdeaCards.filter((idea) => idea.authorId === mockUser.id);
+  const ideas = await getIdeas({
+    category,
+    keyword: searchQuery,
+    sortBy: sortBy ? sortByMap[sortBy] : undefined,
+    visibility: visibility && visibility !== '전체' ? visibilityMap[visibility] : undefined,
+  });
 
-  if (visibility === '공개') {
-    result = result.filter((idea) => idea.isPublic);
-  } else if (visibility === '비공개') {
-    result = result.filter((idea) => !idea.isPublic);
-  }
-
-  if (category) {
-    result = result.filter((idea) => idea.category === category);
-  }
-
-  if (searchQuery) {
-    result = result.filter(
-      (idea) =>
-        idea.title.includes(searchQuery) ||
-        idea.tags?.some((tag: string) => tag.includes(searchQuery)),
-    );
-  }
-
-  if (sortBy === 'latest') {
-    result = result.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
-  } else if (sortBy === 'oldest') {
-    result = result.sort(
-      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-    );
-  } else if (sortBy === 'popular') {
-    result = result.sort((a, b) => b.likeCount - a.likeCount);
-  }
-
-  return result;
+  return ideas.map(mapApiIdeaToCard);
 };
 
-// ===== RecoBot 추천 결과 → 아이디어로 저장 =====
-export interface CreateIdeaFromRecommendationRequest {
-  cardTitle: string;
-  cardContent: string;
-  category: string;
-  tags?: string[];
-  recoItem?: RecoItem;
-  isPublic: boolean;
-}
+// ===== 아이디어 상세 조회 (id로 하나) =====
+export const fetchMockIdeaDetail = async (ideaId: string): Promise<IdeaDetail> => {
+  const [idea, commentsResponse] = await Promise.all([
+    getIdea(Number(ideaId)),
+    getIdeaComments(Number(ideaId)),
+  ]);
 
-export const createMockIdeaFromRecommendation = async (
-  request: CreateIdeaFromRecommendationRequest,
-): Promise<IdeaCard> => {
-  await new Promise((r) => setTimeout(r, 500));
-
-  const newIdea: IdeaCard = {
-    id: `idea_${Date.now()}`,
-    authorId: mockUser.id,
-    title: request.cardTitle,
-    summary: request.cardContent,
-    tags: request.tags,
-    category: request.category,
-    recoBotResult: request.recoItem ? [request.recoItem] : [],
-    createdAt: formatMockDate(new Date()),
-    isPublic: request.isPublic,
-    likeCount: 0,
-    likedByMe: false,
-    commentCount: 0,
+  return {
+    ...mapApiIdeaToCard(idea),
+    brainstormContent: idea.content,
+    // TODO(2차): idea.recommendation 구조가 확정되면 추천 기술 스택 매핑 필요
+    techStack: [],
+    comments: commentsResponse.comments.map(mapApiCommentToComment),
   };
+};
 
-  mockIdeaCards.push(newIdea);
-  return newIdea;
+// ===== RecoBot 추천 결과(또는 추천 없이 카드만) → 아이디어로 저장 =====
+export const createMockIdeaFromRecommendation = async (
+  cardId: string,
+  isPublic: boolean,
+  recommendationId?: number,
+  repositoryId?: number,
+): Promise<IdeaCard> => {
+  const created = await saveIdeaFromCard(cardId, {
+    visibility: isPublic ? 'PUBLIC' : 'PRIVATE',
+    recommendationId,
+    repositoryId,
+  });
+
+  return mapApiIdeaToCard(created);
 };
 
 // ===== 아이디어 수정 =====
@@ -378,35 +394,38 @@ export const updateMockIdea = async (
   ideaId: string,
   request: UpdateIdeaRequest,
 ): Promise<IdeaCard> => {
-  await new Promise((r) => setTimeout(r, 500));
+  const updated = await updateIdea(Number(ideaId), {
+    title: request.title,
+    hashtag: joinHashtag(request.tags),
+    category: request.category,
+    visibility: request.isPublic ? 'PUBLIC' : 'PRIVATE',
+  });
 
-  const index = mockIdeaCards.findIndex((idea) => idea.id === ideaId);
-  if (index === -1) {
-    throw { message: '존재하지 않는 아이디어예요' };
-  }
-
-  const updatedIdea = { ...mockIdeaCards[index], ...request };
-  mockIdeaCards[index] = updatedIdea;
-
-  // 상세 mock(mockIdeaDetail)도 같은 아이디어면 같이 갱신해서 상세 페이지로 돌아갔을 때 반영되게 함
-  if (mockIdeaDetail.id === ideaId) {
-    Object.assign(mockIdeaDetail, request);
-  }
-
-  return updatedIdea;
+  return mapApiIdeaToCard(updated);
 };
 
 // ===== 아이디어 삭제 =====
 export const deleteMockIdea = async (ideaId: string): Promise<{ success: boolean }> => {
-  await new Promise((r) => setTimeout(r, 500));
-
-  const index = mockIdeaCards.findIndex((idea) => idea.id === ideaId);
-  if (index === -1) {
-    throw { message: '존재하지 않는 아이디어예요' };
-  }
-
-  mockIdeaCards.splice(index, 1);
+  await deleteIdea(Number(ideaId));
   return { success: true };
+};
+
+// ===== 좋아요 / 좋아요 취소 =====
+// TODO(2차): api/social.ts에 남은 미확인 사항 그대로 적용됨 —
+// 1) "다시 누르면 좋아요 취소"라는 명세 설명 때문에 POST 자체가 토글일 수도 있어서 DELETE를 계속 써야 하는지 불확실
+// 2) 좋아요 취소 응답 필드가 ideaId가 아니라 cardId로 되어있음(명세 오타로 추정)
+export const likeMockIdea = async (
+  ideaId: string,
+): Promise<{ liked: boolean; likeCount: number }> => {
+  const { liked, likeCount } = await postIdeaLike(Number(ideaId));
+  return { liked, likeCount };
+};
+
+export const unlikeMockIdea = async (
+  ideaId: string,
+): Promise<{ liked: boolean; likeCount: number }> => {
+  const { liked, likeCount } = await deleteIdeaLike(Number(ideaId));
+  return { liked, likeCount };
 };
 
 // ===== 댓글 작성 =====
@@ -416,25 +435,21 @@ export interface CreateCommentRequest {
 }
 
 export const createMockComment = async (request: CreateCommentRequest): Promise<Comment> => {
-  await new Promise((r) => setTimeout(r, 300));
+  const created = await postIdeaComment(Number(request.ideaId), { content: request.content });
 
   return {
-    id: `comment_${Date.now()}`,
+    id: String(created.commentId),
     authorNickname: mockUser.nickname,
     authorProfileImageUrl: mockUser.profileImageUrl,
-    content: request.content,
-    createdAt: '2026.07.04',
+    content: created.content,
+    createdAt: formatMockDate(new Date(created.createdAt)),
     replies: [],
   };
 };
 
 // ===== 댓글 삭제 =====
 export const deleteMockComment = async (commentId: string): Promise<{ success: boolean }> => {
-  await new Promise((r) => setTimeout(r, 300));
-
-  // 댓글 목록은 컴포넌트가 로컬 state로 들고 있고(새로 작성한 댓글도 여기 포함) 이 mockComments 배열엔 안 들어가므로,
-  // 여기서 존재 여부를 mockComments 기준으로 검사하면 새로 쓴 댓글은 전부 삭제 실패로 처리되는 버그가 있었음
-  void commentId;
+  await deleteComment(Number(commentId));
   return { success: true };
 };
 
@@ -445,13 +460,13 @@ export interface CreateReplyRequest {
 }
 
 export const createMockReply = async (request: CreateReplyRequest): Promise<Reply> => {
-  await new Promise((r) => setTimeout(r, 300));
+  const created = await postCommentReply(Number(request.commentId), { content: request.content });
 
   return {
-    id: `reply_${Date.now()}`,
+    id: String(created.replyId),
     authorNickname: mockUser.nickname,
     authorProfileImageUrl: mockUser.profileImageUrl,
-    content: request.content,
-    createdAt: '2026.07.04',
+    content: created.content,
+    createdAt: formatMockDate(new Date(created.createdAt)),
   };
 };
