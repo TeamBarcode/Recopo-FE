@@ -1,7 +1,7 @@
 import type { RecoItem } from './recobot';
 import { mockRecoSuccess } from './recobot';
 import { mockRecoEmpty } from './recobot';
-import { mockUser } from './user'; // 댓글/답글 작성자 정보용
+import { mockUser } from './user';
 
 import { getIdeas, getIdea, updateIdea, deleteIdea, saveIdeaFromCard } from '@/api/idea';
 import type { Idea as ApiIdea } from '@/api/idea';
@@ -15,6 +15,9 @@ import {
 } from '@/api/social';
 import type { Comment as ApiComment, Reply as ApiReply } from '@/api/social';
 import { toCategoryCode, toCategoryLabel } from '@/constants/category';
+import { getMe } from '@/api/member';
+import type { MyProfile } from '@/api/member';
+import { useMyProfileStore } from '@/store/myProfileStore';
 
 // 다른 시드 데이터('2026.06.24' 등)와 형식을 맞추기 위한 헬퍼
 const formatMockDate = (date: Date) => {
@@ -49,6 +52,7 @@ export interface IdeaDetail extends IdeaCard {
 
 export interface Comment {
   id: string;
+  authorId: string; // 내 댓글 여부 판별용 (API의 writerId)
   authorNickname: string;
   authorProfileImageUrl?: string;
   content: string;
@@ -58,6 +62,7 @@ export interface Comment {
 
 export interface Reply {
   id: string;
+  authorId: string;
   authorNickname: string;
   authorProfileImageUrl?: string;
   content: string;
@@ -68,6 +73,7 @@ export interface Reply {
 export const mockReplies: Reply[] = [
   {
     id: 'reply1',
+    authorId: mockUser.id,
     authorNickname: '떠윤',
     content: '감사해요',
     createdAt: '2026.07.04',
@@ -77,6 +83,7 @@ export const mockReplies: Reply[] = [
 export const mockComments: Comment[] = [
   {
     id: 'comment1',
+    authorId: 'commenter1',
     authorNickname: '지원',
     content: '오 이거 좋은데?',
     createdAt: '2026.07.04',
@@ -84,6 +91,7 @@ export const mockComments: Comment[] = [
   },
   {
     id: 'comment2',
+    authorId: 'commenter2',
     authorNickname: '태영',
     content: '좋다',
     createdAt: '2026.07.04',
@@ -314,6 +322,7 @@ const mapApiIdeaToCard = (idea: ApiIdea): IdeaCard => ({
 
 const mapApiReplyToReply = (reply: ApiReply): Reply => ({
   id: String(reply.replyId),
+  authorId: String(reply.writerId),
   authorNickname: reply.writerNickname,
   authorProfileImageUrl: reply.writerProfileImageUrl,
   content: reply.content,
@@ -322,6 +331,7 @@ const mapApiReplyToReply = (reply: ApiReply): Reply => ({
 
 const mapApiCommentToComment = (comment: ApiComment): Comment => ({
   id: String(comment.commentId),
+  authorId: String(comment.writerId),
   authorNickname: comment.writerNickname,
   authorProfileImageUrl: comment.writerProfileImageUrl,
   content: comment.content,
@@ -430,6 +440,17 @@ export const unlikeMockIdea = async (
   return { liked, likeCount };
 };
 
+// 댓글/답글 작성 응답엔 writerId만 있어서 작성자 닉네임·사진은 내 정보에서 채움
+// (헤더가 마운트 시 getMe로 채워두지만, 아직 비어있으면 직접 조회)
+const getMyProfile = async (): Promise<MyProfile> => {
+  const cached = useMyProfileStore.getState().profile;
+  if (cached) return cached;
+
+  const profile = await getMe();
+  useMyProfileStore.getState().setProfile(profile);
+  return profile;
+};
+
 // ===== 댓글 작성 =====
 export interface CreateCommentRequest {
   ideaId: string;
@@ -438,11 +459,13 @@ export interface CreateCommentRequest {
 
 export const createMockComment = async (request: CreateCommentRequest): Promise<Comment> => {
   const created = await postIdeaComment(Number(request.ideaId), { content: request.content });
+  const me = await getMyProfile();
 
   return {
     id: String(created.commentId),
-    authorNickname: mockUser.nickname,
-    authorProfileImageUrl: mockUser.profileImageUrl,
+    authorId: String(created.writerId),
+    authorNickname: me.nickname,
+    authorProfileImageUrl: me.profileImageUrl ?? undefined,
     content: created.content,
     createdAt: formatMockDate(new Date(created.createdAt)),
     replies: [],
@@ -463,11 +486,13 @@ export interface CreateReplyRequest {
 
 export const createMockReply = async (request: CreateReplyRequest): Promise<Reply> => {
   const created = await postCommentReply(Number(request.commentId), { content: request.content });
+  const me = await getMyProfile();
 
   return {
     id: String(created.replyId),
-    authorNickname: mockUser.nickname,
-    authorProfileImageUrl: mockUser.profileImageUrl,
+    authorId: String(created.writerId),
+    authorNickname: me.nickname,
+    authorProfileImageUrl: me.profileImageUrl ?? undefined,
     content: created.content,
     createdAt: formatMockDate(new Date(created.createdAt)),
   };

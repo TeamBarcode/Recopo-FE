@@ -11,7 +11,7 @@ import {
     createMockReply,
 } from '@/mocks/ideaCards';
 import type { IdeaDetail, Comment } from '@/mocks/ideaCards';
-import { mockUser } from '@/mocks/user';
+import { useMyProfileStore } from '@/store/myProfileStore';
 import Button from '@/components/common/Button';
 import Modal from '@/components/common/Modal';
 import Tag from '@/components/common/Tag';
@@ -225,6 +225,8 @@ interface CommentSectionProps {
 }
 
 function CommentSection({ ideaId, comments, highlightCommentId, onCommentsChange }: CommentSectionProps) {
+    const myProfile = useMyProfileStore((state) => state.profile);
+    const myId = myProfile ? String(myProfile.memberId) : null;
     const [newComment, setNewComment] = useState('');
     const [openReplyCommentId, setOpenReplyCommentId] = useState<string | null>(null);
     const [replyInput, setReplyInput] = useState('');
@@ -321,7 +323,7 @@ function CommentSection({ ideaId, comments, highlightCommentId, onCommentsChange
                                     </CommentHeader>
                                     <CommentContent>{reply.content}</CommentContent>
                                 </CommentBody>
-                                {reply.authorNickname === mockUser.nickname && (
+                                {reply.authorId === myId && (
                                     <MenuWrapper>
                                         <MenuButton
                                             type="button"
@@ -347,7 +349,7 @@ function CommentSection({ ideaId, comments, highlightCommentId, onCommentsChange
 
                         {openReplyCommentId === comment.id && (
                             <ReplyInputRow>
-                                <Avatar size="xs" src={mockUser.profileImageUrl} />
+                                <Avatar size="xs" src={myProfile?.profileImageUrl ?? undefined} />
                                 <PillInput
                                     value={replyInput}
                                     onChange={(e) => setReplyInput(e.target.value)}
@@ -365,7 +367,7 @@ function CommentSection({ ideaId, comments, highlightCommentId, onCommentsChange
                             </ReplyInputRow>
                         )}
                     </CommentBody>
-                    {comment.authorNickname === mockUser.nickname && (
+                    {comment.authorId === myId && (
                         <MenuWrapper>
                             <MenuButton
                                 type="button"
@@ -385,7 +387,7 @@ function CommentSection({ ideaId, comments, highlightCommentId, onCommentsChange
             ))}
 
             <NewCommentRow>
-                <Avatar size="xs" src={mockUser.profileImageUrl} />
+                <Avatar size="xs" src={myProfile?.profileImageUrl ?? undefined} />
                 <PillInput
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
