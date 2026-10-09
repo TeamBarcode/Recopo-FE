@@ -423,9 +423,6 @@ export const deleteMockIdea = async (ideaId: string): Promise<{ success: boolean
 };
 
 // ===== 좋아요 / 좋아요 취소 =====
-// TODO(2차): api/social.ts에 남은 미확인 사항 그대로 적용됨 —
-// 1) "다시 누르면 좋아요 취소"라는 명세 설명 때문에 POST 자체가 토글일 수도 있어서 DELETE를 계속 써야 하는지 불확실
-// 2) 좋아요 취소 응답 필드가 ideaId가 아니라 cardId로 되어있음(명세 오타로 추정)
 export const likeMockIdea = async (
   ideaId: string,
 ): Promise<{ liked: boolean; likeCount: number }> => {

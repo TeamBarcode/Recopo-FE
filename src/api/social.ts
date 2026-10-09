@@ -7,24 +7,15 @@ export interface IdeaLikeResponse {
   likeCount: number;
 }
 
-// 명세상 "다시 누르면 좋아요 취소됨"이라고 되어있어 POST 자체가 토글로 동작할 수도 있음
-// — 실제 연동 시 DELETE(deleteIdeaLike)를 계속 써야 하는지 확인 필요
 export const postIdeaLike = async (ideaId: number): Promise<IdeaLikeResponse> => {
   const { data } = await apiClient.post<IdeaLikeResponse>(`/api/ideas/${ideaId}/likes`);
   return data;
 };
 
 // ===== 좋아요 취소 =====
-// 명세 예시 응답 필드가 cardId로 되어있음(좋아요 쪽은 ideaId) — 스펙 오타로 보이나 일단 그대로 반영,
-// 연동 시 실제 응답 필드명 확인 필요
-export interface IdeaUnlikeResponse {
-  cardId: number;
-  liked: boolean;
-  likeCount: number;
-}
-
-export const deleteIdeaLike = async (ideaId: number): Promise<IdeaUnlikeResponse> => {
-  const { data } = await apiClient.delete<IdeaUnlikeResponse>(`/api/ideas/${ideaId}/likes`);
+// 응답은 좋아요와 같은 모양 (명세 예시의 cardId는 오타 — 실제 BE 응답 필드는 ideaId)
+export const deleteIdeaLike = async (ideaId: number): Promise<IdeaLikeResponse> => {
+  const { data } = await apiClient.delete<IdeaLikeResponse>(`/api/ideas/${ideaId}/likes`);
   return data;
 };
 
