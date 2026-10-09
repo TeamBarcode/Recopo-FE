@@ -14,6 +14,7 @@ import {
   postCommentReply,
 } from '@/api/social';
 import type { Comment as ApiComment, Reply as ApiReply } from '@/api/social';
+import { toCategoryCode, toCategoryLabel } from '@/constants/category';
 
 // 다른 시드 데이터('2026.06.24' 등)와 형식을 맞추기 위한 헬퍼
 const formatMockDate = (date: Date) => {
@@ -300,8 +301,7 @@ const mapApiIdeaToCard = (idea: ApiIdea): IdeaCard => ({
   title: idea.title,
   summary: idea.content,
   tags: parseHashtag(idea.hashtag),
-  // TODO(2차): 실제 카테고리 enum 값이 확정되면 한글 라벨 매핑 테이블 추가 필요 (지금은 그대로 노출)
-  category: idea.category,
+  category: toCategoryLabel(idea.category),
   // TODO(2차): idea.recommendation 구조가 확정되면 추천 레포 매핑 필요
   recoBotResult: [],
   createdAt: formatMockDate(new Date(idea.createdAt)),
@@ -340,7 +340,7 @@ export const fetchMockIdeas = async (
   const visibilityMap = { 공개: 'PUBLIC', 비공개: 'PRIVATE' } as const;
 
   const ideas = await getIdeas({
-    category,
+    category: category ? toCategoryCode(category) : undefined,
     keyword: searchQuery,
     sortBy: sortBy ? sortByMap[sortBy] : undefined,
     visibility: visibility && visibility !== '전체' ? visibilityMap[visibility] : undefined,
@@ -391,10 +391,15 @@ export const updateMockIdea = async (
   ideaId: string,
   request: UpdateIdeaRequest,
 ): Promise<IdeaCard> => {
+  const category = toCategoryCode(request.category);
+  if (!category) {
+    throw new Error(`알 수 없는 카테고리: ${request.category}`);
+  }
+
   const updated = await updateIdea(Number(ideaId), {
     title: request.title,
     hashtag: joinHashtag(request.tags),
-    category: request.category,
+    category,
     visibility: request.isPublic ? 'PUBLIC' : 'PRIVATE',
   });
 

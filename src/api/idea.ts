@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import type { CategoryCode } from '@/constants/category';
 
 export interface Idea {
   ideaId: number;
@@ -6,7 +7,7 @@ export interface Idea {
   content: string;
   // 명세 예시엔 콤마 구분 단일 문자열로 내려옴(예: "#AI,#카페")
   hashtag: string;
-  category: string;
+  category: CategoryCode;
   visibility: 'PUBLIC' | 'PRIVATE';
   likeCount: number;
   commentCount: number;
@@ -18,7 +19,7 @@ export interface Idea {
 // ===== 아이디어 목록/카테고리별/검색/정렬/공개여부 필터 조회 =====
 // 명세상 전부 같은 GET /ideas의 쿼리 파라미터 조합이라 함수 하나로 합침
 export interface GetIdeasParams {
-  category?: string;
+  category?: CategoryCode;
   keyword?: string;
   sortBy?: 'LATEST' | 'OLDEST' | 'POPULAR';
   visibility?: 'PUBLIC' | 'PRIVATE';
@@ -39,7 +40,7 @@ export const getIdea = async (ideaId: number): Promise<Idea> => {
 export interface UpdateIdeaRequest {
   title: string;
   hashtag: string;
-  category: string;
+  category: CategoryCode;
   visibility: 'PUBLIC' | 'PRIVATE';
 }
 
