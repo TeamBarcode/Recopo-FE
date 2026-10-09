@@ -12,8 +12,25 @@ export interface Idea {
   likeCount: number;
   commentCount: number;
   createdAt: string;
-  // 명세 예시엔 null만 있어서 실제 값이 있을 때의 구조는 확인 필요
-  recommendation: unknown;
+  // 저장 시 고른 추천 레포 1개 — 추천 없이 저장한 아이디어는 null
+  // (명세 예시엔 null뿐이라 BE 코드의 IdeaResponseDto.RecommendationResponse 기준)
+  recommendation: IdeaRecommendation | null;
+}
+
+export interface IdeaRecommendation {
+  recommendationId: number;
+  repositoryId: number | null;
+  repositoryName: string;
+  repositoryFullName: string | null;
+  repositoryUrl: string;
+  repositoryDescription: string;
+  language: string | null;
+  // 콤마 구분 단일 문자열(예: "Spring,JPA")
+  techStack: string | null;
+  starCount: number;
+  forkCount: number;
+  updatedAt: string | null;
+  reason: string | null;
 }
 
 // ===== 아이디어 목록/카테고리별/검색/정렬/공개여부 필터 조회 =====

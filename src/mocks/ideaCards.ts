@@ -4,7 +4,7 @@ import { mockRecoEmpty } from './recobot';
 import { mockUser } from './user';
 
 import { getIdeas, getIdea, updateIdea, deleteIdea, saveIdeaFromCard } from '@/api/idea';
-import type { Idea as ApiIdea } from '@/api/idea';
+import type { Idea as ApiIdea, IdeaRecommendation } from '@/api/idea';
 import {
   postIdeaLike,
   deleteIdeaLike,
@@ -290,16 +290,27 @@ export const mockIdeaDetail: IdeaDetail = {
 
 // ===== API 응답 ↔ 컴포넌트 타입 매퍼 =====
 
-// API는 해시태그를 콤마 구분 단일 문자열로 내려줌(예: "#AI,#카페") — 배열로 상호 변환
-const parseHashtag = (hashtag: string): string[] =>
-  hashtag
-    ? hashtag
+// API는 해시태그·기술스택을 콤마 구분 단일 문자열로 내려줌(예: "#AI,#카페") — 배열로 상호 변환
+const splitCommaList = (value: string | null): string[] =>
+  value
+    ? value
         .split(',')
         .map((tag) => tag.trim())
         .filter(Boolean)
     : [];
 
 const joinHashtag = (tags?: string[]): string => (tags ?? []).join(',');
+
+const mapRecommendationToRecoItem = (recommendation: IdeaRecommendation): RecoItem => ({
+  id: String(recommendation.recommendationId),
+  repoName: recommendation.repositoryName,
+  repoUrl: recommendation.repositoryUrl,
+  description: recommendation.repositoryDescription,
+  reason: recommendation.reason ?? '',
+  stars: recommendation.starCount,
+  forks: recommendation.forkCount,
+  updatedAt: recommendation.updatedAt ?? '',
+});
 
 const mapApiIdeaToCard = (idea: ApiIdea): IdeaCard => ({
   id: String(idea.ideaId),
@@ -308,10 +319,9 @@ const mapApiIdeaToCard = (idea: ApiIdea): IdeaCard => ({
   authorId: mockUser.id,
   title: idea.title,
   summary: idea.content,
-  tags: parseHashtag(idea.hashtag),
+  tags: splitCommaList(idea.hashtag),
   category: toCategoryLabel(idea.category),
-  // TODO(2차): idea.recommendation 구조가 확정되면 추천 레포 매핑 필요
-  recoBotResult: [],
+  recoBotResult: idea.recommendation ? [mapRecommendationToRecoItem(idea.recommendation)] : [],
   createdAt: formatMockDate(new Date(idea.createdAt)),
   isPublic: idea.visibility === 'PUBLIC',
   likeCount: idea.likeCount,
@@ -369,8 +379,7 @@ export const fetchMockIdeaDetail = async (ideaId: string): Promise<IdeaDetail> =
   return {
     ...mapApiIdeaToCard(idea),
     brainstormContent: idea.content,
-    // TODO(2차): idea.recommendation 구조가 확정되면 추천 기술 스택 매핑 필요
-    techStack: [],
+    techStack: splitCommaList(idea.recommendation?.techStack ?? null),
     comments: commentsResponse.comments.map(mapApiCommentToComment),
   };
 };
