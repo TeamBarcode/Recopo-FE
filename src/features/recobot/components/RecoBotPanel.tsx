@@ -275,7 +275,7 @@ function RecoBotPanel({ onSaved }: RecoBotPanelProps, ref: React.ForwardedRef<Re
 
     await saveMockRecommendationAsIdea(selectedRecommendationId, isPublic ? 'PUBLIC' : 'PRIVATE');
 
-    const newIdea = await createMockIdeaFromRecommendation(
+    await createMockIdeaFromRecommendation(
       sentCard.id,
       isPublic,
       selectedRecommendationId,
@@ -284,7 +284,8 @@ function RecoBotPanel({ onSaved }: RecoBotPanelProps, ref: React.ForwardedRef<Re
 
     setIsSaveModalOpen(false);
     resetPanel();
-    navigate(`/ideas/${newIdea.id}`);
+    // 저장 API 응답에 새 ideaId가 없어서 상세 대신 목록으로 이동
+    navigate('/ideas');
   };
 
   return (

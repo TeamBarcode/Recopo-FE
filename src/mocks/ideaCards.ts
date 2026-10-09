@@ -371,14 +371,12 @@ export const createMockIdeaFromRecommendation = async (
   isPublic: boolean,
   recommendationId?: number,
   repositoryId?: number,
-): Promise<IdeaCard> => {
-  const created = await saveIdeaFromCard(cardId, {
+): Promise<void> => {
+  await saveIdeaFromCard(cardId, {
     visibility: isPublic ? 'PUBLIC' : 'PRIVATE',
     recommendationId,
     repositoryId,
   });
-
-  return mapApiIdeaToCard(created);
 };
 
 // ===== 아이디어 수정 =====

@@ -131,9 +131,10 @@ function CardDetail({ onRecommend }: CardDetailProps, ref: React.ForwardedRef<Ca
         // NOTE: 여기서 다루는 card.recoBotResult(RecoItem)는 화면 표시용으로 가공된 데이터라
         // recommendationId/repositoryId(숫자 원본 id)를 안 갖고 있음 — 추천 없이 카드만 저장하는
         // 경로와 동일하게 cardId/공개여부만 넘김(둘 다 API 스펙상 선택값이라 문제 없음).
-        const newIdea = await createMockIdeaFromRecommendation(card.id, isPublic);
+        await createMockIdeaFromRecommendation(card.id, isPublic);
 
-        navigate(`/ideas/${newIdea.id}`);
+        // 저장 API 응답에 새 ideaId가 없어서 상세 대신 목록으로 이동
+        navigate('/ideas');
     };
 
     return(

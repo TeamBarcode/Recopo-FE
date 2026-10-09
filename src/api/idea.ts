@@ -62,13 +62,12 @@ export interface SaveIdeaFromCardRequest {
   repositoryId?: number;
 }
 
-// 응답 본문 예시가 명세서에 없어(200 OK만 명시) 아이디어 객체를 반환한다고 가정 — 실제 응답이 다르면 조정 필요
+// 성공 시 200 OK + 응답 바디 없음 — 새로 생긴 ideaId를 알 수 없음
 export const saveIdeaFromCard = async (
   cardId: string,
   request: SaveIdeaFromCardRequest,
-): Promise<Idea> => {
-  const { data } = await apiClient.post<Idea>(`/api/ideas/cards/${cardId}/ideas`, request);
-  return data;
+): Promise<void> => {
+  await apiClient.post(`/api/ideas/cards/${cardId}/ideas`, request);
 };
 
 // ===== 좋아요한 아이디어 목록 조회 (마이페이지) =====
