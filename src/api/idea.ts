@@ -9,6 +9,7 @@ export interface Idea {
   category: string;
   visibility: 'PUBLIC' | 'PRIVATE';
   likeCount: number;
+  commentCount: number;
   createdAt: string;
   // 명세 예시엔 null만 있어서 실제 값이 있을 때의 구조는 확인 필요
   recommendation: unknown;

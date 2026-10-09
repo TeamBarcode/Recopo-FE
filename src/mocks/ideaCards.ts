@@ -309,8 +309,7 @@ const mapApiIdeaToCard = (idea: ApiIdea): IdeaCard => ({
   likeCount: idea.likeCount,
   // 내 담당 화면(IdeaPage/IdeaDetailPage)엔 좋아요 인터랙션이 없어서 실제로는 안 쓰임
   likedByMe: false,
-  // TODO(2차): 목록 조회 응답에 댓글 수 필드가 없어서 임시로 0 — 백엔드 확인 필요
-  commentCount: 0,
+  commentCount: idea.commentCount,
 });
 
 const mapApiReplyToReply = (reply: ApiReply): Reply => ({

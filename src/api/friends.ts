@@ -71,6 +71,7 @@ export interface FriendCard {
   title: string;
   thumbnailUrl: string;
   likedByMe: boolean;
+  commentCount: number;
   updatedAt: string;
 }
 
