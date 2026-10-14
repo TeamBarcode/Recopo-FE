@@ -5,12 +5,15 @@ import notificationIcon from '@/assets/notification.svg';
 import Avatar from '@/components/common/Avatar';
 import IconButton from '@/components/common/IconButton';
 import { tokens } from '@/styles/tokens';
-import { mockUser } from '@/mocks/user';
+import { getMe } from '@/api/member';
+import { useMyProfileStore } from '@/store/myProfileStore';
 import NotificationPanel from './NotificationPanel';
 import { useEffect, useRef, useState } from 'react';
 import { hasUnreadNotification } from '@/mocks/notifications';
 
 function Header() {
+  const profile = useMyProfileStore((state) => state.profile);
+  const setProfile = useMyProfileStore((state) => state.setProfile);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [hasUnread, setHasUnread] = useState(hasUnreadNotification());
   const notificationRef = useRef<HTMLDivElement>(null);
@@ -23,6 +26,13 @@ function Header() {
       return next;
     });
   };
+
+  useEffect(() => {
+    // 실패해도 헤더는 기본 프로필 이미지로 보여주면 되므로 에러 UI 없이 무시함
+    getMe()
+      .then(setProfile)
+      .catch(() => {});
+  }, [setProfile]);
 
   useEffect(() => {
     if (!isNotificationOpen) return;
@@ -99,7 +109,7 @@ function Header() {
             isActive ? (
               <MyPageActiveIcon>MY</MyPageActiveIcon>
             ) : (
-              <Avatar src={mockUser.profileImageUrl} size="md" alt="프로필 이미지" />
+              <Avatar src={profile?.profileImageUrl ?? undefined} size="md" alt="프로필 이미지" />
             )
           }
         </ProfileLink>

@@ -1,14 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 import Avatar from '@/components/common/Avatar';
+import ErrorState from '@/components/common/ErrorState';
 import Loading from '@/components/common/Loading';
 import Modal from '@/components/common/Modal';
 import CardColorModal from './CardColorModal';
 import { tokens } from '@/styles/tokens';
-import { fetchMockMyPageSummary, logoutMock, withdrawMockUser } from '@/mocks/mypage';
-import type { MyPageSummary } from '@/mocks/mypage';
+import { postLogout } from '@/api/auth';
+import { deleteMember, getMe } from '@/api/member';
+import { clearRefreshToken, useAuthStore } from '@/store/authStore';
+import { useMyProfileStore } from '@/store/myProfileStore';
 
 import profileEditIcon from '@/assets/profile_edit.svg';
 import brainstormingIcon from '@/assets/mypage_brainstorming.svg';
@@ -19,42 +22,95 @@ import likesIcon from '@/assets/mypage_likes.svg';
 
 function MyPageBoard() {
     const navigate = useNavigate();
-    const [summary, setSummary] = useState<MyPageSummary | null>(null);
+    const profile = useMyProfileStore((state) => state.profile);
+    const setProfile = useMyProfileStore((state) => state.setProfile);
+    const clearProfile = useMyProfileStore((state) => state.clearProfile);
+    const clearAccessToken = useAuthStore((state) => state.clearAccessToken);
+
+    const [error, setError] = useState<string | null>(null);
+    const [retryCount, setRetryCount] = useState(0);
     const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
     const [isCardColorModalOpen, setIsCardColorModalOpen] = useState(false);
+    const [isWithdrawFailedModalOpen, setIsWithdrawFailedModalOpen] = useState(false);
+    const [isLogoutFailedModalOpen, setIsLogoutFailedModalOpen] = useState(false);
+    const isLeavingRef = useRef(false);
 
     useEffect(() => {
-        fetchMockMyPageSummary().then(setSummary);
-    }, []);
+        getMe()
+            .then((me) => {
+                setError(null);
+                setProfile(me);
+            })
+            .catch(() => setError('내 정보를 불러오지 못했어요'));
+    }, [retryCount, setProfile]);
+
+    const clearSession = () => {
+        clearAccessToken();
+        clearRefreshToken();
+        clearProfile();
+    };
 
     const handleConfirmWithdraw = async () => {
-        await withdrawMockUser();
+        if (isLeavingRef.current) return;
+        isLeavingRef.current = true;
+
         setIsWithdrawModalOpen(false);
-        navigate('/login');
+        try {
+            await deleteMember();
+            clearSession();
+            navigate('/login');
+        } catch {
+            setIsWithdrawFailedModalOpen(true);
+        } finally {
+            isLeavingRef.current = false;
+        }
     };
 
     const handleConfirmLogout = async () => {
-        await logoutMock();
+        if (isLeavingRef.current) return;
+        isLeavingRef.current = true;
+
         setIsLogoutModalOpen(false);
-        navigate('/login');
+        try {
+            await postLogout();
+            clearSession();
+            navigate('/login');
+        } catch {
+            setIsLogoutFailedModalOpen(true);
+        } finally {
+            isLeavingRef.current = false;
+        }
     };
 
-    if (!summary) return <Loading minHeight="480px" />;
+    if (!profile) {
+        return error ? (
+            <ErrorState
+                title={error}
+                description="잠시 후 다시 시도해주세요"
+                actionLabel="다시 시도"
+                onAction={() => setRetryCount((count) => count + 1)}
+                minHeight="480px"
+                size="lg"
+            />
+        ) : (
+            <Loading minHeight="480px" />
+        );
+    }
 
     return (
         <Wrapper>
             <ProfileBox>
                 <ProfileLeft>
                     <AvatarWrapper>
-                        <Avatar src={summary.profileImageUrl} size="lg" />
+                        <Avatar src={profile.profileImageUrl ?? undefined} size="lg" />
                         <EditButton type="button" onClick={() => navigate('/mypage/edit')} aria-label="프로필 수정">
                             <img src={profileEditIcon} alt="" />
                         </EditButton>
                     </AvatarWrapper>
                     <ProfileText>
-                        <Nickname>{summary.nickname}</Nickname>
-                        <UserIdText>@{summary.userId}</UserIdText>
+                        <Nickname>{profile.nickname}</Nickname>
+                        <UserIdText>@{profile.loginId}</UserIdText>
                     </ProfileText>
                 </ProfileLeft>
 
@@ -62,13 +118,13 @@ function MyPageBoard() {
                     <StatItem>
                         <img src={brainstormingIcon} alt="" />
                         <StatLabel>Brainstorming</StatLabel>
-                        <StatValue>{summary.brainstormingCount}개</StatValue>
+                        <StatValue>{profile.cardCount}개</StatValue>
                     </StatItem>
                     <StatDivider />
                     <StatItem>
                         <img src={ideaIcon} alt="" />
                         <StatLabel>Idea</StatLabel>
-                        <StatValue>{summary.ideaCount}개</StatValue>
+                        <StatValue>{profile.ideaCount}개</StatValue>
                     </StatItem>
                 </StatsBox>
             </ProfileBox>
@@ -78,7 +134,7 @@ function MyPageBoard() {
                     <EmailTitle>Google 로그인 계정 이메일</EmailTitle>
                     <EmailRow>
                         <img src={emailIcon} alt="" />
-                        <EmailText>{summary.email}</EmailText>
+                        <EmailText>{profile.email}</EmailText>
                     </EmailRow>
                 </EmailBox>
 
@@ -125,6 +181,22 @@ function MyPageBoard() {
                 message="로그아웃 하시겠습니까?"
                 confirmText="네"
                 cancelText="아니오"
+            />
+
+            <Modal
+                type="confirm"
+                isOpen={isWithdrawFailedModalOpen}
+                onClose={() => setIsWithdrawFailedModalOpen(false)}
+                message={'탈퇴에 실패했어요.\n다시 시도해주세요'}
+                cancelText="닫기"
+            />
+
+            <Modal
+                type="confirm"
+                isOpen={isLogoutFailedModalOpen}
+                onClose={() => setIsLogoutFailedModalOpen(false)}
+                message={'로그아웃에 실패했어요.\n다시 시도해주세요'}
+                cancelText="닫기"
             />
 
             <CardColorModal
