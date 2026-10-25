@@ -1,6 +1,12 @@
 import type { RecoItem } from './recobot';
-import { mockRecoSuccess } from './recobot';
+import { fetchCardRecoItems, mockRecoSuccess } from './recobot';
 import type { IdeaCard } from './ideaCards'; // 새로 추가
+import { formatMockDate, joinHashtag, parseHashtag } from './ideaCards';
+import { toCategoryCode, toCategoryLabel } from '@/utils/category';
+
+import axios from 'axios';
+import { deleteCard, getCard, getCards, postCard, putCard } from '@/api/brainstorm';
+import type { BrainstormCard as ApiBrainstormCard } from '@/api/brainstorm';
 
 // ===== 타입 =====
 export interface BrainstormCard {
@@ -10,7 +16,7 @@ export interface BrainstormCard {
   tags?: string[];
   category: string;
   createdAt: string;
-  hasRecommendation?: boolean; // 목록 조회 시 계산되는 파생 필드 (미리보기 카드 status dot 단계 표시용)
+  hasRecommendation?: boolean; // 미리보기 카드 status dot용. 서버 목록 응답에 추천 여부가 없어서 지금은 채워지지 않음
 }
 
 export interface BrainstormCardDetail extends BrainstormCard {
@@ -57,95 +63,64 @@ export interface CreateBrainstormCardRequest {
 export const createMockBrainstormCard = async (
   request: CreateBrainstormCardRequest,
 ): Promise<BrainstormCard> => {
-  await new Promise((r) => setTimeout(r, 500));
-
-  const newCard : BrainstormCard = {
-    id: `card_${Date.now()}`,
+  const created = await postCard({
     title: request.title,
     content: request.content,
-    tags: request.tags,
-    category: request.category,
-    createdAt: '2026.07.04',
-  };
+    category: toCategoryCode(request.category),
+    hashtag: joinHashtag(request.tags),
+  });
 
-  mockBrainstormCards.push(newCard);
-  // 실제 서버라면 DB에 저장되는 부분. mock이라 그냥 배열에 추가해서
-  // 이후 fetchMockCards / 상세 조회에서도 이 카드가 조회되게 함
-
-  return newCard;
+  return mapApiCardToCard(created);
 };
 
-// ===== 카드별로 "보관"하기로 확정한 RecoBot 추천 결과 =====
-// 카드 하나에 여러 개 쌓일 수 있음 (추천받기 → 보관 → 추천받기 → 보관 ...)
-const cardRecoResults: Record<string, RecoItem[]> = {};
-
-export const appendMockRecoResult = async (
-  cardId: string,
-  item: RecoItem,
-): Promise<RecoItem[]> => {
-  await new Promise((r) => setTimeout(r, 300));
-
-  const existing = cardRecoResults[cardId] ?? [];
-  const updated = [item, ...existing]; // 가장 최근에 보관한 게 목록 맨 위로
-  cardRecoResults[cardId] = updated;
-
-  return updated;
-};
+// API 응답 → 화면에서 쓰는 카드 모양으로 변환
+const mapApiCardToCard = (card: ApiBrainstormCard): BrainstormCard => ({
+  id: String(card.cardId),
+  title: card.title,
+  content: card.content,
+  tags: parseHashtag(card.hashtag),
+  category: toCategoryLabel(card.category),
+  createdAt: formatMockDate(new Date(card.createdAt)),
+});
 
 //카드 하나 조회하는 함수
 export const fetchMockCardDetail = async (
   cardId : string
   ): Promise<BrainstormCardDetail> => {
-  await new Promise((r) => setTimeout(r, 300));
+  try {
+    const [card, recoBotResult] = await Promise.all([
+      getCard(Number(cardId)),
+      fetchCardRecoItems(cardId),
+    ]);
 
-  const card = mockBrainstormCards.find((c) => c.id === cardId);
-  if(!card){
-    throw {message : '존재하지 않는 카드예요'};
+    return {
+      ...mapApiCardToCard(card),
+      recoBotResult, // 보관된 추천 결과가 있으면 그걸, 없으면 아직 추천 안 받은 상태이므로 null
+    };
+  } catch (error) {
+    const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+    // 없는 카드(404)나 잘못된 id(400)면 "존재하지 않는 카드"로, 그 외(네트워크/서버 오류)는 일반 실패로 안내
+    throw {
+      message: status === 400 || status === 404 ? '존재하지 않는 카드예요' : '카드를 불러오지 못했어요',
+    };
   }
-
-  return {
-    ...card,
-    recoBotResult : cardRecoResults[cardId] ?? null,
-    // 보관된 추천 결과가 있으면 그걸, 없으면 아직 추천 안 받은 상태이므로 null
-  };
 };
 
-// ===== 목록 조회 + 필터링 가짜 서버 로직 =====
+// ===== 목록 조회 (카테고리/정렬/검색 조합) =====
 export const fetchMockCards = async (
   category?: string,
   sortBy?: 'latest' | 'oldest',
   searchQuery?: string,
 ): Promise<BrainstormCard[]> => {
-  await new Promise((r) => setTimeout(r, 300));
+  const sortByMap = { latest: 'LATEST', oldest: 'OLDEST' } as const;
 
-  let result = [...mockBrainstormCards];
+  const cards = await getCards({
+    category: category ? toCategoryCode(category) : undefined,
+    keyword: searchQuery?.trim().replace(/^#/, '') || undefined,
+    sortBy: sortBy ? sortByMap[sortBy] : undefined,
+  });
 
-  if (category) {
-    result = result.filter((card) => card.category === category);
-  }
-
-  if (searchQuery) {
-    result = result.filter(
-      (idea) =>
-        idea.title.includes(searchQuery) || idea.tags?.some((tag) => tag.includes(searchQuery)),
-    );
-  }
-
-  if (sortBy === 'latest') {
-    result = result.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
-  } else if (sortBy === 'oldest') {
-    result = result.sort(
-      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-    );
-  }
-
-  // 카드마다 보관된 추천 결과가 있는지 계산해서 붙임 (미리보기 카드 status dot 단계 표시용)
-  return result.map((card) => ({
-    ...card,
-    hasRecommendation: (cardRecoResults[card.id]?.length ?? 0) > 0,
-  }));
+  return cards.map(mapApiCardToCard);
 };
 
 // ===== 상세 mock 데이터 (추천 받은 경우 / 안 받은 경우) =====
@@ -171,38 +146,21 @@ export const UpdateMockBrainstormCard = async (
   cardId: string,
   request: UpdateBrainstormCardRequest,
 ): Promise<BrainstormCard> => {
-  await new Promise((r) => setTimeout(r, 500));
+  const updated = await putCard(Number(cardId), {
+    title: request.title,
+    content: request.content,
+    category: toCategoryCode(request.category),
+    hashtag: joinHashtag(request.tags),
+  });
 
-  const index = mockBrainstormCards.findIndex((c) => c.id === cardId);
-  if(index === -1){
-    throw {message: '존재하지 않는 카드예요'};
-  }
-
-  const updatedCard : BrainstormCard = {
-    ...mockBrainstormCards[index], // 기존 카드 필드 다 펼침
-    ...request, //그 위에 새로 입력한 값으로 덮어씀
-  }
-
-  mockBrainstormCards[index] = updatedCard;
-  //배열의 해당 인덱스를 새 객체로 실제로 교체함
-
-  return updatedCard;
+  return mapApiCardToCard(updated);
 };
 
 // ===== 카드 삭제 =====
 export const deleteMockBrainstormCard = async (
-  cardId: string, // → 삭제하고 싶은 카드의 id 하나만 받음
+  cardId: string,
 ): Promise<{ success: boolean }> => {
-  //삭제했는지 성공 여부만 돌려줌
-  await new Promise((r) => setTimeout(r, 500));
-
-  //배열을 하나씩 보면서 이 카드의 id가 지우려는 cardId랑 같은 게 있는지 체크
-  const index = mockBrainstormCards.findIndex((c) => c.id === cardId);
-  if (index === -1) {
-    throw { message: '존재하지 않는 카드예요' };
-  }
-  mockBrainstormCards.splice(index, 1)
-  //findIndex로 지울 카드의 배열 위치를 찾고, splice로 그위치에서 실제로 1개를 제거함.
+  await deleteCard(Number(cardId));
 
   return { success: true };
 };

@@ -32,18 +32,25 @@ export interface RequestRecommendationBody {
   excludedRepositoryIds: number[];
 }
 
+// 조회와 마찬가지로 명세(객체 하나)와 실제 응답 모양이 다를 수 있어 배열로 맞춰서 반환함
 export const postRecommendationRequest = async (
   request: RequestRecommendationBody,
-): Promise<Recommendation> => {
-  const { data } = await apiClient.post<Recommendation>('/api/recommendations/request', request);
-  return data;
+): Promise<Recommendation[]> => {
+  const { data } = await apiClient.post<Recommendation | Recommendation[]>(
+    '/api/recommendations/request',
+    request,
+  );
+  return Array.isArray(data) ? data : [data];
 };
 
 // ===== AI 추천 목록 조회 =====
-// 카드 하나당 현재 유효한 recommendation은 최대 1개라 배열이 아니라 단일 객체로 내려옴
-export const getRecommendation = async (cardId: number): Promise<Recommendation> => {
-  const { data } = await apiClient.get<Recommendation>(`/api/recommendations/cards/${cardId}`);
-  return data;
+// 명세는 카드 하나당 recommendation 객체 하나라고 되어 있는데, 실제 서버는 배열(없으면 [])로 내려줌
+// — 어느 쪽이든 배열로 맞춰서 반환함 (명세와 실제 응답 모양은 백엔드 확인 필요)
+export const getRecommendation = async (cardId: number): Promise<Recommendation[]> => {
+  const { data } = await apiClient.get<Recommendation | Recommendation[]>(
+    `/api/recommendations/cards/${cardId}`,
+  );
+  return Array.isArray(data) ? data : [data];
 };
 
 // ===== AI 추천 결과 정렬 =====

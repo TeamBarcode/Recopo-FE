@@ -131,9 +131,14 @@ const Content = styled.div`
 
 const TagRow = styled.div`
     display : flex;
+    flex-wrap : wrap;
     gap : 8px;
+    height : 19px;
+    flex-shrink : 0;
+    overflow : hidden;
     margin-top : 20px;
 `;
+/* 태그가 많으면 한 줄(태그 높이 19px)에 들어가는 만큼만 보이고 나머지는 잘려서 카드 밖으로 나가지 않음 */
 
 const DateBadge = styled.div`
     width : 50px;
