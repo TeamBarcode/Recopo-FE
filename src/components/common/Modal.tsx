@@ -28,6 +28,8 @@ interface ConfirmModalProps extends CommonModalProps {
   message?: string;
   messageFontSize?: string;
   confirmText?: string;
+  // 취소 버튼만 따로 처리하고 싶을 때 사용. 없으면 바깥 클릭/Esc와 같은 onClose로 처리됨
+  onCancel?: () => void;
   cancelText?: string;
   // onConfirm을 안 넘기면 버튼 1개(닫기)짜리 알림 모달로 동작함
   onConfirm?: () => void;
@@ -192,7 +194,7 @@ function Modal(props: ModalProps) {
                 </ConfirmButton>
               )}
 
-              <ConfirmButton type="button" variant="cancel" onClick={onClose}>
+              <ConfirmButton type="button" variant="cancel" onClick={props.onCancel ?? onClose}>
                 {props.cancelText ?? (props.onConfirm ? '아니오' : '닫기')}
               </ConfirmButton>
             </ConfirmButtonWrapper>

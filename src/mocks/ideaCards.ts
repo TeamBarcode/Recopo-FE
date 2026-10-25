@@ -5,6 +5,7 @@ import { mockUser } from './user'; // 댓글/답글 작성자 정보용
 
 import { getIdeas, getIdea, updateIdea, deleteIdea, saveIdeaFromCard } from '@/api/idea';
 import type { Idea as ApiIdea } from '@/api/idea';
+import { toCategoryCode, toCategoryLabel } from '@/utils/category';
 import {
   postIdeaLike,
   deleteIdeaLike,
@@ -16,7 +17,7 @@ import {
 import type { Comment as ApiComment, Reply as ApiReply } from '@/api/social';
 
 // 다른 시드 데이터('2026.06.24' 등)와 형식을 맞추기 위한 헬퍼
-const formatMockDate = (date: Date) => {
+export const formatMockDate = (date: Date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
@@ -282,7 +283,7 @@ export const mockIdeaDetail: IdeaDetail = {
 // ===== API 응답 ↔ 컴포넌트 타입 매퍼 =====
 
 // API는 해시태그를 콤마 구분 단일 문자열로 내려줌(예: "#AI,#카페") — 배열로 상호 변환
-const parseHashtag = (hashtag: string): string[] =>
+export const parseHashtag = (hashtag: string): string[] =>
   hashtag
     ? hashtag
         .split(',')
@@ -290,7 +291,7 @@ const parseHashtag = (hashtag: string): string[] =>
         .filter(Boolean)
     : [];
 
-const joinHashtag = (tags?: string[]): string => (tags ?? []).join(',');
+export const joinHashtag = (tags?: string[]): string => (tags ?? []).join(',');
 
 const mapApiIdeaToCard = (idea: ApiIdea): IdeaCard => ({
   id: String(idea.ideaId),
@@ -301,7 +302,7 @@ const mapApiIdeaToCard = (idea: ApiIdea): IdeaCard => ({
   summary: idea.content,
   tags: parseHashtag(idea.hashtag),
   // TODO(2차): 실제 카테고리 enum 값이 확정되면 한글 라벨 매핑 테이블 추가 필요 (지금은 그대로 노출)
-  category: idea.category,
+  category: toCategoryLabel(idea.category),
   // TODO(2차): idea.recommendation 구조가 확정되면 추천 레포 매핑 필요
   recoBotResult: [],
   createdAt: formatMockDate(new Date(idea.createdAt)),
@@ -341,7 +342,7 @@ export const fetchMockIdeas = async (
   const visibilityMap = { 공개: 'PUBLIC', 비공개: 'PRIVATE' } as const;
 
   const ideas = await getIdeas({
-    category,
+    category: category ? toCategoryCode(category) : undefined,
     keyword: searchQuery,
     sortBy: sortBy ? sortByMap[sortBy] : undefined,
     visibility: visibility && visibility !== '전체' ? visibilityMap[visibility] : undefined,
@@ -397,7 +398,7 @@ export const updateMockIdea = async (
   const updated = await updateIdea(Number(ideaId), {
     title: request.title,
     hashtag: joinHashtag(request.tags),
-    category: request.category,
+    category: toCategoryCode(request.category),
     visibility: request.isPublic ? 'PUBLIC' : 'PRIVATE',
   });
 

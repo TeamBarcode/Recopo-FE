@@ -19,6 +19,7 @@ interface CardDetailProps {
         content: string;
         category: string;
         tags?: string[];
+        excludedRepositoryIds?: number[];
     }) => void;
 }
 
@@ -38,6 +39,8 @@ function CardDetail({ onRecommend }: CardDetailProps, ref: React.ForwardedRef<Ca
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDeleteFailedModalOpen, setIsDeleteFailedModalOpen] = useState(false);
     const isDeletingRef = useRef(false);
+    const isSavingIdeaRef = useRef(false);
+    const [isSaveIdeaFailedModalOpen, setIsSaveIdeaFailedModalOpen] = useState(false);
     const [selectedRecoId, setSelectedRecoId] = useState<string | null>(null);
     const [isSaveIdeaModalOpen, setIsSaveIdeaModalOpen] = useState(false);
 
@@ -107,6 +110,10 @@ function CardDetail({ onRecommend }: CardDetailProps, ref: React.ForwardedRef<Ca
             content: card.content,
             category: card.category,
             tags: card.tags,
+            // 이미 받은 추천이 있으면 그 레포들은 빼고 새로 추천받도록 함
+            excludedRepositoryIds: card.recoBotResult
+                ?.map((item) => item.repositoryId)
+                .filter((id): id is number => id !== undefined),
         });
     };
 
@@ -126,14 +133,27 @@ function CardDetail({ onRecommend }: CardDetailProps, ref: React.ForwardedRef<Ca
 
     // 공개(네) / 비공개(아니오) 버튼을 누르는 것 자체가 공개 여부 선택임
     const handleConfirmSaveIdea = async (isPublic: boolean) => {
+        if (isSavingIdeaRef.current) return;
+        isSavingIdeaRef.current = true;
         setIsSaveIdeaModalOpen(false);
 
-        // NOTE: 여기서 다루는 card.recoBotResult(RecoItem)는 화면 표시용으로 가공된 데이터라
-        // recommendationId/repositoryId(숫자 원본 id)를 안 갖고 있음 — 추천 없이 카드만 저장하는
-        // 경로와 동일하게 cardId/공개여부만 넘김(둘 다 API 스펙상 선택값이라 문제 없음).
-        const newIdea = await createMockIdeaFromRecommendation(card.id, isPublic);
+        // 추천 결과를 골랐다면 그 추천/레포 id를 같이 보내고, 추천 없이 저장하는 경우엔 카드/공개여부만 보냄
+        const selected = card.recoBotResult?.find((item) => item.id === selectedRecoId);
 
-        navigate(`/ideas/${newIdea.id}`);
+        try {
+            const newIdea = await createMockIdeaFromRecommendation(
+                card.id,
+                isPublic,
+                selected?.recommendationId,
+                selected?.repositoryId,
+            );
+
+            navigate(`/ideas/${newIdea.id}`);
+        } catch {
+            setIsSaveIdeaFailedModalOpen(true);
+        } finally {
+            isSavingIdeaRef.current = false;
+        }
     };
 
     return(
@@ -227,6 +247,13 @@ function CardDetail({ onRecommend }: CardDetailProps, ref: React.ForwardedRef<Ca
             </RecoSection>
         </DetailWrapper>
         <Modal type="confirm" isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} onConfirm={handleConfirmDelete} message="정말 삭제하시겠어요?"/>
+        <Modal
+            type="confirm"
+            isOpen={isSaveIdeaFailedModalOpen}
+            onClose={() => setIsSaveIdeaFailedModalOpen(false)}
+            message={'아이디어 저장에 실패했어요.\n다시 시도해주세요'}
+            cancelText="닫기"
+        />
         <Modal
             type="confirm"
             isOpen={isDeleteFailedModalOpen}

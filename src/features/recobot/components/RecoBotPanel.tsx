@@ -9,15 +9,12 @@ import filterIcon from '@/assets/filter.svg';
 import recobotIcon from '@/assets/recobot.svg';
 import type { RecommendationSortOption } from '@/mocks/recobot';
 import {
-  deleteMockRecommendationsForCard,
-  fetchMockRecommendations,
-  requestMockRecommendation,
-  saveMockRecommendationAsIdea,
-  toRecoItem,
+  cancelRecommendation,
+  fetchSortedRecommendationResults,
+  requestRecommendation,
 } from '@/mocks/recobot';
-import { appendMockRecoResult } from '@/mocks/brainstormCards';
 import { createMockIdeaFromRecommendation } from '@/mocks/ideaCards';
-import type { AttachedCard, ResultItem } from '@/store/recoBotSessionStore';
+import type { AttachedCard } from '@/store/recoBotSessionStore';
 import { useRecoBotSessionStore } from '@/store/recoBotSessionStore';
 
 export interface RecoBotPanelHandle {
@@ -52,8 +49,8 @@ function RecoBotPanel({ onSaved }: RecoBotPanelProps, ref: React.ForwardedRef<Re
   const setSentCard = useRecoBotSessionStore((s) => s.setSentCard);
   const panelState = useRecoBotSessionStore((s) => s.panelState);
   const setPanelState = useRecoBotSessionStore((s) => s.setPanelState);
-  const selectedRecommendationId = useRecoBotSessionStore((s) => s.selectedRecommendationId);
-  const setSelectedRecommendationId = useRecoBotSessionStore((s) => s.setSelectedRecommendationId);
+  const selectedRepositoryId = useRecoBotSessionStore((s) => s.selectedRepositoryId);
+  const setSelectedRepositoryId = useRecoBotSessionStore((s) => s.setSelectedRepositoryId);
   const selectedSort = useRecoBotSessionStore((s) => s.selectedSort);
   const setSelectedSort = useRecoBotSessionStore((s) => s.setSelectedSort);
   const resetSession = useRecoBotSessionStore((s) => s.resetSession);
@@ -66,6 +63,8 @@ function RecoBotPanel({ onSaved }: RecoBotPanelProps, ref: React.ForwardedRef<Re
   const [cancelWarning, setCancelWarning] = useState(false);
 
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [failedMessage, setFailedMessage] = useState<string | null>(null);
+  const isFinishingRef = useRef(false);
 
   // 패널 내부 자식 엘리먼트 사이를 오갈 때도 dragenter/dragleave가 계속 발생하므로,
   // 카운터로 세어서 패널을 완전히 벗어났을 때만 isDragOver를 꺼줌 (깜빡임 방지)
@@ -134,35 +133,23 @@ function RecoBotPanel({ onSaved }: RecoBotPanelProps, ref: React.ForwardedRef<Re
     setIsFilterOpen((prev) => !prev);
   };
 
-  const loadResultList = async (
-    cardId: string,
-    sort: RecommendationSortOption | null,
-  ): Promise<ResultItem[]> => {
-    const list = await fetchMockRecommendations(cardId, sort ?? undefined);
-    const items: ResultItem[] = [];
-    for (const r of list) {
-      if (r.repositories && r.repositories[0]) {
-        items.push({ recommendationId: r.recommendationId, repository: r.repositories[0] });
-      }
-    }
-    return items;
-  };
-
   const handleSelectSort = (option: RecommendationSortOption) => {
     const next = selectedSort === option ? null : option;
     setSelectedSort(next);
 
-    if (sentCard && panelState.phase === 'result') {
-      loadResultList(sentCard.id, next).then((items) => setPanelState({ phase: 'result', items }));
+    if (next && sentCard && panelState.phase === 'result') {
+      // 정렬 조회에 실패하거나 결과가 비어 있으면 지금 보이는 목록을 그대로 둠
+      fetchSortedRecommendationResults(next)
+        .then((items) => {
+          if (items.length > 0) setPanelState({ phase: 'result', items });
+        })
+        .catch(() => {});
     }
   };
 
+  // 서버에는 "정렬 해제" 조회가 없어서, 선택만 풀어줌(목록 순서는 다음 추천 때 서버 순서로 돌아옴)
   const handleResetSort = () => {
     setSelectedSort(null);
-
-    if (sentCard && panelState.phase === 'result') {
-      loadResultList(sentCard.id, null).then((items) => setPanelState({ phase: 'result', items }));
-    }
   };
 
   // 처음 보내기(sending 상태로 전환)와 "다시 추천받기"(기존 목록 유지하며 1개 추가)를 함께 처리
@@ -176,17 +163,29 @@ function RecoBotPanel({ onSaved }: RecoBotPanelProps, ref: React.ForwardedRef<Re
       setAttachedCard(null);
       setSentCard(card);
       setPanelState({ phase: 'sending' });
-      setSelectedRecommendationId(null);
+      setSelectedRepositoryId(null);
     }
+
+    // 다시 추천받기면 지금 화면의 레포들을, 처음 보내는 거면 카드에 이미 보관된 레포들을 제외하고 요청함
+    const excludedRepositoryIds =
+      isAppending && panelState.phase === 'result'
+        ? panelState.items.map((item) => item.repository.repositoryId)
+        : (card.excludedRepositoryIds ?? []);
 
     const requestId = ++requestSeqRef.current;
 
     try {
-      await requestMockRecommendation(card.id, card.title, card.content);
+      const newItems = await requestRecommendation(card.id, excludedRepositoryIds);
       if (requestSeqRef.current !== requestId) return;
 
-      const items = await loadResultList(card.id, selectedSort);
-      if (requestSeqRef.current !== requestId) return;
+      // 다시 추천받기면 기존 목록 뒤에 새로 받은 레포를 이어붙임(서버가 누적 목록을 주든 새 레포만 주든 중복 없이 합침)
+      const current = useRecoBotSessionStore.getState().panelState;
+      const items = isAppending && current.phase === 'result' ? [...current.items] : [];
+      for (const item of newItems) {
+        if (!items.some((existing) => existing.repository.repositoryId === item.repository.repositoryId)) {
+          items.push(item);
+        }
+      }
 
       setPanelState({ phase: 'result', items });
     } catch (err) {
@@ -216,8 +215,8 @@ function RecoBotPanel({ onSaved }: RecoBotPanelProps, ref: React.ForwardedRef<Re
     },
   }));
 
-  const handleSelectResult = (recommendationId: number) => {
-    setSelectedRecommendationId(selectedRecommendationId === recommendationId ? null : recommendationId);
+  const handleSelectResult = (repositoryId: number) => {
+    setSelectedRepositoryId(selectedRepositoryId === repositoryId ? null : repositoryId);
   };
 
   const resetPanel = () => {
@@ -228,63 +227,86 @@ function RecoBotPanel({ onSaved }: RecoBotPanelProps, ref: React.ForwardedRef<Re
     setIsCancelModalOpen(true);
   };
 
+  // 한 번의 추천 세션은 recommendationId 하나라서, 어느 레포에서 가져와도 같은 값임
+  const getCurrentRecommendationId = () =>
+    panelState.phase === 'result' ? panelState.items[0]?.recommendationId : undefined;
+
   const handleConfirmCancelModal = async () => {
-    if (selectedRecommendationId === null) {
+    if (selectedRepositoryId === null) {
       setIsCancelModalOpen(false);
       setCancelWarning(true);
       setTimeout(() => setCancelWarning(false), 2500);
       return; // 선택 안 했으면 패널은 그대로 두고 사용자가 다시 골라야 함
     }
 
-    const items = panelState.phase === 'result' ? panelState.items : [];
-    const selected = items.find((i) => i.recommendationId === selectedRecommendationId);
+    if (isFinishingRef.current) return;
+    isFinishingRef.current = true;
     setIsCancelModalOpen(false);
 
-    if (selected && sentCard) {
-      await appendMockRecoResult(sentCard.id, toRecoItem(selected.repository));
-      onSaved?.();
+    try {
+      const recommendationId = getCurrentRecommendationId();
+      if (recommendationId !== undefined) {
+        await cancelRecommendation(recommendationId, true);
+        onSaved?.();
+      }
+      resetPanel();
+    } catch {
+      setFailedMessage('추천 내역 보관에 실패했어요.\n다시 시도해주세요');
+    } finally {
+      isFinishingRef.current = false;
     }
-
-    resetPanel();
   };
 
+  // "아니오": 이번 세션의 추천 기록을 서버에서 완전히 지움
   const handleDeclineCancelModal = async () => {
+    if (isFinishingRef.current) return;
+    isFinishingRef.current = true;
     setIsCancelModalOpen(false);
 
-    // 보관 안 하기로 했으면, 이번 세션에서 만든 추천 기록 자체를 지워서
-    // 같은 카드로 다시 보냈을 때 예전 추천들이 다시 나타나지 않게 함
-    if (sentCard) {
-      await deleteMockRecommendationsForCard(sentCard.id);
+    try {
+      const recommendationId = getCurrentRecommendationId();
+      if (recommendationId !== undefined) {
+        await cancelRecommendation(recommendationId, false);
+      }
+      resetPanel();
+    } catch {
+      setFailedMessage('추천 취소에 실패했어요.\n다시 시도해주세요');
+    } finally {
+      isFinishingRef.current = false;
     }
-
-    resetPanel();
   };
 
   const handleSaveIdeaClick = () => {
-    if (selectedRecommendationId === null) return;
+    if (selectedRepositoryId === null) return;
     setIsSaveModalOpen(true);
   };
 
   // 공개(네) / 비공개(아니오) 버튼을 누르는 것 자체가 공개 여부 선택임
   const handleConfirmSaveIdea = async (isPublic: boolean) => {
-    if (selectedRecommendationId === null || !sentCard) return;
+    if (selectedRepositoryId === null || !sentCard || isFinishingRef.current) return;
 
     const items = panelState.phase === 'result' ? panelState.items : [];
-    const selected = items.find((i) => i.recommendationId === selectedRecommendationId);
+    const selected = items.find((i) => i.repository.repositoryId === selectedRepositoryId);
     if (!selected) return;
 
-    await saveMockRecommendationAsIdea(selectedRecommendationId, isPublic ? 'PUBLIC' : 'PRIVATE');
-
-    const newIdea = await createMockIdeaFromRecommendation(
-      sentCard.id,
-      isPublic,
-      selectedRecommendationId,
-      selected.repository.repositoryId,
-    );
-
+    isFinishingRef.current = true;
     setIsSaveModalOpen(false);
-    resetPanel();
-    navigate(`/ideas/${newIdea.id}`);
+
+    try {
+      const newIdea = await createMockIdeaFromRecommendation(
+        sentCard.id,
+        isPublic,
+        selected.recommendationId,
+        selected.repository.repositoryId,
+      );
+
+      resetPanel();
+      navigate(`/ideas/${newIdea.id}`);
+    } catch {
+      setFailedMessage('아이디어 저장에 실패했어요.\n다시 시도해주세요');
+    } finally {
+      isFinishingRef.current = false;
+    }
   };
 
   return (
@@ -364,7 +386,7 @@ function RecoBotPanel({ onSaved }: RecoBotPanelProps, ref: React.ForwardedRef<Re
         {panelState.phase === 'result' && (
           <>
             <ButtonRow>
-              <ActionButton type="button" disabled={selectedRecommendationId === null} onClick={handleSaveIdeaClick}>
+              <ActionButton type="button" disabled={selectedRepositoryId === null} onClick={handleSaveIdeaClick}>
                 아이디어로 저장
               </ActionButton>
               <ActionButton type="button" disabled={isRequestingMore} onClick={handleRequestAgain}>
@@ -382,9 +404,9 @@ function RecoBotPanel({ onSaved }: RecoBotPanelProps, ref: React.ForwardedRef<Re
             <ResultList>
               {panelState.items.map((item) => (
                 <RepoCard
-                  key={item.recommendationId}
-                  $selected={selectedRecommendationId === item.recommendationId}
-                  onClick={() => handleSelectResult(item.recommendationId)}
+                  key={item.repository.repositoryId}
+                  $selected={selectedRepositoryId === item.repository.repositoryId}
+                  onClick={() => handleSelectResult(item.repository.repositoryId)}
                 >
                   <RepoName>{item.repository.name}</RepoName>
                   <RepoStats>
@@ -444,9 +466,18 @@ function RecoBotPanel({ onSaved }: RecoBotPanelProps, ref: React.ForwardedRef<Re
       <Modal
         type="confirm"
         isOpen={isCancelModalOpen}
-        onClose={handleDeclineCancelModal}
+        onClose={() => setIsCancelModalOpen(false)}
+        onCancel={handleDeclineCancelModal}
         onConfirm={handleConfirmCancelModal}
         message="추천 내역을 보관할까요?"
+      />
+
+      <Modal
+        type="confirm"
+        isOpen={failedMessage !== null}
+        onClose={() => setFailedMessage(null)}
+        message={failedMessage ?? ''}
+        cancelText="닫기"
       />
 
       <CompactModal type="default" size="sm" isOpen={isSaveModalOpen} onClose={() => setIsSaveModalOpen(false)}>

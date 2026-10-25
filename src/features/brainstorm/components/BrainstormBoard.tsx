@@ -5,6 +5,7 @@ import {useNavigate} from 'react-router-dom';
 import {tokens} from '@/styles/tokens';
 import Dropdown from '@/components/common/Dropdown';
 import Loading from '@/components/common/Loading';
+import ErrorState from '@/components/common/ErrorState';
 import BrainstormCardPreview from './BrainstormCardPreview';
 import searchIcon from '@/assets/search.svg';
 import HomeEmpty from '@/assets/Home_empty.svg';
@@ -28,6 +29,8 @@ function BrainstormBoard(){
 
     const [cards, setCards] = useState<BrainstormCard[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [retryCount, setRetryCount] = useState(0);
 
     const navigate = useNavigate();
 
@@ -36,12 +39,15 @@ function BrainstormBoard(){
         // 드롭다운 옵션 자체가 한글 라벨('최신 순'/'오래된 순')이라, fetchMockCards가 기대하는
         // 영문 값('latest'/'oldest')으로 변환해서 넘겨야 실제로 정렬이 적용됨
         const sortBy = sort === '최신 순' ? 'latest' : sort === '오래된 순' ? 'oldest' : undefined;
-        fetchMockCards(category, sortBy, search).then((result) => {
-            setCards(result);
-            setIsLoading(false);
-        });
+        fetchMockCards(category, sortBy, search)
+            .then((result) => {
+                setError(null);
+                setCards(result);
+                setIsLoading(false);
+            })
+            .catch(() => setError('카드를 불러오지 못했어요'));
         //categort, sort, search 중 하나라도 바뀌면 다시 불러옴
-    }, [category, sort, search]);
+    }, [category, sort, search, retryCount]);
 
 
     return(
@@ -71,7 +77,16 @@ function BrainstormBoard(){
                 </FilterGroup>
             </Toolbar>
             <CardScrollArea>
-                {isLoading ? (
+                {error ? (
+                    <ErrorState
+                        title={error}
+                        description="잠시 후 다시 시도해주세요"
+                        actionLabel="다시 시도"
+                        onAction={() => setRetryCount((count) => count + 1)}
+                        minHeight="480px"
+                        size="lg"
+                    />
+                ) : isLoading ? (
                     <Loading minHeight="480px" />
                 ) : cards.length === 0 ? (
                     <EmptyState>
