@@ -6,6 +6,7 @@ import { mockUser } from './user'; // 댓글/답글 작성자 정보용
 import { getIdeas, getIdea, updateIdea, deleteIdea, saveIdeaFromCard } from '@/api/idea';
 import type { Idea as ApiIdea } from '@/api/idea';
 import { toCategoryCode, toCategoryLabel } from '@/utils/category';
+import { parseServerDate } from '@/utils/date';
 import {
   postIdeaLike,
   deleteIdeaLike,
@@ -305,7 +306,7 @@ const mapApiIdeaToCard = (idea: ApiIdea): IdeaCard => ({
   category: toCategoryLabel(idea.category),
   // TODO(2차): idea.recommendation 구조가 확정되면 추천 레포 매핑 필요
   recoBotResult: [],
-  createdAt: formatMockDate(new Date(idea.createdAt)),
+  createdAt: formatMockDate(parseServerDate(idea.createdAt)),
   isPublic: idea.visibility === 'PUBLIC',
   likeCount: idea.likeCount,
   // 내 담당 화면(IdeaPage/IdeaDetailPage)엔 좋아요 인터랙션이 없어서 실제로는 안 쓰임
@@ -319,7 +320,7 @@ const mapApiReplyToReply = (reply: ApiReply): Reply => ({
   authorNickname: reply.writerNickname,
   authorProfileImageUrl: reply.writerProfileImageUrl,
   content: reply.content,
-  createdAt: formatMockDate(new Date(reply.createdAt)),
+  createdAt: formatMockDate(parseServerDate(reply.createdAt)),
 });
 
 const mapApiCommentToComment = (comment: ApiComment): Comment => ({
@@ -327,7 +328,7 @@ const mapApiCommentToComment = (comment: ApiComment): Comment => ({
   authorNickname: comment.writerNickname,
   authorProfileImageUrl: comment.writerProfileImageUrl,
   content: comment.content,
-  createdAt: formatMockDate(new Date(comment.createdAt)),
+  createdAt: formatMockDate(parseServerDate(comment.createdAt)),
   replies: comment.replies.map(mapApiReplyToReply),
 });
 
@@ -443,7 +444,7 @@ export const createMockComment = async (request: CreateCommentRequest): Promise<
     authorNickname: mockUser.nickname,
     authorProfileImageUrl: mockUser.profileImageUrl,
     content: created.content,
-    createdAt: formatMockDate(new Date(created.createdAt)),
+    createdAt: formatMockDate(parseServerDate(created.createdAt)),
     replies: [],
   };
 };
@@ -468,6 +469,6 @@ export const createMockReply = async (request: CreateReplyRequest): Promise<Repl
     authorNickname: mockUser.nickname,
     authorProfileImageUrl: mockUser.profileImageUrl,
     content: created.content,
-    createdAt: formatMockDate(new Date(created.createdAt)),
+    createdAt: formatMockDate(parseServerDate(created.createdAt)),
   };
 };

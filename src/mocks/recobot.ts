@@ -14,6 +14,7 @@ export interface RecoItem {
 }
 
 import axios from 'axios';
+import { parseServerDate } from '@/utils/date';
 import {
     getRecommendation,
     getSortedRecommendations,
@@ -107,7 +108,7 @@ const toRepository = (repo: RecommendedRepo): RecommendedRepository => ({
 });
 
 const formatDotDate = (iso: string) => {
-    const date = new Date(iso);
+    const date = parseServerDate(iso);
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${date.getFullYear()}.${month}.${day}`;

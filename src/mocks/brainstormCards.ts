@@ -3,6 +3,7 @@ import { fetchCardRecoItems, mockRecoSuccess } from './recobot';
 import type { IdeaCard } from './ideaCards'; // 새로 추가
 import { formatMockDate, joinHashtag, parseHashtag } from './ideaCards';
 import { toCategoryCode, toCategoryLabel } from '@/utils/category';
+import { parseServerDate } from '@/utils/date';
 
 import axios from 'axios';
 import { deleteCard, getCard, getCards, postCard, putCard } from '@/api/brainstorm';
@@ -80,7 +81,7 @@ const mapApiCardToCard = (card: ApiBrainstormCard): BrainstormCard => ({
   content: card.content,
   tags: parseHashtag(card.hashtag),
   category: toCategoryLabel(card.category),
-  createdAt: formatMockDate(new Date(card.createdAt)),
+  createdAt: formatMockDate(parseServerDate(card.createdAt)),
 });
 
 //카드 하나 조회하는 함수
