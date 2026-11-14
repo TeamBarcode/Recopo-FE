@@ -139,7 +139,7 @@ function RecoBotPanel({ onSaved }: RecoBotPanelProps, ref: React.ForwardedRef<Re
 
     if (next && sentCard && panelState.phase === 'result') {
       // 정렬 조회에 실패하거나 결과가 비어 있으면 지금 보이는 목록을 그대로 둠
-      fetchSortedRecommendationResults(next)
+      fetchSortedRecommendationResults(sentCard.id, next)
         .then((items) => {
           if (items.length > 0) setPanelState({ phase: 'result', items });
         })
@@ -227,9 +227,9 @@ function RecoBotPanel({ onSaved }: RecoBotPanelProps, ref: React.ForwardedRef<Re
     setIsCancelModalOpen(true);
   };
 
-  // 한 번의 추천 세션은 recommendationId 하나라서, 어느 레포에서 가져와도 같은 값임
-  const getCurrentRecommendationId = () =>
-    panelState.phase === 'result' ? panelState.items[0]?.recommendationId : undefined;
+  // 서버는 추천된 레포 하나마다 recommendationId가 따로 있어서, 지금 쌓인 레포 전부를 각각 취소해야 함
+  const getCurrentRecommendationIds = () =>
+    panelState.phase === 'result' ? panelState.items.map((item) => item.recommendationId) : [];
 
   const handleConfirmCancelModal = async () => {
     if (selectedRepositoryId === null) {
@@ -244,9 +244,9 @@ function RecoBotPanel({ onSaved }: RecoBotPanelProps, ref: React.ForwardedRef<Re
     setIsCancelModalOpen(false);
 
     try {
-      const recommendationId = getCurrentRecommendationId();
-      if (recommendationId !== undefined) {
-        await cancelRecommendation(recommendationId, true);
+      const recommendationIds = getCurrentRecommendationIds();
+      if (recommendationIds.length > 0) {
+        await Promise.all(recommendationIds.map((id) => cancelRecommendation(id, true)));
         onSaved?.();
       }
       resetPanel();
@@ -264,10 +264,8 @@ function RecoBotPanel({ onSaved }: RecoBotPanelProps, ref: React.ForwardedRef<Re
     setIsCancelModalOpen(false);
 
     try {
-      const recommendationId = getCurrentRecommendationId();
-      if (recommendationId !== undefined) {
-        await cancelRecommendation(recommendationId, false);
-      }
+      const recommendationIds = getCurrentRecommendationIds();
+      await Promise.all(recommendationIds.map((id) => cancelRecommendation(id, false)));
       resetPanel();
     } catch {
       setFailedMessage('추천 취소에 실패했어요.\n다시 시도해주세요');
@@ -301,7 +299,7 @@ function RecoBotPanel({ onSaved }: RecoBotPanelProps, ref: React.ForwardedRef<Re
       );
 
       resetPanel();
-      navigate(`/ideas/${newIdea.id}`);
+      navigate(newIdea ? `/ideas/${newIdea.id}` : '/ideas');
     } catch {
       setFailedMessage('아이디어 저장에 실패했어요.\n다시 시도해주세요');
     } finally {

@@ -57,9 +57,43 @@ export interface IdeaCommentsResponse {
   message?: string;
 }
 
+// 명세와 실제 서버 응답이 달라서 둘 다 읽도록 맞춤 (백엔드 확인 필요)
+// - 명세: { ideaId, comments: [{ writerId, writerNickname, writerProfileImageUrl, replies }] }
+// - 실제: [{ memberId, nickname, profileImageUrl }] 배열 (replies 없음)
+type RawAuthor = {
+  writerId?: number;
+  writerNickname?: string;
+  writerProfileImageUrl?: string;
+  memberId?: number;
+  nickname?: string;
+  profileImageUrl?: string;
+};
+
+type RawReply = Omit<Reply, 'writerId' | 'writerNickname' | 'writerProfileImageUrl'> & RawAuthor;
+type RawComment = Omit<Comment, 'writerId' | 'writerNickname' | 'writerProfileImageUrl' | 'replies'> &
+  RawAuthor & { replies?: RawReply[] };
+
+const normalizeAuthor = (raw: RawAuthor) => ({
+  writerId: (raw.writerId ?? raw.memberId) as number,
+  writerNickname: (raw.writerNickname ?? raw.nickname ?? '') as string,
+  writerProfileImageUrl: (raw.writerProfileImageUrl ?? raw.profileImageUrl ?? '') as string,
+});
+
+const normalizeReply = (raw: RawReply): Reply => ({ ...raw, ...normalizeAuthor(raw) });
+
+const normalizeComment = (raw: RawComment): Comment => ({
+  ...raw,
+  ...normalizeAuthor(raw),
+  replies: (raw.replies ?? []).map(normalizeReply),
+});
+
 export const getIdeaComments = async (ideaId: number): Promise<IdeaCommentsResponse> => {
-  const { data } = await apiClient.get<IdeaCommentsResponse>(`/api/ideas/${ideaId}/comments`);
-  return data;
+  const { data } = await apiClient.get<IdeaCommentsResponse | RawComment[]>(
+    `/api/ideas/${ideaId}/comments`,
+  );
+
+  const rawComments = Array.isArray(data) ? data : ((data?.comments ?? []) as RawComment[]);
+  return { ideaId, comments: rawComments.map(normalizeComment) };
 };
 
 // ===== 댓글 작성 =====

@@ -4,9 +4,11 @@ import { mockRecoEmpty } from './recobot';
 import { mockUser } from './user'; // 댓글/답글 작성자 정보용
 
 import { getIdeas, getIdea, updateIdea, deleteIdea, saveIdeaFromCard } from '@/api/idea';
-import type { Idea as ApiIdea } from '@/api/idea';
+import type { Idea as ApiIdea, IdeaRecommendation } from '@/api/idea';
 import { toCategoryCode, toCategoryLabel } from '@/utils/category';
 import { parseServerDate } from '@/utils/date';
+import { useMyProfileStore } from '@/store/myProfileStore';
+import axios from 'axios';
 import {
   postIdeaLike,
   deleteIdeaLike,
@@ -50,6 +52,7 @@ export interface IdeaDetail extends IdeaCard {
 
 export interface Comment {
   id: string;
+  authorId?: number; // 작성자 memberId (내 댓글인지 판단용)
   authorNickname: string;
   authorProfileImageUrl?: string;
   content: string;
@@ -59,6 +62,7 @@ export interface Comment {
 
 export interface Reply {
   id: string;
+  authorId?: number;
   authorNickname: string;
   authorProfileImageUrl?: string;
   content: string;
@@ -294,6 +298,34 @@ export const parseHashtag = (hashtag: string): string[] =>
 
 export const joinHashtag = (tags?: string[]): string => (tags ?? []).join(',');
 
+// 아이디어에 붙은 추천(레포 1개)을 화면에서 쓰는 RecoItem으로 변환 (추천 없이 저장했으면 빈 목록)
+const mapRecommendationToRecoItems = (recommendation?: IdeaRecommendation | null): RecoItem[] =>
+  recommendation
+    ? [
+        {
+          id: `repo_${recommendation.repositoryId}`,
+          recommendationId: recommendation.recommendationId,
+          repositoryId: recommendation.repositoryId,
+          repoName: recommendation.repositoryFullName || recommendation.repositoryName,
+          repoUrl: recommendation.repositoryUrl,
+          description: recommendation.repositoryDescription,
+          reason: recommendation.reason,
+          stars: recommendation.starCount,
+          forks: recommendation.forkCount,
+          updatedAt: recommendation.updatedAt ? formatMockDate(parseServerDate(recommendation.updatedAt)) : '',
+        },
+      ]
+    : [];
+
+// techStack은 "Spring, JPA"처럼 콤마로 이어진 문자열로 내려옴
+const parseTechStack = (techStack?: string): string[] =>
+  techStack
+    ? techStack
+        .split(',')
+        .map((tech) => tech.trim())
+        .filter(Boolean)
+    : [];
+
 const mapApiIdeaToCard = (idea: ApiIdea): IdeaCard => ({
   id: String(idea.ideaId),
   // TODO(2차): 응답에 작성자 정보가 없어서 임시로 내 계정으로 고정함.
@@ -304,19 +336,19 @@ const mapApiIdeaToCard = (idea: ApiIdea): IdeaCard => ({
   tags: parseHashtag(idea.hashtag),
   // TODO(2차): 실제 카테고리 enum 값이 확정되면 한글 라벨 매핑 테이블 추가 필요 (지금은 그대로 노출)
   category: toCategoryLabel(idea.category),
-  // TODO(2차): idea.recommendation 구조가 확정되면 추천 레포 매핑 필요
-  recoBotResult: [],
+  recoBotResult: mapRecommendationToRecoItems(idea.recommendation),
   createdAt: formatMockDate(parseServerDate(idea.createdAt)),
   isPublic: idea.visibility === 'PUBLIC',
   likeCount: idea.likeCount,
   // 내 담당 화면(IdeaPage/IdeaDetailPage)엔 좋아요 인터랙션이 없어서 실제로는 안 쓰임
   likedByMe: false,
-  // TODO(2차): 목록 조회 응답에 댓글 수 필드가 없어서 임시로 0 — 백엔드 확인 필요
-  commentCount: 0,
+  // 서버 응답에 댓글 수가 아직 없어서 없으면 0 (상세 화면은 댓글 목록으로 직접 셈)
+  commentCount: idea.commentCount ?? 0,
 });
 
 const mapApiReplyToReply = (reply: ApiReply): Reply => ({
   id: String(reply.replyId),
+  authorId: reply.writerId,
   authorNickname: reply.writerNickname,
   authorProfileImageUrl: reply.writerProfileImageUrl,
   content: reply.content,
@@ -325,11 +357,12 @@ const mapApiReplyToReply = (reply: ApiReply): Reply => ({
 
 const mapApiCommentToComment = (comment: ApiComment): Comment => ({
   id: String(comment.commentId),
+  authorId: comment.writerId,
   authorNickname: comment.writerNickname,
   authorProfileImageUrl: comment.writerProfileImageUrl,
   content: comment.content,
   createdAt: formatMockDate(parseServerDate(comment.createdAt)),
-  replies: comment.replies.map(mapApiReplyToReply),
+  replies: (comment.replies ?? []).map(mapApiReplyToReply),
 });
 
 // ===== 아이디어 목록 조회 (필터/검색/정렬 조합) =====
@@ -354,34 +387,44 @@ export const fetchMockIdeas = async (
 
 // ===== 아이디어 상세 조회 (id로 하나) =====
 export const fetchMockIdeaDetail = async (ideaId: string): Promise<IdeaDetail> => {
-  const [idea, commentsResponse] = await Promise.all([
-    getIdea(Number(ideaId)),
-    getIdeaComments(Number(ideaId)),
-  ]);
+  try {
+    const [idea, commentsResponse] = await Promise.all([
+      getIdea(Number(ideaId)),
+      getIdeaComments(Number(ideaId)),
+    ]);
 
-  return {
-    ...mapApiIdeaToCard(idea),
-    brainstormContent: idea.content,
-    // TODO(2차): idea.recommendation 구조가 확정되면 추천 기술 스택 매핑 필요
-    techStack: [],
-    comments: commentsResponse.comments.map(mapApiCommentToComment),
-  };
+    return {
+      ...mapApiIdeaToCard(idea),
+      brainstormContent: idea.content,
+      techStack: parseTechStack(idea.recommendation?.techStack),
+      comments: commentsResponse.comments.map(mapApiCommentToComment),
+    };
+  } catch (error) {
+    const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+    // 없는 아이디어(404)나 잘못된 id(400)면 "존재하지 않는 아이디어"로, 그 외(네트워크/서버 오류)는 일반 실패로 안내
+    throw {
+      message:
+        status === 400 || status === 404 ? '존재하지 않는 아이디어예요' : '아이디어를 불러오지 못했어요',
+    };
+  }
 };
 
 // ===== RecoBot 추천 결과(또는 추천 없이 카드만) → 아이디어로 저장 =====
+// 저장 API의 응답 본문이 명세서에 없어서, 새 아이디어의 번호(ideaId)를 못 받으면 null을 돌려줌
+// (호출한 쪽에서 상세 화면 대신 아이디어 목록으로 보냄)
 export const createMockIdeaFromRecommendation = async (
   cardId: string,
   isPublic: boolean,
   recommendationId?: number,
   repositoryId?: number,
-): Promise<IdeaCard> => {
-  const created = await saveIdeaFromCard(cardId, {
+): Promise<IdeaCard | null> => {
+  const created = await saveIdeaFromCard(Number(cardId), {
     visibility: isPublic ? 'PUBLIC' : 'PRIVATE',
     recommendationId,
     repositoryId,
   });
 
-  return mapApiIdeaToCard(created);
+  return created?.ideaId !== undefined ? mapApiIdeaToCard(created) : null;
 };
 
 // ===== 아이디어 수정 =====
@@ -439,10 +482,14 @@ export interface CreateCommentRequest {
 export const createMockComment = async (request: CreateCommentRequest): Promise<Comment> => {
   const created = await postIdeaComment(Number(request.ideaId), { content: request.content });
 
+  const me = useMyProfileStore.getState().profile;
+
   return {
     id: String(created.commentId),
-    authorNickname: mockUser.nickname,
-    authorProfileImageUrl: mockUser.profileImageUrl,
+    // 작성 응답도 작성자 번호가 writerId 또는 memberId로 올 수 있어 둘 다 읽음(없으면 내 번호)
+    authorId: created.writerId ?? (created as { memberId?: number }).memberId ?? me?.memberId,
+    authorNickname: me?.nickname ?? '',
+    authorProfileImageUrl: me?.profileImageUrl ?? undefined,
     content: created.content,
     createdAt: formatMockDate(parseServerDate(created.createdAt)),
     replies: [],
@@ -464,10 +511,13 @@ export interface CreateReplyRequest {
 export const createMockReply = async (request: CreateReplyRequest): Promise<Reply> => {
   const created = await postCommentReply(Number(request.commentId), { content: request.content });
 
+  const me = useMyProfileStore.getState().profile;
+
   return {
     id: String(created.replyId),
-    authorNickname: mockUser.nickname,
-    authorProfileImageUrl: mockUser.profileImageUrl,
+    authorId: created.writerId ?? (created as { memberId?: number }).memberId ?? me?.memberId,
+    authorNickname: me?.nickname ?? '',
+    authorProfileImageUrl: me?.profileImageUrl ?? undefined,
     content: created.content,
     createdAt: formatMockDate(parseServerDate(created.createdAt)),
   };

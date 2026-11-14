@@ -167,11 +167,10 @@ export const requestRecommendation = async (
 const SORT_BY_MAP = { latest: 'LATEST', star: 'STAR', fork: 'FORK' } as const;
 
 export const fetchSortedRecommendationResults = async (
+    cardId: string,
     sort: RecommendationSortOption,
-): Promise<RecommendationResultItem[]> => {
-    // 정렬 조회는 카드가 아니라 지금 챗봇에서 진행 중인 추천을 정렬하는 API라 cardId를 받지 않음
-    return toResultItems(await getSortedRecommendations(SORT_BY_MAP[sort]));
-};
+): Promise<RecommendationResultItem[]> =>
+    toResultItems(await getSortedRecommendations(Number(cardId), SORT_BY_MAP[sort]));
 
 // ===== 추천 취소 (saveHistory: true면 이력 보관, false면 완전 삭제) =====
 export const cancelRecommendation = async (

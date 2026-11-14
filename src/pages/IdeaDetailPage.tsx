@@ -11,7 +11,7 @@ import {
     createMockReply,
 } from '@/mocks/ideaCards';
 import type { IdeaDetail, Comment } from '@/mocks/ideaCards';
-import { mockUser } from '@/mocks/user';
+import { useMyProfileStore } from '@/store/myProfileStore';
 import Button from '@/components/common/Button';
 import Modal from '@/components/common/Modal';
 import Tag from '@/components/common/Tag';
@@ -25,6 +25,10 @@ import sendArrowIcon from '@/assets/comment-send-arrow.svg';
 import clipIcon from '@/assets/idea-clip.svg';
 import visibilityPublicIcon from '@/assets/idea-visibility-public.svg';
 import visibilityPrivateIcon from '@/assets/idea-visibility-private.svg';
+
+// 백엔드에 답글(대댓글) API가 아직 없어서(POST /comments/{id}/replies 가 500) 답글 버튼과 입력창을 숨김
+// — 서버에 구현되면 true로 바꾸면 됨
+const REPLIES_SUPPORTED = false;
 
 const formatCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k` : String(n));
 
@@ -225,12 +229,17 @@ interface CommentSectionProps {
 }
 
 function CommentSection({ ideaId, comments, highlightCommentId, onCommentsChange }: CommentSectionProps) {
+    const profile = useMyProfileStore((state) => state.profile);
+    const isMine = (authorId?: number) =>
+        profile !== null && authorId !== undefined && authorId === profile.memberId;
     const [newComment, setNewComment] = useState('');
     const [openReplyCommentId, setOpenReplyCommentId] = useState<string | null>(null);
     const [replyInput, setReplyInput] = useState('');
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const [openReplyMenuId, setOpenReplyMenuId] = useState<string | null>(null);
     const [activeHighlightId, setActiveHighlightId] = useState(highlightCommentId);
+    const [failedMessage, setFailedMessage] = useState<string | null>(null);
+    const isBusyRef = useRef(false);
     const commentRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
     // 알림 클릭으로 들어온 경우 해당 댓글로 스크롤하고, 잠시 후 하이라이트를 지움
@@ -242,34 +251,52 @@ function CommentSection({ ideaId, comments, highlightCommentId, onCommentsChange
         return () => clearTimeout(timer);
     }, [highlightCommentId]);
 
-    const handleSubmitComment = async () => {
+    // 연타로 같은 요청이 여러 번 나가는 걸 막고, 실패하면 안내 모달을 띄움
+    const runGuarded = async (action: () => Promise<void>, failMessage: string) => {
+        if (isBusyRef.current) return;
+        isBusyRef.current = true;
+        try {
+            await action();
+        } catch {
+            setFailedMessage(failMessage);
+        } finally {
+            isBusyRef.current = false;
+        }
+    };
+
+    const handleSubmitComment = () => {
         const content = newComment.trim();
         if (!content) return;
 
-        const created = await createMockComment({ ideaId, content });
-        onCommentsChange([...comments, created]);
-        setNewComment('');
+        return runGuarded(async () => {
+            const created = await createMockComment({ ideaId, content });
+            onCommentsChange([...comments, created]);
+            setNewComment('');
+        }, '댓글 등록에 실패했어요.\n다시 시도해주세요');
     };
 
-    const handleDeleteComment = async (commentId: string) => {
-        await deleteMockComment(commentId);
-        onCommentsChange(comments.filter((comment) => comment.id !== commentId));
-    };
+    const handleDeleteComment = (commentId: string) =>
+        runGuarded(async () => {
+            await deleteMockComment(commentId);
+            onCommentsChange(comments.filter((comment) => comment.id !== commentId));
+        }, '댓글 삭제에 실패했어요.\n다시 시도해주세요');
 
-    const handleSubmitReply = async (commentId: string) => {
+    const handleSubmitReply = (commentId: string) => {
         const content = replyInput.trim();
         if (!content) return;
 
-        const created = await createMockReply({ commentId, content });
-        onCommentsChange(
-            comments.map((comment) =>
-                comment.id === commentId
-                    ? { ...comment, replies: [...comment.replies, created] }
-                    : comment,
-            ),
-        );
-        setReplyInput('');
-        setOpenReplyCommentId(null);
+        return runGuarded(async () => {
+            const created = await createMockReply({ commentId, content });
+            onCommentsChange(
+                comments.map((comment) =>
+                    comment.id === commentId
+                        ? { ...comment, replies: [...comment.replies, created] }
+                        : comment,
+                ),
+            );
+            setReplyInput('');
+            setOpenReplyCommentId(null);
+        }, '답글 등록에 실패했어요.\n다시 시도해주세요');
     };
 
     // 답글 삭제 mock API가 따로 없어서 로컬 상태에서만 제거
@@ -300,16 +327,18 @@ function CommentSection({ ideaId, comments, highlightCommentId, onCommentsChange
                             <CommentDate>{comment.createdAt}</CommentDate>
                         </CommentHeader>
                         <CommentContent>{comment.content}</CommentContent>
-                        <CommentActions>
-                            <Button
-                                variant="text"
-                                onClick={() =>
-                                    setOpenReplyCommentId((prev) => (prev === comment.id ? null : comment.id))
-                                }
-                            >
-                                답글
-                            </Button>
-                        </CommentActions>
+                        {REPLIES_SUPPORTED && (
+                            <CommentActions>
+                                <Button
+                                    variant="text"
+                                    onClick={() =>
+                                        setOpenReplyCommentId((prev) => (prev === comment.id ? null : comment.id))
+                                    }
+                                >
+                                    답글
+                                </Button>
+                            </CommentActions>
+                        )}
 
                         {comment.replies.map((reply) => (
                             <ReplyItem key={reply.id}>
@@ -321,7 +350,7 @@ function CommentSection({ ideaId, comments, highlightCommentId, onCommentsChange
                                     </CommentHeader>
                                     <CommentContent>{reply.content}</CommentContent>
                                 </CommentBody>
-                                {reply.authorNickname === mockUser.nickname && (
+                                {isMine(reply.authorId) && (
                                     <MenuWrapper>
                                         <MenuButton
                                             type="button"
@@ -345,9 +374,9 @@ function CommentSection({ ideaId, comments, highlightCommentId, onCommentsChange
                             </ReplyItem>
                         ))}
 
-                        {openReplyCommentId === comment.id && (
+                        {REPLIES_SUPPORTED && openReplyCommentId === comment.id && (
                             <ReplyInputRow>
-                                <Avatar size="xs" src={mockUser.profileImageUrl} />
+                                <Avatar size="xs" src={profile?.profileImageUrl ?? undefined} />
                                 <PillInput
                                     value={replyInput}
                                     onChange={(e) => setReplyInput(e.target.value)}
@@ -365,7 +394,7 @@ function CommentSection({ ideaId, comments, highlightCommentId, onCommentsChange
                             </ReplyInputRow>
                         )}
                     </CommentBody>
-                    {comment.authorNickname === mockUser.nickname && (
+                    {isMine(comment.authorId) && (
                         <MenuWrapper>
                             <MenuButton
                                 type="button"
@@ -385,7 +414,7 @@ function CommentSection({ ideaId, comments, highlightCommentId, onCommentsChange
             ))}
 
             <NewCommentRow>
-                <Avatar size="xs" src={mockUser.profileImageUrl} />
+                <Avatar size="xs" src={profile?.profileImageUrl ?? undefined} />
                 <PillInput
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
@@ -401,6 +430,14 @@ function CommentSection({ ideaId, comments, highlightCommentId, onCommentsChange
                     <img src={sendArrowIcon} alt="" />
                 </SendButton>
             </NewCommentRow>
+
+            <Modal
+                type="confirm"
+                isOpen={failedMessage !== null}
+                onClose={() => setFailedMessage(null)}
+                message={failedMessage ?? ''}
+                cancelText="닫기"
+            />
         </CommentWrapper>
     );
 }

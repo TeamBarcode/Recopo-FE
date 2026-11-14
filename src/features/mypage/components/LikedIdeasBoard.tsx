@@ -120,7 +120,7 @@ function LikedIdeasBoard() {
 
                             <IdeaInfo>
                                 <IdeaTitle>{idea.title}</IdeaTitle>
-                                <IdeaMeta>· {formatDate(idea.updatedAt)}</IdeaMeta>
+                                <IdeaMeta>· {formatDate(idea.createdAt ?? idea.likedAt)}</IdeaMeta>
                             </IdeaInfo>
 
                             <LikeButton

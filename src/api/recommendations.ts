@@ -25,6 +25,62 @@ export interface Recommendation {
   repositories: RecommendedRepo[];
 }
 
+// 실제 서버(백엔드 Recommendation 엔티티)는 추천 "레포 한 개 = 한 줄"인 평평한 목록으로 내려줌
+// (recommendationId가 레포마다 다름). 명세의 { recommendationId, repositories: [...] } 모양과 둘 다 읽도록 맞춤
+interface RecommendationRow {
+  recommendationId: number;
+  cardId: number;
+  status?: string;
+  createdAt?: string;
+  repositoryId: number;
+  repositoryName: string;
+  repositoryFullName: string;
+  repositoryUrl: string;
+  repositoryDescription: string;
+  language: string;
+  techStack: string | null;
+  starCount: number;
+  forkCount: number;
+  updatedAt: string;
+  reason: string;
+}
+
+const toRecommendation = (raw: Recommendation | RecommendationRow): Recommendation => {
+  if ('repositories' in raw) return raw;
+
+  return {
+    recommendationId: raw.recommendationId,
+    cardId: raw.cardId,
+    status: raw.status,
+    createdAt: raw.createdAt,
+    repositories: [
+      {
+        repositoryId: raw.repositoryId,
+        name: raw.repositoryName,
+        fullName: raw.repositoryFullName,
+        url: raw.repositoryUrl,
+        description: raw.repositoryDescription,
+        language: raw.language,
+        techStack: raw.techStack
+          ? raw.techStack
+              .split(',')
+              .map((tech) => tech.trim())
+              .filter(Boolean)
+          : [],
+        stars: raw.starCount,
+        forks: raw.forkCount,
+        updatedAt: raw.updatedAt,
+        reason: raw.reason,
+      },
+    ],
+  };
+};
+
+const toRecommendations = (data: unknown): Recommendation[] => {
+  const list = Array.isArray(data) ? data : data ? [data] : [];
+  return (list as (Recommendation | RecommendationRow)[]).map(toRecommendation);
+};
+
 // ===== AI 추천 요청 및 재요청 =====
 export interface RequestRecommendationBody {
   cardId: number;
@@ -36,34 +92,29 @@ export interface RequestRecommendationBody {
 export const postRecommendationRequest = async (
   request: RequestRecommendationBody,
 ): Promise<Recommendation[]> => {
-  const { data } = await apiClient.post<Recommendation | Recommendation[]>(
-    '/api/recommendations/request',
-    request,
-  );
-  return Array.isArray(data) ? data : [data];
+  const { data } = await apiClient.post<unknown>('/api/recommendations/request', request);
+  return toRecommendations(data);
 };
 
 // ===== AI 추천 목록 조회 =====
 // 명세는 카드 하나당 recommendation 객체 하나라고 되어 있는데, 실제 서버는 배열(없으면 [])로 내려줌
 // — 어느 쪽이든 배열로 맞춰서 반환함 (명세와 실제 응답 모양은 백엔드 확인 필요)
 export const getRecommendation = async (cardId: number): Promise<Recommendation[]> => {
-  const { data } = await apiClient.get<Recommendation | Recommendation[]>(
-    `/api/recommendations/cards/${cardId}`,
-  );
-  return Array.isArray(data) ? data : [data];
+  const { data } = await apiClient.get<unknown>(`/api/recommendations/cards/${cardId}`);
+  return toRecommendations(data);
 };
 
 // ===== AI 추천 결과 정렬 =====
-// "선택한 카드"가 아니라 지금 챗봇 세션에서 진행 중인 recommendation의 레포들을 정렬하는 것.
-// 추천 요청(postRecommendationRequest)이 recommendationId 없이도 "지금 진행 중인 사이클"을
-// 서버가 알아서 추적하는 것과 같은 방식이라, cardId 없이 sortBy만 받는 게 맞음
+// 명세는 GET /recommendations?sortBy= 라고 되어 있지만 실제 서버엔 그 주소가 없고,
+// 카드별 조회 주소에 sortBy를 붙여서 정렬해 줌 (GET /recommendations/cards/{cardId}?sortBy=)
 export const getSortedRecommendations = async (
+  cardId: number,
   sortBy: 'LATEST' | 'STAR' | 'FORK',
 ): Promise<Recommendation[]> => {
-  const { data } = await apiClient.get<Recommendation[]>('/api/recommendations', {
+  const { data } = await apiClient.get<unknown>(`/api/recommendations/cards/${cardId}`, {
     params: { sortBy },
   });
-  return data;
+  return toRecommendations(data);
 };
 
 // ===== AI 추천 취소 =====
