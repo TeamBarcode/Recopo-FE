@@ -69,7 +69,7 @@ function BrainstormBoard(){
                         />
                     </DropdownGroup>
                     <SearchBarWrapper>
-                        <SearchInput value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="검색" />
+                        <SearchInput value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="해시태그 검색" />
                         <SearchButton type="button" aria-label="검색">
                             <img src={searchIcon} alt="" />
                         </SearchButton>

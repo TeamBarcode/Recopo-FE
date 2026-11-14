@@ -1,5 +1,23 @@
 import { apiClient } from './client';
 
+// 추천을 선택해 저장한 아이디어에만 들어오고, 추천 없이 저장했으면 null
+// (백엔드 IdeaResponseDto.RecommendationResponse 기준 — 레코봇 추천 API의 레포 필드 이름과 다름)
+export interface IdeaRecommendation {
+  recommendationId: number;
+  repositoryId: number;
+  repositoryName: string;
+  repositoryFullName: string;
+  repositoryUrl: string;
+  repositoryDescription: string;
+  language: string;
+  // 콤마(", ")로 이어붙인 하나의 문자열 (예: "Spring, JPA")
+  techStack: string;
+  starCount: number;
+  forkCount: number;
+  updatedAt: string;
+  reason: string;
+}
+
 export interface Idea {
   ideaId: number;
   title: string;
@@ -9,9 +27,10 @@ export interface Idea {
   category: string;
   visibility: 'PUBLIC' | 'PRIVATE';
   likeCount: number;
+  // 명세엔 있지만 실제 서버 응답(IdeaResponseDto)엔 아직 없음
+  commentCount?: number;
   createdAt: string;
-  // 명세 예시엔 null만 있어서 실제 값이 있을 때의 구조는 확인 필요
-  recommendation: unknown;
+  recommendation?: IdeaRecommendation | null;
 }
 
 // ===== 아이디어 목록/카테고리별/검색/정렬/공개여부 필터 조회 =====
@@ -63,7 +82,7 @@ export interface SaveIdeaFromCardRequest {
 
 // 응답 본문 예시가 명세서에 없어(200 OK만 명시) 아이디어 객체를 반환한다고 가정 — 실제 응답이 다르면 조정 필요
 export const saveIdeaFromCard = async (
-  cardId: string,
+  cardId: number,
   request: SaveIdeaFromCardRequest,
 ): Promise<Idea> => {
   const { data } = await apiClient.post<Idea>(`/api/ideas/cards/${cardId}/ideas`, request);
@@ -72,17 +91,17 @@ export const saveIdeaFromCard = async (
 
 // ===== 좋아요한 아이디어 목록 조회 (마이페이지) =====
 // likedAt(내가 좋아요 누른 시각) 내림차순으로 정렬돼서 내려옴
+// 백엔드 LikedIdeaResponse 기준 (명세서의 thumbnailUrl/likedByMe/updatedAt은 실제 서버가 주지 않음)
 export interface LikedIdea {
   ideaId: number;
   memberId: number;
   nickname: string;
   title: string;
-  thumbnailUrl: string;
-  likedByMe: boolean;
+  liked: boolean;
   likeCount: number;
   commentCount: number;
   likedAt: string;
-  updatedAt: string;
+  createdAt: string;
 }
 
 export interface LikedIdeasResponse {

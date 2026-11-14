@@ -5,6 +5,7 @@ import styled from 'styled-components';
 
 import Dropdown from '@/components/common/Dropdown';
 import Loading from '@/components/common/Loading';
+import ErrorState from '@/components/common/ErrorState';
 import IdeaCard from '@/features/idea/IdeaCard';
 import { categoryOptions, sortOptions, visibilityOptions } from '@/features/idea/ideaData';
 import { fetchMockIdeas } from '@/mocks/ideaCards';
@@ -30,6 +31,8 @@ function IdeaPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredIdeas, setFilteredIdeas] = useState<IdeaCardData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     fetchMockIdeas(
@@ -37,11 +40,14 @@ function IdeaPage() {
       category === '전체' || !category ? undefined : category,
       SORT_VALUE_MAP[sort as keyof typeof SORT_VALUE_MAP],
       searchTerm.trim().replace(/^#/, '') || undefined,
-    ).then((ideas) => {
-      setFilteredIdeas(ideas);
-      setIsLoading(false);
-    });
-  }, [category, searchTerm, sort, visibility]);
+    )
+      .then((ideas) => {
+        setError(null);
+        setFilteredIdeas(ideas);
+        setIsLoading(false);
+      })
+      .catch(() => setError('아이디어를 불러오지 못했어요'));
+  }, [category, searchTerm, sort, visibility, retryCount]);
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -71,13 +77,22 @@ function IdeaPage() {
               />
             </Filters>
             <SearchForm onSubmit={handleSearch} role="search">
-              <SearchInput value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="제목 또는 해시태그 검색" aria-label="아이디어 검색" />
+              <SearchInput value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="해시태그 검색" aria-label="아이디어 검색" />
               <SearchButton type="submit" aria-label="검색"><img src={searchIcon} alt="" /></SearchButton>
             </SearchForm>
           </FilterGroup>
         </Toolbar>
 
-        {isLoading ? (
+        {error ? (
+          <ErrorState
+            title={error}
+            description="잠시 후 다시 시도해주세요"
+            actionLabel="다시 시도"
+            onAction={() => setRetryCount((count) => count + 1)}
+            minHeight="480px"
+            size="lg"
+          />
+        ) : isLoading ? (
           <Loading minHeight="480px" />
         ) : filteredIdeas.length > 0 ? (
           <IdeaGrid>
@@ -90,7 +105,7 @@ function IdeaPage() {
               <EmptyTitle>{searchEmpty ? '검색 결과 없음' : '아이디어가 없어요!'}</EmptyTitle>
               {!searchEmpty && <EmptyDescription><strong>Recobot</strong>과 함께 브레인스토밍 카드를<br />아이디어로 만들어 보세요</EmptyDescription>}
             </EmptyCard>
-            {searchEmpty && <SearchEmptyDescription>해당 검색어와 일치하는 제목 또는 태그가 없습니다</SearchEmptyDescription>}
+            {searchEmpty && <SearchEmptyDescription>해당 검색어와 일치하는 해시태그가 없습니다</SearchEmptyDescription>}
           </EmptyArea>
         )}
       </ContentArea>

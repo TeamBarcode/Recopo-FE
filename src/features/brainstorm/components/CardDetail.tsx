@@ -148,7 +148,7 @@ function CardDetail({ onRecommend }: CardDetailProps, ref: React.ForwardedRef<Ca
                 selected?.repositoryId,
             );
 
-            navigate(`/ideas/${newIdea.id}`);
+            navigate(newIdea ? `/ideas/${newIdea.id}` : '/ideas');
         } catch {
             setIsSaveIdeaFailedModalOpen(true);
         } finally {
